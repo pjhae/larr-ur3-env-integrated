@@ -1,0 +1,1 @@
+__version__ = '0.1.0' # 0.17.1 (original OpenAI Gym fork)
