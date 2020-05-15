@@ -12,6 +12,14 @@ register(
 )
 
 register(
+    id='Practice1-motor-nogravity-v0',
+    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    max_episode_steps=1000,
+    reward_threshold=0.0,
+    kwargs={'actuator_type': 'motor(nogravity)'},
+)
+
+register(
     id='Practice1-position-v0',
     entry_point='gym_custom.envs.custom:PracticeEnv1',
     max_episode_steps=1000,
@@ -33,6 +41,14 @@ register(
     max_episode_steps=1000,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'velocity'},
+)
+
+register(
+    id='Practice1-nodynamics-v0',
+    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    max_episode_steps=1000,
+    reward_threshold=0.0,
+    kwargs={'actuator_type': 'nodynamics'}
 )
 
 register(

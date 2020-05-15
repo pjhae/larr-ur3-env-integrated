@@ -9,15 +9,19 @@ class PracticeEnv1(MujocoEnv, utils.EzPickle):
 
     def __init__(self, actuator_type):
         utils.EzPickle.__init__(self)
-        actuator_type_list = ['motor', 'position', 'position(dyntype=integrator)', 'velocity']
+        actuator_type_list = ['motor', 'motor(nogravity)', 'position', 'position(dyntype=integrator)', 'velocity', 'nodynamics']
         if actuator_type == 'motor':
             xml_filename = 'practice1_motor.xml'
+        elif actuator_type == 'motor(nogravity)':
+            xml_filename = 'practice1_motor_no_gravity.xml'
         elif actuator_type == 'position':
             xml_filename = 'practice1_position.xml'
         elif actuator_type == 'position(dyntype=integrator)':
             xml_filename = 'practice1_position_dyntype_integrator.xml'
         elif actuator_type == 'velocity':
             xml_filename = 'practice1_velocity.xml'
+        elif actuator_type == 'nodynamics':
+            xml_filename = 'practice1_nodynamics.xml'
         else:
             raise ValueError('actuator_type not in %s'%actuator_type_list)
         fullpath = os.path.join(os.path.dirname(__file__), 'assets', xml_filename)
