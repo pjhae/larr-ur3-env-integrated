@@ -52,9 +52,24 @@ register(
 )
 
 register(
-    id='Practice2-v0',
+    id='Practice2-motor-v0',
     entry_point='gym_custom.envs.custom:PracticeEnv2',
     max_episode_steps=1000,
+    reward_threshold=0.0,
+)
+
+register(
+    id='Practice1-motor-notimelimit-v0',
+    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+    kwargs={'actuator_type': 'motor'},
+)
+
+register(
+    id='Practice2-motor-notimelimit-v0',
+    entry_point='gym_custom.envs.custom:PracticeEnv2',
+    max_episode_steps=None,
     reward_threshold=0.0,
 )
 

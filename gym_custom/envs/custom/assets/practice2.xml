@@ -1,47 +1,36 @@
-<!-- Cartpole Model
+<?xml version="1.0" encoding="utf-8"?>
 
-    The state space is populated with joints in the order that they are
-    defined in this file. The actuators also operate on joints.
+<mujoco model="double_pendulum">
+    <!--Infer masses and inertial masses from geometry-->
+	<compiler coordinate="local" inertiafromgeom="true"/>
 
-    State-Space (name/joint/parameter):
-        - cart      slider      position (m)
-        - pole      hinge       angle (rad)
-        - cart      slider      velocity (m/s)
-        - pole      hinge       angular velocity (rad/s)
+    <!--Global defaults-->
+	<default>
+		<joint armature="0" damping="0.05" limited="false"/>
+		<geom contype="0" friction="1 0.1 0.1" rgba="0.7 0.7 0 1"/>
+	</default>
 
-    Actuators (name/actuator/parameter):
-        - cart      motor       force x (N)
+    <!--Simulator options-->
+	<option gravity="0 0 -9.81" integrator="RK4" timestep="0.01"/>
+	<size nstack="3000"/>
 
--->
-<mujoco model="cartpole">
-  <compiler coordinate="local" inertiafromgeom="true"/>
-  <custom>
-    <numeric data="2" name="frame_skip"/>
-  </custom>
-  <default>
-    <joint damping="0.05"/>
-    <geom contype="0" friction="1 0.1 0.1" rgba="0.7 0.7 0 1"/>
-  </default>
-  <option gravity="1e-5 0 -9.81" integrator="RK4" timestep="0.01"/>
-  <size nstack="3000"/>
-  <worldbody>
-    <geom name="floor" pos="0 0 -3.0" rgba="0.8 0.9 0.8 1" size="40 40 40" type="plane"/>
-    <geom name="rail" pos="0 0 0" quat="0.707 0 0.707 0" rgba="0.3 0.3 0.7 1" size="0.02 1" type="capsule"/>
-    <body name="cart" pos="0 0 0">
-      <joint axis="1 0 0" limited="true" margin="0.01" name="slider" pos="0 0 0" range="-1 1" type="slide"/>
-      <geom name="cart" pos="0 0 0" quat="0.707 0 0.707 0" size="0.1 0.1" type="capsule"/>
-      <body name="pole" pos="0 0 0">
-        <joint axis="0 1 0" name="hinge" pos="0 0 0" type="hinge"/>
-        <geom fromto="0 0 0 0 0 0.6" name="cpole" rgba="0 0.7 0.7 1" size="0.045 0.3" type="capsule"/>
-        <body name="pole2" pos="0 0 0.6">
-          <joint axis="0 1 0" name="hinge2" pos="0 0 0" type="hinge"/>
-          <geom fromto="0 0 0 0 0 0.6" name="cpole2" rgba="0 0.7 0.7 1" size="0.045 0.3" type="capsule"/>
-          <site name="tip" pos="0 0 .6" size="0.01 0.01"/>
+    <!--Define bodies-->
+    <worldbody>
+        <!--<geom name="floor" pos="0 0 -3.0" rgba="0.8 0.9 0.8 1" size="40 40 40"/>-->
+        <geom name="bar" pos="0 0 0" quat="0.707 0 0.707 0" rgba="0.3 0.3 0.7 1" size="0.02 1" type="capsule"/>
+        <body name="pole1" pos="0 0 0">
+            <joint axis="0 1 0" name="hinge1" pos="0 0 0" type="hinge"/>
+            <geom fromto="0 0 0 0.001 0 -0.6" name="pole1" rgba="0 0.7 0.7 1" size="0.05" type="capsule"/>
+            <body name="pole2" pos="0 0 -0.6">
+                <joint axis="0 1 0" name="hinge2" pos="0 0 0" type="hinge"/>
+                <geom fromto="0 0 0 -0.001 0 -0.6" name="pole2" rgba="0.7 0 0.7 1" size="0.05" type="capsule"/>
+            </body>
         </body>
-      </body>
-    </body>
-  </worldbody>
-  <actuator>
-    <motor ctrllimited="true" ctrlrange="-1 1" gear="500" joint="slider" name="slide"/>
-  </actuator>
+    </worldbody>
+
+    <!--Define actuators-->
+    <actuator>
+        <motor joint="hinge1" name="hinge1" ctrlrange="-400 400"/> <!--Torque control-->
+        <motor joint="hinge2" name="hinge2" ctrlrange="-100 100"/> <!--Torque control-->
+    </actuator>
 </mujoco>
