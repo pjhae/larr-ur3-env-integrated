@@ -85,12 +85,12 @@ def random_action():
     
     print('Times up!')
 
-def set_state(state='home'):
+def set_state(state='home'): # kinematics only
     env = gym_custom.make('ur3-practice-v0')
     obs = env.reset()
     dt = env.dt
 
-    for _ in range(int(60/dt)):
+    for t in range(int(60/dt)):
         mjsimstate = env.sim.get_state()
         qpos, qvel = mjsimstate.qpos, mjsimstate.qvel
         if state == 'home':
@@ -104,10 +104,15 @@ def set_state(state='home'):
         env.set_state(qpos, qvel)
 
         env.render()
-        print('qpos: %s (degrees), qvel: %s (dps), qfrc_bias: %s'%(qpos[:6]*180/np.pi, qvel[:6]*180/np.pi, env.sim.data.qfrc_bias[:6]))
+        print('time: %.2f'%(t*dt))
+        print('  qpos: %s (degrees)'%(qpos[:6]*180/np.pi))
+        print('  qvel: %s (dps)'%(qvel[:6]*180/np.pi))
+        print('  qfrc_bias: %s'%(env.sim.data.qfrc_bias[:6]))
         time.sleep(dt)
 
-def set_theta():
+    print('Times up!')
+
+def set_theta(): # movej
     env = gym_custom.make('ur3-practice-v0')
     obs = env.reset()
     dt = env.dt
@@ -116,37 +121,50 @@ def set_theta():
     scale = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 4.0, 4.0, 1.0])
     env = PositionControlWrapper(env, control_gains=PID_gains, scale_factor=scale, ndof=6)
     
-    desired_theta = np.array([-60.0, -90.0, 30.0, -90.0, 90.0, 0.0])*np.pi/180
-    for _ in range(int(60/dt)):
+    # desired_theta = np.array([-60.0, -90.0, 30.0, -90.0, 90.0, 0.0])*np.pi/180
+    desired_theta = np.array([270.0, -90.0, -90.0, -90.0, 90.0, 180.0])*np.pi/180.0
+    for t in range(int(60/dt)):
         obs, _, _, _ = env.step(desired_theta)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
         theta, theta_dot = qpos[:6], qvel[:6]
 
         env.render()
-        print('qpos: %s (degrees), qvel: %s (dps), qfrc_bias: %s'%(theta*180/np.pi, theta_dot*180/np.pi, env.env.sim.data.qfrc_bias[:6]))
+        print('time: %.2f'%(t*dt))
+        print('  qpos: %s (degrees)'%(theta*180/np.pi))
+        print('  qvel: %s (dps)'%(theta_dot*180/np.pi))
+        print('  qfrc_bias: %s'%(env.sim.data.qfrc_bias[:6]))
         time.sleep(dt)
 
-def set_thetadot():
+    print('Times up!')
+    time.sleep(120)
+
+def set_thetadot(): # speedj
     env = gym_custom.make('ur3-practice-v0')
     obs = env.reset()
     dt = env.dt
 
-    PI_gains = {'P': 0.2, 'I': 1.0}
-    scale = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 4.0, 4.0, 1.0])
+    PI_gains = {'P': 0.20, 'I': 5.0}
+    scale = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 2.0, 2.5, 2.5, 2.5])
     env = VelocityControlWrapper(env, control_gains=PI_gains, scale_factor=scale, ndof=6)
 
-    desired_theta_dot = np.array([60.0, 0.0, 0.0, 0.0, 0.0, 0.0])*np.pi/180
-    for _ in range(int(60/dt)):
+    desired_theta_dot = np.array([27.0, -9.0, -9.0, -9.0, 9.0, 18.0])*np.pi/180 # stress test
+    for t in range(int(10/dt)):
         obs, _, _, _ = env.step(desired_theta_dot)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
         theta, theta_dot = qpos[:6], qvel[:6]
 
         env.render()
-        print('qpos: %s (degrees), qvel: %s (dps), qfrc_bias: %s'%(theta*180/np.pi, theta_dot*180/np.pi, env.env.sim.data.qfrc_bias[:6]))
+        print('time: %.2f'%(t*dt))
+        print('  qpos: %s (degrees)'%(theta*180/np.pi))
+        print('  qvel: %s (dps)'%(theta_dot*180/np.pi))
+        print('  qfrc_bias: %s'%(env.sim.data.qfrc_bias[:6]))
         time.sleep(dt)
+
+    print('Times up!')
+    time.sleep(120)
 
 if __name__ == '__main__':
     # random_action()
     # set_home()
-    # set_theta()
-    set_thetadot()
+    set_theta()
+    # set_thetadot()
