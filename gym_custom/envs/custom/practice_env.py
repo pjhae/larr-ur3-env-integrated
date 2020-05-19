@@ -9,7 +9,7 @@ class PracticeEnv1(MujocoEnv, utils.EzPickle):
 
     def __init__(self, actuator_type):
         utils.EzPickle.__init__(self)
-        actuator_type_list = ['motor', 'motor(nogravity)', 'position', 'position(dyntype=integrator)', 'velocity', 'nodynamics']
+        actuator_type_list = ['motor', 'motor(nogravity)', 'position', 'position(dyntype=integrator)', 'velocity', 'nodynamics', 'double']
         if actuator_type == 'motor':
             xml_filename = 'practice1_motor.xml'
         elif actuator_type == 'motor(nogravity)':
@@ -22,9 +22,11 @@ class PracticeEnv1(MujocoEnv, utils.EzPickle):
             xml_filename = 'practice1_velocity.xml'
         elif actuator_type == 'nodynamics':
             xml_filename = 'practice1_nodynamics.xml'
+        elif actuator_type == 'double':
+            xml_filename = 'practice1_double.xml'
         else:
             raise ValueError('actuator_type not in %s'%actuator_type_list)
-        fullpath = os.path.join(os.path.dirname(__file__), 'assets', xml_filename)
+        fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'practice', xml_filename)
         MujocoEnv.__init__(self, fullpath, 2)
 
     def step(self, a):
@@ -43,6 +45,8 @@ class PracticeEnv1(MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
+        # mjsimstate = self.sim.get_state()
+        # return np.concatenate([mjsimstate.qpos, mjsimstate.qvel])
 
     def viewer_setup(self):
         v = self.viewer
@@ -54,7 +58,7 @@ class PracticeEnv2(MujocoEnv, utils.EzPickle):
     # InvertedDoublePendulumEnv from gym/envs/mujoco
 
     def __init__(self):
-        fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'practice2.xml')
+        fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'practice', 'practice2.xml')
         MujocoEnv.__init__(self, fullpath, 1)
         utils.EzPickle.__init__(self)
 

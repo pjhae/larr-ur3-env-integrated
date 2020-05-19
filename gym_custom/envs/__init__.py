@@ -3,6 +3,8 @@ from gym_custom.envs.registration import registry, register, make, spec
 # Custom
 # ----------------------------------------
 
+# Practice1 environments
+#
 register(
     id='Practice1-motor-v0',
     entry_point='gym_custom.envs.custom:PracticeEnv1',
@@ -52,13 +54,6 @@ register(
 )
 
 register(
-    id='Practice2-motor-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv2',
-    max_episode_steps=1000,
-    reward_threshold=0.0,
-)
-
-register(
     id='Practice1-motor-notimelimit-v0',
     entry_point='gym_custom.envs.custom:PracticeEnv1',
     max_episode_steps=None,
@@ -67,8 +62,41 @@ register(
 )
 
 register(
+    id='Practice1-motor-doublependulum-v0',
+    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    max_episode_steps=1000,
+    reward_threshold=0.0,
+    kwargs={'actuator_type': 'double'}
+)
+
+# Practice2 environments
+#
+register(
     id='Practice2-motor-notimelimit-v0',
     entry_point='gym_custom.envs.custom:PracticeEnv2',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+register(
+    id='Practice2-motor-v0',
+    entry_point='gym_custom.envs.custom:PracticeEnv2',
+    max_episode_steps=1000,
+    reward_threshold=0.0,
+)
+
+# UR3 environments
+#
+register(
+    id='ur3-practice-v0',
+    entry_point='gym_custom.envs.custom:UR3PracticeEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+register(
+    id='ur3-dscho-v0',
+    entry_point='gym_custom.envs.custom:UR3dschoEnv',
     max_episode_steps=None,
     reward_threshold=0.0,
 )
