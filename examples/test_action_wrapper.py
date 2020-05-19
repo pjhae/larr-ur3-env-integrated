@@ -24,7 +24,7 @@ class PositionControlWrapper(gym_custom.core.ActionWrapper):
         self.err_integ = np.clip(self.err_integ + err*self.env.dt, -100, 100)
 
         # Internal forces 
-        bias = env.env.sim.data.qfrc_bias
+        bias = self.env.sim.data.qfrc_bias
 
         # PID controller
         action = self.P_gain*err + self.I_gain*self.err_integ + self.D_gain*err_dot + bias
@@ -51,7 +51,7 @@ class VelocityControlWrapper(gym_custom.core.ActionWrapper):
         self.err_integ = np.clip(self.err_integ + err*self.env.dt, -100, 100)
 
         # Internal forces
-        bias = env.env.sim.data.qfrc_bias
+        bias = self.env.sim.data.qfrc_bias
 
         # PID controller
         action = self.P_gain*err + self.I_gain*self.err_integ + bias
