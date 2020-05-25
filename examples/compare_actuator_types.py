@@ -78,8 +78,7 @@ def motor_gravity_compensation(desired_value, mode):
             err_integ = np.clip(err_integ + err*dt, -10, 10)
 
             # Internal forces 
-            bias = env.env.sim.data.qfrc_bias
-            # bias = 0.0
+            bias = env.env.sim.data.qfrc_bias*1.0
 
             # PID controller
             action = P_gain*err + I_gain*err_integ + D_gain*err_dot + bias
@@ -101,8 +100,7 @@ def motor_gravity_compensation(desired_value, mode):
             err_integ = np.clip(err_integ + err*dt, -10, 10)
 
             # Internal forces
-            bias = env.env.sim.data.qfrc_bias
-            # bias = 0.0
+            bias = env.env.sim.data.qfrc_bias*1.0
 
             # PI controller
             action = P_gain*err + I_gain*err_integ + bias
