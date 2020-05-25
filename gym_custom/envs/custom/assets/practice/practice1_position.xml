@@ -10,6 +10,6 @@
     <!--Define actuators-->
 	<actuator>
 		<!-- <motor gear="100" joint="slider" name="slide"/> -->
-        <position joint="hinge" name="hinge" ctrlrange="-6.28 6.28" kp="3"/> <!--Position control-->
+        <position joint="hinge" name="hinge" ctrlrange="-6.28 6.28" kp="20"/> <!--Position control-->
 	</actuator>
 </mujoco>
