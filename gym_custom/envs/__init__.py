@@ -95,8 +95,24 @@ register(
 )
 
 register(
+    id='ur3-practice-withgripper-v0',
+    entry_point='gym_custom.envs.custom:UR3PracticewithGripperEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+register(
     id='ur3-dscho-v0',
     entry_point='gym_custom.envs.custom:UR3dschoEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+# Grippers
+#
+register(
+    id='robotiq-practice-v0',
+    entry_point='gym_custom.envs.custom:Robotiq85PracticeEnv',
     max_episode_steps=None,
     reward_threshold=0.0,
 )

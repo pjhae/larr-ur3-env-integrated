@@ -4,11 +4,11 @@ from gym_custom import utils
 from gym_custom.envs.mujoco import MujocoEnv
 
 
-class DualUR3PracticeEnv(MujocoEnv, utils.EzPickle):
+class Robotiq85PracticeEnv(MujocoEnv, utils.EzPickle):
 
     def __init__(self):
         utils.EzPickle.__init__(self)
-        xml_filename = 'dual_ur3_mounted.xml'
+        xml_filename = 'flying_gripper.xml'
         fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'ur3', xml_filename)
         MujocoEnv.__init__(self, fullpath, 5)
 
@@ -20,8 +20,10 @@ class DualUR3PracticeEnv(MujocoEnv, utils.EzPickle):
         return ob, reward, done, {}
 
     def reset_model(self):
-        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
-        qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+        # qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        # qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+        qpos = self.init_qpos
+        qvel = self.init_qvel
         self.set_state(qpos, qvel)
         return self._get_obs()
 
