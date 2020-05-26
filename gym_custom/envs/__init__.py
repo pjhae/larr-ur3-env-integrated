@@ -456,11 +456,18 @@ register(
 #     a.update(b)
 #     return a
 
-# for reward_type in ['sparse', 'dense']:
-#     suffix = 'Dense' if reward_type == 'dense' else ''
-#     kwargs = {
-#         'reward_type': reward_type,
-#     }
+register(
+    id='FetchGripper-v0',
+    entry_point='gym_custom.envs.robotics:FetchGripperEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+for reward_type in ['sparse', 'dense']:
+    suffix = 'Dense' if reward_type == 'dense' else ''
+    kwargs = {
+        'reward_type': reward_type,
+    }
 
 #     # Fetch
 #     register(
@@ -470,12 +477,12 @@ register(
 #         max_episode_steps=50,
 #     )
 
-#     register(
-#         id='FetchPickAndPlace{}-v1'.format(suffix),
-#         entry_point='gym.envs.robotics:FetchPickAndPlaceEnv',
-#         kwargs=kwargs,
-#         max_episode_steps=50,
-#     )
+    register(
+        id='FetchPickAndPlace{}-v1'.format(suffix),
+        entry_point='gym_custom.envs.robotics:FetchPickAndPlaceEnv',
+        kwargs=kwargs,
+        max_episode_steps=50,
+    )
 
 #     register(
 #         id='FetchReach{}-v1'.format(suffix),

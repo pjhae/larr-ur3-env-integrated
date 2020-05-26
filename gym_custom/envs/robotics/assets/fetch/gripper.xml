@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<mujoco>
+    <compiler angle="radian" coordinate="local" meshdir="../stls/fetch" texturedir="../textures"></compiler>
+	<option timestep="0.002">
+		<flag warmstart="enable"></flag>
+	</option>
+
+	<!-- <include file="shared.xml"></include> -->
+    <asset>
+        <material name="floor_mat" specular="0" shininess="0.5" reflectance="0" rgba="0.2 0.2 0.2 1"></material>
+        <material name="table_mat" specular="0" shininess="0.5" reflectance="0" rgba="0.93 0.93 0.93 1"></material>
+        <material name="block_mat" specular="0" shininess="0.5" reflectance="0" rgba="0.2 0.2 0.2 1"></material>
+        <material name="puck_mat" specular="0" shininess="0.5" reflectance="0" rgba="0.2 0.2 0.2 1"></material>
+        <material name="robot0:geomMat" shininess="0.03" specular="0.4"></material>
+        <material name="robot0:gripper_finger_mat" shininess="0.03" specular="0.4" reflectance="0"></material>
+        <material name="robot0:gripper_mat" shininess="0.03" specular="0.4" reflectance="0"></material>
+        <material name="robot0:arm_mat" shininess="0.03" specular="0.4" reflectance="0"></material>
+        <material name="robot0:head_mat" shininess="0.03" specular="0.4" reflectance="0"></material>
+        <material name="robot0:torso_mat" shininess="0.03" specular="0.4" reflectance="0"></material>
+        <material name="robot0:base_mat" shininess="0.03" specular="0.4" reflectance="0"></material>
+
+        <mesh file="gripper_link.stl" name="robot0:gripper_link"></mesh>
+    </asset>
+    <default>
+        <default class="robot0:fetch">
+            <geom margin="0.001" material="robot0:geomMat" rgba="1 1 1 1" solimp="0.99 0.99 0.01" solref="0.01 1" type="mesh" user="0"></geom>
+            <joint armature="1" damping="50" frictionloss="0" stiffness="0"></joint>
+            
+            <default class="robot0:fetchGripper">
+                <geom condim="4" margin="0.001" type="box" user="0" rgba="0.356 0.361 0.376 1.0"></geom>
+                <joint armature="100" damping="1000" limited="true" solimplimit="0.99 0.999 0.01" solreflimit="0.01 1" type="slide"></joint>
+            </default>
+
+            <default class="robot0:grey">
+                <geom rgba="0.356 0.361 0.376 1.0"></geom>
+            </default>
+            <default class="robot0:blue">
+                <geom rgba="0.086 0.506 0.767 1.0"></geom>
+            </default>
+        </default>
+    </default>
+
+    <worldbody>
+        <geom name="floor0" pos="0.8 0.75 0" size="0.85 0.7 1" type="plane" condim="3" material="floor_mat"></geom>
+		<body name="floor0" pos="0.8 0.75 0">
+			<site name="target0" pos="0 0 0.5" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"></site>
+		</body>
+
+        <!--Gripper-->
+        <body name="pole" pos="1.3 0.75 0.6" quat="1 0 0 0">
+            <geom name="pole" fromto="0 0 0 0 0 0.1" rgba="0 0.7 0.7 1" size="0.04" type="cylinder" />
+            <inertial pos="0 0 0.05" quat="1 0 0 0" mass="2" diaginertia="0.0028 0.0028 0.0024" /> <!--https://en.wikipedia.org/wiki/List_of_moments_of_inertia-->
+            <joint name="pole:xslide" type="slide" axis="1 0 0" pos="0 0 0" limited="true" range="-1 1" />
+            <joint name="pole:yslide" type="slide" axis="0 1 0" pos="0 0 0" limited="true" range="-1 1" />
+            <joint name="pole:zslide" type="slide" axis="0 0 1" pos="0 0 0" limited="true" range="-1 1" />
+            
+            <body name="robot0:gripper_link" pos="0 0 -0.1" quat="0.707 0 0.707 0">
+                <inertial diaginertia="0.0024 0.0019 0.0013" mass="1.5175" pos="-0.09 -0.0001 -0.0017" quat="0 0.7071 0 0.7071"></inertial>
+                <geom mesh="robot0:gripper_link" name="robot0:gripper_link" material="robot0:gripper_mat"></geom>
+
+                <!--Right finger-->
+                <body childclass="robot0:fetchGripper" name="robot0:r_gripper_finger_link" pos="0 0.0159 0">
+                    <inertial diaginertia="0.1 0.1 0.1" mass="4" pos="-0.01 0 0"></inertial>
+                    <joint axis="0 1 0" name="robot0:r_gripper_finger_joint" range="0 0.05"></joint>
+                    <geom pos="0 -0.008 0" size="0.0385 0.007 0.0135" type="box" name="robot0:r_gripper_finger_link"
+                        material="robot0:gripper_finger_mat" condim="4" friction="1 0.05 0.01" rgba="0 0.7 0.7 1"></geom>
+                </body>
+                <!--Left finger-->
+                <body childclass="robot0:fetchGripper" name="robot0:l_gripper_finger_link" pos="0 -0.0159 0">
+                    <inertial diaginertia="0.1 0.1 0.1" mass="4" pos="-0.01 0 0"></inertial>
+                    <joint axis="0 -1 0" name="robot0:l_gripper_finger_joint" range="0 0.05"></joint>
+                    <geom pos="0 0.008 0" size="0.0385 0.007 0.0135" type="box" name="robot0:l_gripper_finger_link" 
+                        material="robot0:gripper_finger_mat" condim="4" friction="1 0.05 0.01" rgba="0.7 0.7 1 1"></geom>
+                </body>
+            </body>
+        </body>
+
+        <!--Table-->
+        <body pos="1.3 0.75 0.2" name="table0">
+			<geom size="0.25 0.35 0.2" type="box" mass="2000" material="table_mat" condim="4"></geom>
+		</body>
+
+        <!--Object-->
+        <body name="box" pos="1.3 0.75 0.45">
+        <!-- contype="1" conaffinity="1" friction="1 0.1 0.002" condim="4" -->
+            <!-- <geom type="mesh" pos = "0 0 -0.005" rgba="0.7 0.7 0.7 1" mesh="mug" material="light_wood" 
+                condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.05" friction="1 0.1 0.002"
+            /> -->
+            <geom type="box" pos="0 0 -0.005" condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.05" size="0.025 0.025 0.025"
+                friction="1 0.1 0.002" rgba="0 0.7 0.7 1"
+            />
+            <!-- <geom type="sphere" pos="0 0 -0.005" condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.05" size="0.025"
+                friction="1 0.1 0.002" rgba="0 0.7 0.7 1"
+            /> -->
+            <!-- <inertial /> -->
+            <joint name="box" type="free" limited="false" damping="0.0" armature="0" />
+        </body>
+
+    </worldbody>
+
+    <!--Define actuators-->
+    <actuator>
+        <!--Pole-->
+        <motor name="xslide" joint="pole:xslide" ctrllimited="true" ctrlrange="-1000 1000" />
+        <motor name="yslide" joint="pole:yslide" ctrllimited="true" ctrlrange="-1000 1000" />
+        <motor name="zslide" joint="pole:zslide" ctrllimited="true" ctrlrange="-1000 1000" />
+        <!--Gripper-->
+        <motor name="robot0:r_gripper_finger_joint" joint="robot0:r_gripper_finger_joint" ctrllimited="true" ctrlrange="-100 100" />
+        <motor name="robot0:l_gripper_finger_joint" joint="robot0:l_gripper_finger_joint" ctrllimited="true" ctrlrange="-100 100" />
+    </actuator>
+
+</mujoco>
