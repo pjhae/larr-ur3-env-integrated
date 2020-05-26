@@ -2,7 +2,7 @@
 
 <mujoco model="flyinggripper">
     <include file="shared_config.xml"/>
-    <include file="robotiq85_gripper_constraints.xml"/>
+    <!-- <include file="robotiq85_gripper_constraints.xml"/> -->
 
     <worldbody>
 
@@ -17,18 +17,22 @@
             <joint name="pole:zslide" type="slide" axis="0 0 1" pos="0 0 0" limited="true" range="-1 1" />
             
             <body name="ee_link" pos="0 0 0" quat="0 0 1 0">
-                <include file="robotiq85_gripper.xml" />
+                <!-- <include file="robotiq85_gripper.xml" /> -->
+                <include file="simple_gripper.xml" />
             </body>
         </body>>
 
         <body name="mug" pos="0 0 0.02">
         <!-- contype="1" conaffinity="1" friction="1 0.1 0.002" condim="4" -->
             <!-- <geom type="mesh" pos = "0 0 -0.005" rgba="0.7 0.7 0.7 1" mesh="mug" material="light_wood" 
-                condim="4" solimp="0.99 0.99 0.01" solref="0.01 1" mass="0.05"
+                condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.05" friction="1 0.1 0.002"
             /> -->
-            <geom type="box" pos="0 0 -0.005" condim="4" solimp="0.99 0.99 0.01" solref="0.01 1" mass="0.05" size="0.025 0.025 0.025"
-                friction="5 0.1 0.002"
+            <geom type="box" pos="0 0 -0.005" condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.05" size="0.025 0.025 0.025"
+                friction="1 0.1 0.002" rgba="0 0.7 0.7 1"
             />
+            <!-- <geom type="sphere" pos="0 0 -0.005" condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.05" size="0.025"
+                friction="1 0.1 0.002" rgba="0 0.7 0.7 1"
+            /> -->
             <!-- <inertial /> -->
             <joint name="mug" type="free" limited="false" damping="0.0" armature="0" />
         </body>
@@ -50,8 +54,12 @@
         <motor name="yslide" joint="pole:yslide" ctrllimited="true" ctrlrange="-1000 1000" />
         <motor name="zslide" joint="pole:zslide" ctrllimited="true" ctrlrange="-1000 1000" />
         <!--Gripper-->
-        <position name="close_r" joint="joint7_1" ctrllimited="true" ctrlrange="-10 10" kp="3"/>
-        <position name="close_l" joint="joint7_2" ctrllimited="true" ctrlrange="-10 10" kp="3"/>
+        <!-- <position name="close_r" joint="joint7_1" ctrllimited="true" ctrlrange="-10 10" kp="3"/>
+        <position name="close_l" joint="joint7_2" ctrllimited="true" ctrlrange="-10 10" kp="3"/> -->
+        <!-- <motor name="close_r" joint="joint7_1" ctrllimited="true" ctrlrange="-10 10" />
+        <motor name="close_l" joint="joint7_2" ctrllimited="true" ctrlrange="-10 10" /> -->
+        <motor name="close_r" joint="right_block" ctrllimited="true" ctrlrange="-100 100" />
+        <motor name="close_l" joint="left_block" ctrllimited="true" ctrlrange="-100 100" />
     </actuator>
     
 </mujoco>
