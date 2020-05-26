@@ -263,78 +263,106 @@ def gripper_grasp_test():
     scale = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
     env = PositionControlWrapperwithGripper(env, control_gains=PID_gains, scale_factor=scale, ndof=3, ngripperdof=2)
 
+    num_pole_joints, num_pole_jointvels = 3, 3
+    num_gripper_joints, num_gripper_jointvels = 2, 2
+    num_object_joints, num_object_jointvels = 7, 6
+    num_qpos = [num_pole_joints, num_gripper_joints, num_object_joints]
+    num_qvel = [num_pole_jointvels, num_gripper_jointvels, num_object_jointvels]
+
     # Open gripper
     for t in range(int(5/dt)):
         pole_xyz = np.array([0.0, 0.0, -0.04])
-        gripper_pos = -1
+        # gripper_pos = -1
+        gripper_pos = -2
+        gripper_pos = 0
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
-        pole, pole_dot = qpos[:3], qvel[:3]
-        gripper, gripper_dot = qpos[3:11], qvel[3:11]
-        mug, mug_dot = qpos[11:18], qvel[11:17]
+        pole, pole_dot = qpos[:sum(num_qpos[:1])], qvel[:sum(num_qvel[:1])]
+        gripper, gripper_dot = qpos[sum(num_qpos[:1]):sum(num_qpos[:2])], qvel[sum(num_qvel[:1]):sum(num_qvel[:2])]
+        mug, mug_dot = qpos[sum(num_qpos[:2]):sum(num_qpos[:3])], qvel[sum(num_qvel[:2]):sum(num_qvel[:3])]
 
         env.render()
         print('time: %.2f'%(t*dt))
         print('  pole_pos: %s (m)'%(pole))
         print('  pole_vel: %s (m/s)'%(pole_dot))
-        print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:3]))
-        print('  gripper_pos: %s (degrees)'%(gripper[[0,4]]*180/np.pi))
-        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,4]]*180/np.pi))
-        print('  pole_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[3,7]]))
+        print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:sum(num_qpos[:1])]))
+        print('  gripper_pos: %s (degrees)'%(gripper[[0,num_gripper_joints-1]]*180/np.pi))
+        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,num_gripper_jointvels-1]]*180/np.pi))
+        print('  gripper_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
         time.sleep(dt)
 
     # Close gripper
     for t in range(int(5/dt)):
         pole_xyz = np.array([0.0, 0.0, -0.04])
-        gripper_pos = 1
+        # gripper_pos = 1
+        gripper_pos = 20
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
-        pole, pole_dot = qpos[:3], qvel[:3]
-        gripper, gripper_dot = qpos[3:11], qvel[3:11]
-        mug, mug_dot = qpos[11:18], qvel[11:17]
+        pole, pole_dot = qpos[:sum(num_qpos[:1])], qvel[:sum(num_qvel[:1])]
+        gripper, gripper_dot = qpos[sum(num_qpos[:1]):sum(num_qpos[:2])], qvel[sum(num_qvel[:1]):sum(num_qvel[:2])]
+        mug, mug_dot = qpos[sum(num_qpos[:2]):sum(num_qpos[:3])], qvel[sum(num_qvel[:2]):sum(num_qvel[:3])]
 
         env.render()
         print('time: %.2f'%(t*dt))
         print('  pole_pos: %s (m)'%(pole))
         print('  pole_vel: %s (m/s)'%(pole_dot))
-        print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:3]))
-        print('  gripper_pos: %s (degrees)'%(gripper[[0,4]]*180/np.pi))
-        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,4]]*180/np.pi))
-        print('  pole_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[3,7]]))
+        print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:sum(num_qpos[:1])]))
+        print('  gripper_pos: %s (degrees)'%(gripper[[0,num_gripper_joints-1]]*180/np.pi))
+        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,num_gripper_jointvels-1]]*180/np.pi))
+        print('  gripper_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
         time.sleep(dt)
 
     # Lift gripper
-    for t in range(int(5/dt)):
+    for t in range(int(10/dt)):
         pole_xyz = np.array([0.0, 0.0, 0.20])
-        gripper_pos = 1
+        # gripper_pos = 1
+        gripper_pos = 50
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
-        pole, pole_dot = qpos[:3], qvel[:3]
-        gripper, gripper_dot = qpos[3:11], qvel[3:11]
-        mug, mug_dot = qpos[11:18], qvel[11:17]
+        pole, pole_dot = qpos[:sum(num_qpos[:1])], qvel[:sum(num_qvel[:1])]
+        gripper, gripper_dot = qpos[sum(num_qpos[:1]):sum(num_qpos[:2])], qvel[sum(num_qvel[:1]):sum(num_qvel[:2])]
+        mug, mug_dot = qpos[sum(num_qpos[:2]):sum(num_qpos[:3])], qvel[sum(num_qvel[:2]):sum(num_qvel[:3])]
 
         env.render()
         print('time: %.2f'%(t*dt))
         print('  pole_pos: %s (m)'%(pole))
         print('  pole_vel: %s (m/s)'%(pole_dot))
-        print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:3]))
-        print('  gripper_pos: %s (degrees)'%(gripper[[0,4]]*180/np.pi))
-        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,4]]*180/np.pi))
-        print('  pole_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[3,7]]))
+        print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:sum(num_qpos[:1])]))
+        print('  gripper_pos: %s (degrees)'%(gripper[[0,num_gripper_joints-1]]*180/np.pi))
+        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,num_gripper_jointvels-1]]*180/np.pi))
+        print('  gripper_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
         time.sleep(dt)
 
-    time.sleep(120)  
+    # Release gripper
+    for t in range(int(5/dt)):
+        pole_xyz = np.array([0.0, 0.0, 0.20])
+        gripper_pos = -1
+        desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
+        obs, _, _, _ = env.step(desired_values)
+        qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
+        pole, pole_dot = qpos[:sum(num_qpos[:1])], qvel[:sum(num_qvel[:1])]
+        gripper, gripper_dot = qpos[sum(num_qpos[:1]):sum(num_qpos[:2])], qvel[sum(num_qvel[:1]):sum(num_qvel[:2])]
+        mug, mug_dot = qpos[sum(num_qpos[:2]):sum(num_qpos[:3])], qvel[sum(num_qvel[:2]):sum(num_qvel[:3])]
+        
+        env.render()
+        print('time: %.2f'%(t*dt))
+        print('  pole_pos: %s (m)'%(pole))
+        print('  pole_vel: %s (m/s)'%(pole_dot))
+        print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:sum(num_qpos[:1])]))
+        print('  gripper_pos: %s (degrees)'%(gripper[[0,num_gripper_joints-1]]*180/np.pi))
+        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,num_gripper_jointvels-1]]*180/np.pi))
+        print('  gripper_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
+        time.sleep(dt)
+
+    time.sleep(120)
 
 def grasp_mug():
     pass
 
 if __name__ == '__main__':
-    time.sleep(3)
-    print('Press record!')
-    time.sleep(6.0)
     # random_action()
     # set_home()
     # set_theta()
