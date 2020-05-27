@@ -264,16 +264,16 @@ def gripper_grasp_test():
     env = PositionControlWrapperwithGripper(env, control_gains=PID_gains, scale_factor=scale, ndof=3, ngripperdof=2)
 
     num_pole_joints, num_pole_jointvels = 3, 3
-    num_gripper_joints, num_gripper_jointvels = 2, 2
+    num_gripper_joints, num_gripper_jointvels = 8+2, 8+2
     num_object_joints, num_object_jointvels = 7, 6
     num_qpos = [num_pole_joints, num_gripper_joints, num_object_joints]
     num_qvel = [num_pole_jointvels, num_gripper_jointvels, num_object_jointvels]
 
+    assert sum(num_qpos) == env.env.model.nq and sum(num_qvel) == env.env.model.nv, 'Check num_qpos and num_qvel'
+
     # Open gripper
-    for t in range(int(5/dt)):
-        pole_xyz = np.array([0.0, 0.0, -0.04])
-        # gripper_pos = -1
-        gripper_pos = -2
+    for t in range(int(30/dt)):
+        pole_xyz = np.array([0.0, 0.0, 0.0])
         gripper_pos = 0
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
@@ -293,10 +293,9 @@ def gripper_grasp_test():
         time.sleep(dt)
 
     # Close gripper
-    for t in range(int(5/dt)):
+    for t in range(int(10/dt)):
         pole_xyz = np.array([0.0, 0.0, -0.04])
-        # gripper_pos = 1
-        gripper_pos = 20
+        gripper_pos = 10
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
@@ -315,10 +314,9 @@ def gripper_grasp_test():
         time.sleep(dt)
 
     # Lift gripper
-    for t in range(int(10/dt)):
+    for t in range(int(30/dt)):
         pole_xyz = np.array([0.0, 0.0, 0.20])
-        # gripper_pos = 1
-        gripper_pos = 50
+        gripper_pos = 10
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
