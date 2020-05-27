@@ -85,6 +85,15 @@ register(
     reward_threshold=0.0,
 )
 
+# Practice3 environments
+#
+register(
+    id='Practice3-gripper-v0',
+    entry_point='gym_custom.envs.custom:PracticeEnv3',
+    max_episode_steps=1000,
+    reward_threshold=0.0,
+)
+
 # UR3 environments
 #
 register(
