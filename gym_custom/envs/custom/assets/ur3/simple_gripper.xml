@@ -25,7 +25,7 @@
     </body> -->
 
     <!--Mesh finger-->
-    <!--Right finder-->
+    <!--Right finger-->
     <body name="right_finger" quat="0.707 0 -0.707 0">
         <geom name="right_tip" rgba = "1 0 1 1" pos="0.1 -0.045 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" 
                     condim="4" solimp="0.99 0.99 0.01" solref="0.01 1" friction="5 0.1 0.002"
