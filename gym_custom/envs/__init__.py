@@ -117,6 +117,13 @@ register(
     reward_threshold=0.0,
 )
 
+register(
+    id='dual-ur3-larr-v0',
+    entry_point='gym_custom.envs.custom:DualUR3Env',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
 # Grippers
 #
 register(
