@@ -29,7 +29,7 @@
             <!-- <geom type="mesh" pos = "0 0 -0.005" rgba="0.7 0.7 0.7 1" mesh="mug" material="light_wood" 
                 condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.05" friction="1 0.1 0.002"
             /> -->
-            <geom type="box" pos="0.3 0.3 -0.005" condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.5" size="0.025 0.025 0.025"
+            <geom type="box" pos="0.3 0.3 -0.005" condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.1" size="0.025 0.025 0.025"
                 friction="1 0.1 0.002" rgba="0 0.7 0.7 1"
             />
             <!-- <geom type="sphere" pos="0 0 -0.005" condim="4" solimp="0.99 0.99 0.01" solref="0.02 1.2" mass="0.05" size="0.025"
@@ -70,8 +70,8 @@
         <motor name="close_l" joint="left_block" ctrllimited="true" ctrlrange="-100 100" /> -->
 
         <!--3. robotiq gripper (jgkim)-->
-        <motor joint="right_fingertip:slide:control" name="close_r" ctrlrange="-100 100" />
-        <motor joint="left_fingertip:slide:control" name="close_l" ctrlrange="-100 100" />
+        <motor joint="right_fingertip:slide:control" name="close_r" ctrlrange="-10 50" />
+        <motor joint="left_fingertip:slide:control" name="close_l" ctrlrange="-10 50" />
 
     </actuator>
     

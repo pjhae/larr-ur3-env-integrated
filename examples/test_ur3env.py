@@ -272,9 +272,9 @@ def gripper_grasp_test():
     assert sum(num_qpos) == env.env.model.nq and sum(num_qvel) == env.env.model.nv, 'Check num_qpos and num_qvel'
 
     # Open gripper
-    for t in range(int(30/dt)):
+    for t in range(int(10/dt)):
         pole_xyz = np.array([0.0, 0.0, 0.0])
-        gripper_pos = 0
+        gripper_pos = -100
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
@@ -287,15 +287,15 @@ def gripper_grasp_test():
         print('  pole_pos: %s (m)'%(pole))
         print('  pole_vel: %s (m/s)'%(pole_dot))
         print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:sum(num_qpos[:1])]))
-        print('  gripper_pos: %s (degrees)'%(gripper[[0,num_gripper_joints-1]]*180/np.pi))
-        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,num_gripper_jointvels-1]]*180/np.pi))
-        print('  gripper_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
+        print('  gripper_pos: %s (m)'%(gripper[[2,num_gripper_joints-3]]))
+        print('  gripper_vel: %s (m/s)'%(gripper_dot[[2,num_gripper_jointvels-3]]))
+        # print('  gripper_bias: %s (N)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
         time.sleep(dt)
 
     # Close gripper
     for t in range(int(10/dt)):
-        pole_xyz = np.array([0.0, 0.0, -0.04])
-        gripper_pos = 10
+        pole_xyz = np.array([0.0, 0.0, -0.0]) # -0.04
+        gripper_pos = 100
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
@@ -308,15 +308,15 @@ def gripper_grasp_test():
         print('  pole_pos: %s (m)'%(pole))
         print('  pole_vel: %s (m/s)'%(pole_dot))
         print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:sum(num_qpos[:1])]))
-        print('  gripper_pos: %s (degrees)'%(gripper[[0,num_gripper_joints-1]]*180/np.pi))
-        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,num_gripper_jointvels-1]]*180/np.pi))
-        print('  gripper_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
+        print('  gripper_pos: %s (m)'%(gripper[[2,num_gripper_joints-3]]))
+        print('  gripper_vel: %s (m/s)'%(gripper_dot[[2,num_gripper_jointvels-3]]))
+        # print('  gripper_bias: %s (N)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
         time.sleep(dt)
 
     # Lift gripper
-    for t in range(int(30/dt)):
+    for t in range(int(10/dt)):
         pole_xyz = np.array([0.0, 0.0, 0.20])
-        gripper_pos = 10
+        gripper_pos = 100
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
@@ -329,15 +329,15 @@ def gripper_grasp_test():
         print('  pole_pos: %s (m)'%(pole))
         print('  pole_vel: %s (m/s)'%(pole_dot))
         print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:sum(num_qpos[:1])]))
-        print('  gripper_pos: %s (degrees)'%(gripper[[0,num_gripper_joints-1]]*180/np.pi))
-        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,num_gripper_jointvels-1]]*180/np.pi))
-        print('  gripper_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
+        print('  gripper_pos: %s (m)'%(gripper[[2,num_gripper_joints-3]]))
+        print('  gripper_vel: %s (m/s)'%(gripper_dot[[2,num_gripper_jointvels-3]]))
+        # print('  gripper_bias: %s (N)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
         time.sleep(dt)
 
     # Release gripper
-    for t in range(int(5/dt)):
+    for t in range(int(10/dt)):
         pole_xyz = np.array([0.0, 0.0, 0.20])
-        gripper_pos = -1
+        gripper_pos = -100
         desired_values = {'theta': pole_xyz, 'gripperpos': gripper_pos}
         obs, _, _, _ = env.step(desired_values)
         qpos, qvel = obs[:env.env.model.nq], obs[-env.env.model.nv:]
@@ -350,9 +350,9 @@ def gripper_grasp_test():
         print('  pole_pos: %s (m)'%(pole))
         print('  pole_vel: %s (m/s)'%(pole_dot))
         print('  pole_bias: %s (N)'%(env.sim.data.qfrc_bias[:sum(num_qpos[:1])]))
-        print('  gripper_pos: %s (degrees)'%(gripper[[0,num_gripper_joints-1]]*180/np.pi))
-        print('  gripper_vel: %s (dps)'%(gripper_dot[[0,num_gripper_jointvels-1]]*180/np.pi))
-        print('  gripper_bias: %s (Nm)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
+        print('  gripper_pos: %s (m)'%(gripper[[2,num_gripper_joints-3]]))
+        print('  gripper_vel: %s (m/s)'%(gripper_dot[[2,num_gripper_jointvels-3]]))
+        # print('  gripper_bias: %s (N)'%(env.sim.data.qfrc_bias[[sum(num_qvel[:1]),sum(num_qvel[:2])]]))
         time.sleep(dt)
 
     time.sleep(120)

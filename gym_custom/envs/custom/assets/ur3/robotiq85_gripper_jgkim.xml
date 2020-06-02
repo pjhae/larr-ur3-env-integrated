@@ -34,7 +34,7 @@
             
             <body name="right_follower_link" pos="0.0475 -0.006 0">
                 <!-- <joint name="right_fingertip:rot:free" axis="0 0 1" type="hinge" limited="true" range="-1.57 2.967059728" /> -->
-                <joint name="right_fingertip:slide:control" type="slide" axis="0 1 0" pos="0 0 0" limited="true" range="-1 1" />
+                <joint name="right_fingertip:slide:control" type="slide" axis="0 1 0" pos="0 0 0" limited="true" range="-0.0025 0.04" />
                 <joint name="right_fingertip:slide:free" type="slide" axis="1 0 0" pos="0 0 0" limited="true" range="-1 1" />
 
                 <geom name="right_follower_mesh" rgba = "1 0 1 1" pos="0.0025 0.021 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" 
@@ -71,7 +71,7 @@
 
             <body name="left_follower_link" pos="0.0475 -0.006 0">
                 <!-- <joint name="joint9_2" axis="0 0 1" type="hinge" limited="true" range="-1.57 2.967059728" /> -->
-                <joint name="left_fingertip:slide:control" type="slide" axis="0 1 0" pos="0 0 0" limited="true" range="-1 1" />
+                <joint name="left_fingertip:slide:control" type="slide" axis="0 1 0" pos="0 0 0" limited="true" range="-0.0025 0.04" />
                 <joint name="left_fingertip:slide:free" type="slide" axis="1 0 0" pos="0 0 0" limited="true" range="-1 1" />
 
                 <geom name="left_follower_mesh" pos="0.0025 0.021 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" 
