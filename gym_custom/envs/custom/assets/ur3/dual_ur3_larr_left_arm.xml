@@ -33,7 +33,7 @@
                                 
                                 <body name="left_ee_link" pos="0 0.0819 0" euler = "-1.570796 0 0"> <!--name was ee_link--> <!--euler = "-1.570796 0 0"-->
                                     <!--Import Robotiq 2F-85 Gripper-->
-                                    <!-- <include file="robotiq85_gripper.xml"/>  -->
+                                    <include file="dual_ur3_larr_left_hand.xml"/> 
                                 </body>
 
                             </body>

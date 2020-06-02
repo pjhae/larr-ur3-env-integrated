@@ -2,7 +2,7 @@
 
 <mujoco model="dual ur3 larr">
     <include file="dual_ur3_configs.xml"/>
-    <!-- <include file="dual_ur3_constraints.xml"/> -->
+    <include file="dual_ur3_constraints.xml"/>
 
     <worldbody>
         <camera pos="0 0 3.2" name="topview" /> <!--Remove?-->
@@ -108,7 +108,7 @@
 
     <!--Define actuators-->
     <actuator>
-        <!--https://www.universal-robots.com/articles/ur-articles/max-joint-torques/-->
+        <!--UR3 (https://www.universal-robots.com/articles/ur-articles/max-joint-torques/)-->
         <motor name="right_shoulder_pan_joint" joint="right_shoulder_pan_joint" ctrlrange="-50 50" />
         <motor name="right_shoulder_lift_joint" joint="right_shoulder_lift_joint" ctrlrange="-50 50" />
         <motor name="right_elbow_joint" joint="right_elbow_joint" ctrlrange="-25 25" />
@@ -121,6 +121,12 @@
         <motor name="left_wrist_1_joint" joint="left_wrist_1_joint" ctrlrange="-10 10" />
         <motor name="left_wrist_2_joint" joint="left_wrist_2_joint" ctrlrange="-10 10" />
         <motor name="left_wrist_3_joint" joint="left_wrist_3_joint" ctrlrange="-10 10" />
+        
+        <!--Gripper-->
+        <motor name="right_close_r" joint="right_gripper:right_fingertip:slide:control" ctrlrange="-10 50" />
+        <motor name="right_close_l" joint="right_gripper:left_fingertip:slide:control" ctrlrange="-10 50" />
+        <motor name="left_close_r" joint="left_gripper:right_fingertip:slide:control" ctrlrange="-10 50" />
+        <motor name="left_close_l" joint="left_gripper:left_fingertip:slide:control" ctrlrange="-10 50" />
     </actuator>
 
 </mujoco>

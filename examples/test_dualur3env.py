@@ -11,10 +11,25 @@ def run_dual_ur3():
 
     for _ in range(int(60/dt)):
         action = env.action_space.sample()
-        action = np.zeros_like(action)
+        # action = np.zeros_like(action)
         obs, _, _, _ = env.step(action)
         env.render()
         time.sleep(dt)
 
+def servoj_and_forceg():
+    env = gym_custom.make('dual-ur3-larr-v0')
+    obs = env.reset()
+    dt = env.dt
+
+def speedj_and_forceg():
+    env = gym_custom.make('dual-ur3-larr-v0')
+    obs = env.reset()
+    dt = env.dt
+
+def pick_and_place():
+    pass
+
 if __name__ == '__main__':
-    run_dual_ur3()
+    # run_dual_ur3()
+    # servoj_and_forceg()
+    speedj_and_forceg()
