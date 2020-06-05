@@ -18,11 +18,11 @@
     <!--1.-->
     <!--Right finger-->
     <body name="left_gripper:right_driver" pos="0 -0.0306011 0.054904" quat="0.707107 0 -0.707107 0">
-        <geom name="left_gripper:right_driver_mesh" rgba = "1 1 1 1" type="mesh" mesh="robotiq_85_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+        <geom name="left_gripper:right_driver_mesh" type="mesh" mesh="robotiq_85_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
         <joint name="left_gripper:joint7_1" axis="0 0 1"  type="hinge" limited="true" range="-0.6 0.7" armature="1.0" />
                                                 
         <body name="left_gripper:right_coupler" pos="0 -0.0315 0">
-            <geom name="left_gripper:right_coupler_mesh" rgba = "0 1 1 1" type="mesh" mesh="robotiq_85_finger_link" material="GriMat" contype="0" conaffinity="0" />
+            <geom name="left_gripper:right_coupler_mesh" type="mesh" mesh="robotiq_85_finger_link" material="GriMat" contype="0" conaffinity="0" />
             <joint name="left_gripper:joint8_1" axis="0 0 1" type="hinge" limited="true" range="-1.57 2.967059728" />
 
         </body>
@@ -37,7 +37,7 @@
                 <joint name="left_gripper:right_fingertip:slide:control" type="slide" axis="0 1 0" pos="0 0 0" limited="true" range="-0.0025 0.04" />
                 <joint name="left_gripper:right_fingertip:slide:free" type="slide" axis="1 0 0" pos="0 0 0" limited="true" range="-0.1 0.1" />
 
-                <geom name="left_gripper:right_follower_mesh" rgba = "1 0 1 1" pos="0.0025 0.021 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" 
+                <geom name="left_gripper:right_follower_mesh" pos="0.0025 0.021 0" type="mesh" mesh="robotiq_85_finger_tip_link" material="GriMat" 
                     condim="4" solimp="0.99 0.99 0.01" solref="0.01 1" friction="5 0.1 0.002" />
                 <site name="left_gripper:rightEndEffector" pos="0.004 0.0175 0" size="0.01" rgba="1.0 0.0 0.0 1.0"/>
             </body>
@@ -47,7 +47,7 @@
     </body>
     <!--Loop closing link-->
     <body name="left_gripper:right_spring_link" pos="0.0016 -0.012 0.0614" quat="0.707107 0 -0.707107 0">
-        <geom name="left_gripper:right_spring_mesh" rgba = "1 1 0 1" type="mesh" pos="0 -0.0005 0.0016" mesh="robotiq_85_inner_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
+        <geom name="left_gripper:right_spring_mesh" type="mesh" pos="0 -0.0005 0.0016" mesh="robotiq_85_inner_knuckle_link" material="GriMat" contype="0" conaffinity="0" />
         <joint name="left_gripper:joint10_1" axis="0 0 1" type="hinge" limited="true" range="0 1.57" />
     </body>
 

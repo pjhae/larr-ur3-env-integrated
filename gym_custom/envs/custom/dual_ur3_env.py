@@ -22,9 +22,9 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-            np.array([-90.0, -90.0, -90.0, -45.0, 225.0, 0.0])*np.pi/180.0 # right arm
+            np.array([-90.0, -90.0, -90.0, -90.0, -135.0, 90.0])*np.pi/180.0 # right arm
         self.init_qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos] = \
-            np.array([90.0, -90.0, 90.0, 225.0, 135.0, 0.0])*np.pi/180.0 # left arm
+            np.array([90.0, -90.0, 90.0, -90.0, 135.0, -90.0])*np.pi/180.0 # left arm
         
         # Settings for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/

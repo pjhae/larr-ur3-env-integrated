@@ -78,12 +78,12 @@
             <geom name="/home/jgkim-larr/RL/gym-custom/utils/out/test_convex9.stl" pos="0 0 0" type="mesh" contype="1" conaffinity="0" group="0" rgba="0.2 0.2 0.2 0" mesh="/home/jgkim-larr/RL/gym-custom/utils/out/test_convex9.stl"/>
         
             <body name="right_arm_roty" pos="0.160612 0 1.189287" quat="0.382683 0 0.923880 0">
-                <body name="right_arm_rotz" quat="0.707 0 0 0.707">
+                <body name="right_arm_rotz" quat="1 0 0 0">
                     <include file="dual_ur3_larr_right_arm.xml"/>
                 </body>
             </body>
             <body name="left_arm_roty" pos="-0.160612 0 1.189287" quat="0.382683 0 -0.923880 0">
-                <body name="left_arm_rotz" quat="0.707 0 0 0.707">
+                <body name="left_arm_rotz" quat="1 0 0 0">
                     <include file="dual_ur3_larr_left_arm.xml"/>
                 </body>
             </body>
