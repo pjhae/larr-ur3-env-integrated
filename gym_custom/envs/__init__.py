@@ -94,6 +94,15 @@ register(
     reward_threshold=0.0,
 )
 
+# Practice environments
+#
+register(
+    id='Practice4-v0',
+    entry_point='gym_custom.envs.custom:PracticeEnv4',
+    max_episode_steps=1000,
+    reward_threshold=0.0,
+)
+
 # UR3 environments
 #
 register(

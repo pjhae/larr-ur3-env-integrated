@@ -116,3 +116,34 @@ class PracticeEnv3(MujocoEnv, utils.EzPickle):
         v = self.viewer
         v.cam.trackbodyid = 0
         v.cam.distance = self.model.stat.extent
+
+
+class PracticeEnv4(MujocoEnv, utils.EzPickle):
+
+    def __init__(self):
+        fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'practice', 'practice4_kinematics.xml')
+        MujocoEnv.__init__(self, fullpath, 1)
+        utils.EzPickle.__init__(self)
+
+    def step(self, action):
+        reward = 1.0
+        self.do_simulation(action, self.frame_skip)
+        ob = self._get_obs()
+        notdone = np.isfinite(ob).all()
+        done = not notdone
+        return ob, reward, done, {}
+
+    def _get_obs(self):
+        return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
+
+    def reset_model(self):
+        self.set_state(
+            self.init_qpos + self.np_random.uniform(low=-.1, high=.1, size=self.model.nq)*0.0,
+            self.init_qvel + self.np_random.randn(self.model.nv) * .1*0.0
+        )
+        return self._get_obs()
+
+    def viewer_setup(self):
+        v = self.viewer
+        v.cam.trackbodyid = 0
+        v.cam.distance = self.model.stat.extent
