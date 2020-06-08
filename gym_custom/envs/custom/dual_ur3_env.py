@@ -1,5 +1,8 @@
+import copy
 import numpy as np
 import os
+import warnings
+
 from gym_custom import utils
 from gym_custom.core import ActionWrapper
 from gym_custom.envs.mujoco import MujocoEnv
@@ -29,7 +32,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         # Settings for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
         self.kinematics_params = {}
-        self.kinematics_params['d'] = np.array([0.1519, 0, 0, 0.11235, 0.08535, 0.0819+0.12*0]) # in m
+        self.kinematics_params['d'] = np.array([0.1519, 0, 0, 0.11235, 0.08535, 0.0819+0.12*1]) # in m
         self.kinematics_params['a'] = np.array([0, -0.24365, -0.21325, 0, 0, 0]) # in m
         self.kinematics_params['alpha'] =np.array([np.pi/2, 0, 0, np.pi/2, -np.pi/2, 0]) # in rad
         self.kinematics_params['offset'] = np.array([0, 0, 0, 0, 0, 0])
@@ -94,54 +97,32 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
         return R, p, T
 
+    def forward_kinematics_ee(self, q, arm):
+        R, p, T = self.forward_kinematics_DH(q, arm)
+        return R[-1,:,:], p[-1,:], T[-1,:,:]
+
     def _jacobian_DH(self, q, arm):
         assert len(q) == self.ur3_nqpos
         epsilon = 1e-6
         epsilon_inv = 1/epsilon
-        _, _, ps = self.forward_kinematics_DH(q, arm)
+        _, ps, _ = self.forward_kinematics_DH(q, arm)
         p = ps[-1,:] # unperturbed position
 
         jac = np.zeros([3, self.ur3_nqpos])
         for i in range(self.ur3_nqpos):
             q_ = q.copy()
             q_[i] = q_[i] + epsilon
-            _, _, ps_ = self.forward_kinematics_DH(q_, arm)
+            _, ps_, _ = self.forward_kinematics_DH(q_, arm)
             p_ = ps_[-1,:] # perturbed position
             jac[:, i] = (p_ - p)*epsilon_inv
 
         return jac
 
-    def forward_kinematics(self, body_name):
-        # assert len(q) == self.ur3_nqpos
-        body_idx = self.model.body_names.index(body_name)
-        R = self.sim.data.body_xmat[body_idx].reshape([3,3])
-        p = self.sim.data.body_xpos[body_idx]
-        T = np.eye(4)
-        T[0:3,0:3] = R
-        T[0:3,3] = p
-
-        return R, p, T
-
-    # def _jacobian(self, q, body_name):
-    #     assert len(q) == self.ur3_nqpos
-    #     epsilon = 1e-6
-    #     epsilon_inv = 1/epsilon
-    #     _, _, p = self.forward_kinematics(q, body_name) # unperturbed position
-
-    #     jac = np.zeros([3, self.ur3_nqpos])
-    #     for i in range(self.ur3_nqpos):
-    #         q_ = q.copy()
-    #         q_[i] = q_[i] + epsilon
-    #         _, _, p_ = self.forward_kinematics(q_, body_name) # perturbed position
-    #         jac[:, i] = (p_ - p)*epsilon_inv
-
-    #     return jac
-
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
             q_init='current', threshold=0.01, threshold_null=0.001, max_iter=100, epsilon=1e-6
         ):
         '''
-        inverse kinematics with forward_kinematics() and _jacobian()
+        inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
         '''
         # Set initial guess
         if arm == 'right':
@@ -159,11 +140,11 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
         arm_to_body_name = {'right': 'right_gripper:hand', 'left': 'left_gripper:hand'}
         
-        R, x, _ = self.forward_kinematics(q, arm_to_body_name[arm])
-        jac = self._jacobian(q, arm_to_body_name[arm])
+        SO3, x, _ = self.forward_kinematics_ee(q, arm)
+        jac = self._jacobian_DH(q, arm)
         delta_x = ee_pos - x
         err = np.linalg.norm(delta_x)
-        null_obj_val = null_obj_func(R)
+        null_obj_val = null_obj_func.evaluate(SO3)
         iter_taken = 0
 
         while True:
@@ -177,16 +158,17 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
             for i in range(self.ur3_nqpos):
                 q_perturb = q.copy()
                 q_perturb[i] += epsilon
-                null_obj_val_perturb = null_obj_func.evaluate(q_perturb)
+                SO3_perturb, _, _ = self.forward_kinematics_ee(q_perturb, arm)
+                null_obj_val_perturb = null_obj_func.evaluate(SO3_perturb)
                 phi[i] = (null_obj_val_perturb - null_obj_val)/epsilon
             # update
             delta_x = ee_pos - x
             delta_q = np.matmul(jac_dagger, delta_x) - np.matmul(jac_null, phi)
             q += delta_q
-            q = np.minimum(self.kinematic_params['ub'], np.maximum(q, self.kinematic_params['lb'])) # clip within theta bounds
-            R, x, _ = self.forward_kinematics(q, arm_to_body_name[arm])
-            jac = self._jacobian(q, arm_to_body_name[arm])
-            null_obj_val = null_obj_func(R)
+            q = np.minimum(self.kinematics_params['ub'], np.maximum(q, self.kinematics_params['lb'])) # clip within theta bounds
+            SO3, x, _ = self.forward_kinematics_ee(q, arm)
+            jac = self._jacobian_DH(q, arm)
+            null_obj_val = null_obj_func.evaluate(SO3)
             # evaluate
             err = np.linalg.norm(delta_x)
         
@@ -195,6 +177,17 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
                 RuntimeWarning)
         
         return q, iter_taken, err, null_obj_val
+
+    def get_body_se3(self, body_name):
+        # assert len(q) == self.ur3_nqpos
+        body_idx = self.model.body_names.index(body_name)
+        R = self.sim.data.body_xmat[body_idx].reshape([3,3])
+        p = self.sim.data.body_xpos[body_idx]
+        T = np.eye(4)
+        T[0:3,0:3] = R
+        T[0:3,3] = p
+
+        return R, p, T
 
     def _get_obs(self):
         return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
@@ -233,7 +226,9 @@ class URScriptWrapper(ActionWrapper):
     UR Script Wrapper for DualUR3Env
     '''
     def __init__(self, env, PID_gains, ur3_scale_factor, gripper_scale_factor):
-        
+        super().__init__(env)
+        self.ur3_scale_factor = np.concatenate([ur3_scale_factor, ur3_scale_factor])
+        self.gripper_scale_factor = np.concatenate([gripper_scale_factor, gripper_scale_factor])
         self.ndof, self.ngripperdof = ur3_scale_factor.shape[0], gripper_scale_factor.shape[0]
         self.scale_factor_ur3 = np.concatenate([ur3_scale_factor, ur3_scale_factor])
         self.scale_factor_gripper = np.concatenate([gripper_scale_factor, gripper_scale_factor])
@@ -247,12 +242,12 @@ class URScriptWrapper(ActionWrapper):
 
     def action(self, ur_command, relative=False):
         ur3_command_type_list = ['servoj', 'speedj']
-        gripper_command_type_list = ['position', 'velocity', 'force']
+        gripper_command_type_list = ['positiong', 'velocityg', 'forceg']
 
-        if ur3_command_type != ur_command['ur3']['type']:
+        if self.ur3_command_type != ur_command['ur3']['type']:
             self.ur3_err_integ = 0.0 # Clear integration term after command type change
             self.ur3_command_type = ur_command['ur3']['type']
-        if gripper_command_type != ur_command['gripper']['type']:
+        if self.gripper_command_type != ur_command['gripper']['type']:
             self.gripper_err_integ = 0.0
             self.gripper_command_type = ur_command['gripper']['type']
 
@@ -264,7 +259,7 @@ class URScriptWrapper(ActionWrapper):
         else:
             raise ValueError('Invalid UR3 command type!')
         # gripper commands
-        if gripper_command['gripper']['type'] == gripper_command_type_list[0]:
+        if ur_command['gripper']['type'] == gripper_command_type_list[0]:
             gripper_action = self._positiong(q=ur_command['gripper']['command'])
         elif ur_command['gripper']['type'] == gripper_command_type_list[1]:
             gripper_action = self._velocityg(qf=ur_command['gripper']['command'])
@@ -327,24 +322,41 @@ class URScriptWrapper(ActionWrapper):
 
     def _positiong(self, q):
         assert q.shape[0] == self.ngripperdof
-        bias = self.env._get_ur3_bias() # Internal forces
+        bias = self.env._get_gripper_bias() # Internal forces
         err = np.array([q[0], q[0], q[1], q[1]]) - self.env._get_gripper_qpos()
-        action = scale_factor_gripper*err + bias # P control
+        action = scale_factor_gripper*err + np.array([bias[2], bias[7], bias[12], bias[17]]) # P control
         return action
     
     def _velocityg(self, qd):
         assert q.shape[0] == self.ngripperdof
-        bias = self.env._get_ur3_bias() # Internal forces
+        bias = self.env._get_gripper_bias() # Internal forces
         err = np.array([qd[0], qd[0], qd[1], qd[1]]) - self.env._get_gripper_qvel()
-        action = scale_factor_gripper*err + bias # P control
+        action = scale_factor_gripper*err + np.array([bias[2], bias[7], bias[12], bias[17]]) # P control
         return action
 
     def _forceg(self, qf):
         assert qf.shape[0] == self.ngripperdof
-        bias = self.env._get_ur3_bias() # Internal forces
-        action = np.array([qf[0], qf[0], qf[1], qf[1]]) + bias
+        bias = self.env._get_gripper_bias() # Internal forces
+        action = np.array([qf[0], qf[0], qf[1], qf[1]]) + np.array([bias[2], bias[7], bias[12], bias[17]])
         return action
 
     def reset(self, **kwargs):
         self.err_integ = 0.0
         return self.env.reset(**kwargs)
+
+    
+class NullObjectiveBase(object):
+    '''
+    Base class for inverse kinematics null objective
+
+    Must overload __init__() and _evaluate()
+    '''
+
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def evaluate(self, SO3):
+        return self._evaluate(SO3)
+
+    def _evaluate(self, SO3):
+        raise NotImplementedError
