@@ -3,6 +3,25 @@ import numpy as np
 import time
 
 import gym_custom
+from gym_custom.envs.custom.dual_ur3_env import URScriptWrapper, NullObjectiveBase
+
+class NoConstraint(NullObjectiveBase):
+
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        return 0.0
+
+class UprightConstraint(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        axis_des = np.array([0, 0, -1])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
 
 def show_dual_ur3():
     env = gym_custom.make('dual-ur3-larr-v0')
@@ -50,28 +69,72 @@ def test_fkine_ikine():
     print('  pos: (DH) %s vs. (MjData) %s'%(ps[-1,:], p_hand))
     print('  rotMat: (DH) \n%s \nvs. \n  rotMat: (MjData) \n%s'%(Rs[-1,:,:], R_hand))
 
-def servoj_and_forceg():
+def servoj_and_forceg(env_type='sim'):
+    assert env_type in ['sim', 'real']
+
     env = gym_custom.make('dual-ur3-larr-v0')
     obs = env.reset()
     dt = env.dt
 
-    for _ in range():
-        pass
+    null_obj_func = UprightConstraint()
 
-def speedj_and_forceg():
+    ee_pos_right = np.array([0.1, -0.5, 0.8])
+    ee_pos_left = np.array([-0.1, -0.5, 0.8])
+    q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
+    q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
+
+    qpos_des = env.init_qpos.copy()
+    qpos_des[0:env.ur3_nqpos] = q_right_des
+    qpos_des[env.ur3_nqpos+env.gripper_nqpos:2*env.ur3_nqpos+env.gripper_nqpos] = q_left_des
+    env.render()
+    time.sleep(5.0)
+    while True:
+        env.set_state(qpos_des, env.init_qvel)
+        env.render()
+
+    PID_gains = {'P': 1.0, 'I': 0.5, 'D': 0.2}
+    ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 4.0, 4.0, 1.0])*0.01
+    gripper_scale_factor = np.array([1.0, 1.0])
+    env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
+    
+    qpos_err, qvel = np.inf, np.inf
+    while qpos_err > 1e-1*180.0/np.pi and  qvel > 1e-2*180.0/np.pi:
+        command = {
+            'ur3': {'type': 'servoj', 'command': np.concatenate([q_right_des, q_left_des])},
+            'gripper': {'type': 'forceg', 'command': np.array([1.0, 1.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        print('right arm joint error [deg]: %f'%(right_err*180.0/np.pi))
+        print('left arm joint error [deg]: %f'%(left_err*180.0/np.pi))
+        time.sleep(1*dt)
+
+def speedj_and_forceg(env_type='sim'):
+    assert env_type in ['sim', 'real']
+
     env = gym_custom.make('dual-ur3-larr-v0')
     obs = env.reset()
     dt = env.dt
 
-    for _ in range():
+    PI_gains = {'P': 0.20, 'I': 5.0}
+    ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
+    gripper_scale_factor = np.array([1.0, 1.0])
+    URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
+
+    while qvel_err > 1e-2*180.0/np.pi:
         pass
 
-def pick_and_place():
+def pick_and_place(env_type='sim'):
+    assert env_type in ['sim', 'real']
+
     pass
 
 if __name__ == '__main__':
     # show_dual_ur3()
-    run_dual_ur3()
+    # run_dual_ur3()
     # test_fkine_ikine()
-    # servoj_and_forceg()
+    servoj_and_forceg()
     # speedj_and_forceg()
