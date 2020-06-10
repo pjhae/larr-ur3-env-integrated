@@ -230,8 +230,6 @@ class URScriptWrapper(ActionWrapper):
         self.ur3_scale_factor = np.concatenate([ur3_scale_factor, ur3_scale_factor])
         self.gripper_scale_factor = np.concatenate([gripper_scale_factor, gripper_scale_factor])
         self.ndof, self.ngripperdof = ur3_scale_factor.shape[0], gripper_scale_factor.shape[0]
-        self.scale_factor_ur3 = np.concatenate([ur3_scale_factor, ur3_scale_factor])
-        self.scale_factor_gripper = np.concatenate([gripper_scale_factor, gripper_scale_factor])
         assert self.ndof == self.env.ur3_nact/2 and self.ngripperdof == self.env.gripper_nact/2, 'DOF mismatch'
         
         self.PID_gains = copy.deepcopy(PID_gains)
