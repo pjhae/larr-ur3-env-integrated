@@ -99,9 +99,17 @@
             <geom name="leg4" type="cylinder" fromto="0.75 0.35 0.6 0.75 0.35 0" size="0.025" material="metal"/>
         </body>
 
-        <body name="object" pos="0 -0.6 1.5">
-            <geom name="box" type="box" size="0.02 0.02 0.02" rgba="0.7 0.7 0 1" />
-            <joint name="box" type="free" />
+        <body name="cube" pos="0.4 -0.6 1.0" quat="0.92388 0.22094 0.22094 0.22094">
+            <geom name="cube" type="box" size="0.02 0.02 0.02" rgba="0.7 0.7 0 1" />
+            <joint name="cube" type="free" damping="0" />
+        </body>
+
+        <body name="mug" pos="0 -0.4 0.6" >
+            <inertial pos="0 0 0.04" mass="0.2" diaginertia="0.001 0.001 0.001" />
+            <geom name="mug" type="mesh" pos="0 0 0.01" mesh="mug" material="light_wood" 
+                contype="1" conaffinity="1" friction="1 0.1 0.002" condim="4"
+            />
+            <joint name="mug" type="free" limited="false" />
         </body>
 
     </worldbody>

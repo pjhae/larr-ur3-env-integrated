@@ -16,8 +16,8 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'ur3', xml_filename)
         MujocoEnv.__init__(self, fullpath, 1)
 
-        self.ur3_nqpos, self.gripper_nqpos, self.objects_nqpos = 6, 10, [7]
-        self.ur3_nqvel, self.gripper_nqvel, self.objects_nqvel = 6, 10, [6]
+        self.ur3_nqpos, self.gripper_nqpos, self.objects_nqpos = 6, 10, [7, 7]
+        self.ur3_nqvel, self.gripper_nqvel, self.objects_nqvel = 6, 10, [6, 6]
         assert 2*self.ur3_nqpos + 2*self.gripper_nqpos + sum(self.objects_nqpos) == self.model.nq, 'Number of qpos elements mismatch'
         assert 2*self.ur3_nqvel + 2*self.gripper_nqvel + sum(self.objects_nqvel) == self.model.nv, 'Number of qvel elements mismatch'
         self.ur3_nact, self.gripper_nact = 12, 4
@@ -216,6 +216,10 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         return np.concatenate([self.sim.data.qfrc_bias[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel], 
             self.sim.data.qfrc_bias[2*self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+2*self.gripper_nqvel]]).ravel()
 
+    def _get_ur3_constraint(self):
+        return np.concatenate([self.sim.data.qfrc_constraint[0:self.ur3_nqvel], 
+            self.sim.data.qfrc_constraint[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+
     def viewer_setup(self):
         v = self.viewer
         v.cam.trackbodyid = 0
@@ -294,8 +298,11 @@ class URScriptWrapper(ActionWrapper):
         # Internal forces
         bias = self.env._get_ur3_bias()
 
+        # External forces
+        constraint = self.env._get_ur3_constraint()
+
         # PID controller
-        action = self.ur3_scale_factor*(self.PID_gains['P']*err + self.PID_gains['I']*self.ur3_err_integ + self.PID_gains['D']*err_dot) + bias
+        action = self.ur3_scale_factor*(self.PID_gains['P']*err + self.PID_gains['I']*self.ur3_err_integ + self.PID_gains['D']*err_dot) + bias - constraint*1
         return action
 
     def _speedj(self, qd, a, t=None):
@@ -314,8 +321,11 @@ class URScriptWrapper(ActionWrapper):
         # Internal forces
         bias = self.env._get_ur3_bias()
 
+        # External forces
+        constraint = self.env._get_ur3_constraint()
+
         # PID controller
-        action = self.ur3_scale_factor*(self.PID_gains['P']*err + self.PID_gains['I']*self.ur3_err_integ) + bias
+        action = self.ur3_scale_factor*(self.PID_gains['P']*err + self.PID_gains['I']*self.ur3_err_integ) + bias - constraint*1
         return action
 
     def _positiong(self, q):

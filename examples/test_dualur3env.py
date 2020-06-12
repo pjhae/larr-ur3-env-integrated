@@ -186,7 +186,176 @@ def speedj_and_forceg(env_type='sim'):
 def pick_and_place(env_type='sim'):
     assert env_type in ['sim', 'real']
 
-    pass
+    env = gym_custom.make('dual-ur3-larr-v0')
+    obs = env.reset()
+    dt = env.dt
+
+    null_obj_func = UprightConstraint()
+
+    PI_gains = {'P': 0.20, 'I': 5.0}
+    ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
+    gripper_scale_factor = np.array([1.0, 1.0])
+    env = URScriptWrapper(env, PI_gains, ur3_scale_factor, gripper_scale_factor)
+
+    # Move to position
+    q_init = env.env._get_ur3_qpos()
+    ee_pos_right = np.array([0.0, -0.4, 0.8])
+    ee_pos_left = np.array([-0.3, -0.5, 0.8])
+    q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
+    q_left_des, iter_taken_left, err_left, null_obj_left = env.env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
+    q_vel_des = (np.concatenate([q_right_des, q_left_des]) - q_init)/5.0
+    for t in range(int(5.0/dt)):
+        command = {
+            'ur3': {'type': 'speedj', 'command': q_vel_des},
+            'gripper': {'type': 'forceg', 'command': np.array([10.0, 10.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_pos_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_pos_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        right_vel_err = np.linalg.norm(env.env._get_ur3_qvel()[:env.ur3_nqpos] - q_vel_des[:env.ur3_nqpos])
+        left_vel_err = np.linalg.norm(env.env._get_ur3_qvel()[-env.ur3_nqpos:] - q_vel_des[-env.ur3_nqpos:])
+        print('time: %f [s]'%(t*dt))
+        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(right_pos_err*180.0/np.pi, right_vel_err*180.0/np.pi))
+        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(left_pos_err*180.0/np.pi, left_vel_err*180.0/np.pi))
+
+    # Open right gripper
+    q_vel_des = np.zeros_like(q_vel_des)
+    for t in range(int(5.0/dt)):
+        command = {
+            'ur3': {'type': 'speedj', 'command': q_vel_des},
+            'gripper': {'type': 'forceg', 'command': np.array([-10.0, 10.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_pos_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_pos_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        right_vel_err = np.linalg.norm(env.env._get_ur3_qvel()[:env.ur3_nqpos] - q_vel_des[:env.ur3_nqpos])
+        left_vel_err = np.linalg.norm(env.env._get_ur3_qvel()[-env.ur3_nqpos:] - q_vel_des[-env.ur3_nqpos:])
+        print('time: %f [s]'%(t*dt))
+        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(right_pos_err*180.0/np.pi, right_vel_err*180.0/np.pi))
+        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(left_pos_err*180.0/np.pi, left_vel_err*180.0/np.pi))
+
+    # Place right gripper
+    q_init = env.env._get_ur3_qpos()
+    ee_pos_right = np.array([0.0, -0.4, 0.65])
+    ee_pos_left = np.array([-0.3, -0.5, 0.8])
+    q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
+    q_left_des, iter_taken_left, err_left, null_obj_left = env.env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
+    q_vel_des = (np.concatenate([q_right_des, q_left_des]) - q_init)/5.0
+    for t in range(int(5.0/dt)):
+        command = {
+            'ur3': {'type': 'speedj', 'command': q_vel_des},
+            'gripper': {'type': 'forceg', 'command': np.array([-10.0, 10.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_pos_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_pos_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        right_vel_err = np.linalg.norm(env.env._get_ur3_qvel()[:env.ur3_nqpos] - q_vel_des[:env.ur3_nqpos])
+        left_vel_err = np.linalg.norm(env.env._get_ur3_qvel()[-env.ur3_nqpos:] - q_vel_des[-env.ur3_nqpos:])
+        print('time: %f [s]'%(t*dt))
+        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(right_pos_err*180.0/np.pi, right_vel_err*180.0/np.pi))
+        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(left_pos_err*180.0/np.pi, left_vel_err*180.0/np.pi))
+    env.PID_gains = {'P': 1.0, 'I': 0.5, 'D': 0.2}
+    qpos_err, qvel = np.inf, np.inf
+    while qpos_err > 1e-1*np.pi/180.0 or qvel > 1e-1*np.pi/180.0:
+        command = {
+            'ur3': {'type': 'servoj', 'command': np.concatenate([q_right_des, q_left_des])},
+            'gripper': {'type': 'forceg', 'command': np.array([-10.0, 10.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        print('time: %f [s]'%(t*dt))
+        print('right arm joint error [deg]: %f'%(right_err*180.0/np.pi))
+        print('left arm joint error [deg]: %f'%(left_err*180.0/np.pi))
+        qpos_err = max(right_err, left_err)
+        qvel = np.linalg.norm(env.env._get_ur3_qvel())
+        t += 1
+
+    # Grip
+    for t in range(int(5.0/dt)):
+        command = {
+            'ur3': {'type': 'servoj', 'command': np.concatenate([q_right_des, q_left_des])},
+            'gripper': {'type': 'forceg', 'command': np.array([10.0, 10.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        print('time: %f [s]'%(t*dt))
+        print('right arm joint error [deg]: %f'%(right_err*180.0/np.pi))
+        print('left arm joint error [deg]: %f'%(left_err*180.0/np.pi))
+
+    # Lift right gripper
+    env.PID_gains = {'P': 0.20, 'I': 5.0}
+    q_init = env.env._get_ur3_qpos()
+    ee_pos_right = np.array([0.3, -0.5, 0.8])
+    ee_pos_left = np.array([-0.3, -0.5, 0.8])
+    q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
+    q_left_des, iter_taken_left, err_left, null_obj_left = env.env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
+    q_vel_des = (np.concatenate([q_right_des, q_left_des]) - q_init)/5.0
+    for t in range(int(5.0/dt)):
+        command = {
+            'ur3': {'type': 'speedj', 'command': q_vel_des},
+            'gripper': {'type': 'forceg', 'command': np.array([10.0, 10.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_pos_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_pos_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        right_vel_err = np.linalg.norm(env.env._get_ur3_qvel()[:env.ur3_nqpos] - q_vel_des[:env.ur3_nqpos])
+        left_vel_err = np.linalg.norm(env.env._get_ur3_qvel()[-env.ur3_nqpos:] - q_vel_des[-env.ur3_nqpos:])
+        print('time: %f [s]'%(t*dt))
+        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(right_pos_err*180.0/np.pi, right_vel_err*180.0/np.pi))
+        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(left_pos_err*180.0/np.pi, left_vel_err*180.0/np.pi))
+    env.PID_gains = {'P': 1.0, 'I': 2.5, 'D': 0.2}
+    qpos_err, qvel = np.inf, np.inf
+    while qpos_err > 1e-1*np.pi/180.0 or qvel > 1e-1*np.pi/180.0:
+        command = {
+            'ur3': {'type': 'servoj', 'command': np.concatenate([q_right_des, q_left_des])},
+            'gripper': {'type': 'forceg', 'command': np.array([10.0, 10.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        qpos_err = max(right_err, left_err)
+        qvel = np.linalg.norm(env.env._get_ur3_qvel())
+        print('time: %f [s]'%(t*dt))
+        print('right arm joint error [deg]: %f'%(right_err*180.0/np.pi))
+        print('left arm joint error [deg]: %f'%(left_err*180.0/np.pi))
+        print('joint velocity [dps]: %f'%(qvel*180.0/np.pi))
+        t += 1
+    
+    time.sleep(3.0)
+
+    # Open gripper
+    for t in range(int(5.0/dt)):
+        command = {
+            'ur3': {'type': 'servoj', 'command': np.concatenate([q_right_des, q_left_des])},
+            'gripper': {'type': 'forceg', 'command': np.array([-25.0, 10.0])}
+        }
+        obs, _, _, _ = env.step(command)
+        env.render()
+        joint_angles = env.env._get_ur3_qpos()
+        right_err = np.linalg.norm(joint_angles[:env.ur3_nqpos] - q_right_des)
+        left_err = np.linalg.norm(joint_angles[-env.ur3_nqpos:] - q_left_des)
+        print('time: %f [s]'%(t*dt))
+        print('right arm joint error [deg]: %f'%(right_err*180.0/np.pi))
+        print('left arm joint error [deg]: %f'%(left_err*180.0/np.pi))
+    
+    while True:
+        env.render()
 
 if __name__ == '__main__':
     # show_dual_ur3()
