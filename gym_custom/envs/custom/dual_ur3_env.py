@@ -220,6 +220,10 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         return np.concatenate([self.sim.data.qfrc_constraint[0:self.ur3_nqvel], 
             self.sim.data.qfrc_constraint[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
 
+    def _get_ur3_actuator(self):
+        return np.concatenate([self.sim.data.qfrc_actuator[0:self.ur3_nqvel], 
+            self.sim.data.qfrc_actuator[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+
     def viewer_setup(self):
         v = self.viewer
         v.cam.trackbodyid = 0
@@ -241,6 +245,8 @@ class URScriptWrapper(ActionWrapper):
         # self.ur3_err_integ_limits, self.gripper_err_integ_limits = [-2.5, 2.5], [-1.0, 1.0]
         
         self.ur3_command_type, self.gripper_command_type = None, None
+
+        self.ur3_torque_limit = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0, 50.0, 50.0, 25.0, 10.0, 10.0, 10.0])
 
     def action(self, ur_command, relative=False):
         ur3_command_type_list = ['servoj', 'speedj']
@@ -293,16 +299,29 @@ class URScriptWrapper(ActionWrapper):
         #     err = ur3_command['desired'] - current_theta
         err = q - current_theta
         err_dot = -self.env._get_ur3_qvel()
-        self.ur3_err_integ = np.clip(self.ur3_err_integ + err*self.env.dt, -2.5, 2.5)
+        self.ur3_err_integ = np.clip(self.ur3_err_integ + err*self.env.dt, -1, 1)
 
         # Internal forces
         bias = self.env._get_ur3_bias()
 
         # External forces
         constraint = self.env._get_ur3_constraint()
+        constraint = np.clip(constraint, -0.50*self.ur3_torque_limit, 0.50*self.ur3_torque_limit)
 
         # PID controller
-        action = self.ur3_scale_factor*(self.PID_gains['P']*err + self.PID_gains['I']*self.ur3_err_integ + self.PID_gains['D']*err_dot) + bias - constraint*1
+        # control_budget_high = self.ur3_torque_limit - (bias - constraint)
+        # control_budget_high = np.maximum(control_budget_high, 0)
+        # control_budget_low = -self.ur3_torque_limit - (bias - constraint)
+        # control_budget_low = np.minimum(control_budget_low, 0)
+
+        PID_control = self.ur3_scale_factor*(self.PID_gains['P']*err + self.PID_gains['I']*self.ur3_err_integ + self.PID_gains['D']*err_dot)
+
+        # scale_upper = np.min(np.where(PID_control > 0, control_budget_high/PID_control, np.inf))
+        # scale_lower = np.min(np.where(PID_control < 0, control_budget_high/PID_control, np.inf))
+        # rescale = min(scale_lower, scale_upper, 1)
+        rescale = 1
+
+        action = rescale*PID_control + bias - constraint
         return action
 
     def _speedj(self, qd, a, t=None):
@@ -316,16 +335,29 @@ class URScriptWrapper(ActionWrapper):
         # Calculate error
         current_thetadot = self.env._get_ur3_qvel()
         err = qd - current_thetadot
-        self.ur3_err_integ = np.clip(self.ur3_err_integ + err*self.env.dt, -2.5, 2.5)
+        self.ur3_err_integ = np.clip(self.ur3_err_integ + err*self.env.dt, -0.02, 0.02)
 
         # Internal forces
         bias = self.env._get_ur3_bias()
 
         # External forces
         constraint = self.env._get_ur3_constraint()
+        constraint = np.clip(constraint, -0.50*self.ur3_torque_limit, 0.50*self.ur3_torque_limit)
 
         # PID controller
-        action = self.ur3_scale_factor*(self.PID_gains['P']*err + self.PID_gains['I']*self.ur3_err_integ) + bias - constraint*1
+        # control_budget_high = self.ur3_torque_limit - (bias - constraint)
+        # control_budget_high = np.maximum(control_budget_high, 0)
+        # control_budget_low = -self.ur3_torque_limit - (bias - constraint)
+        # control_budget_low = np.minimum(control_budget_low, 0)
+
+        PI_control = self.ur3_scale_factor*(self.PID_gains['P']*err + self.PID_gains['I']*self.ur3_err_integ)
+
+        # scale_upper = np.min(np.where(PID_control > 0, control_budget_high/PID_control, np.inf))
+        # scale_lower = np.min(np.where(PID_control < 0, control_budget_high/PID_control, np.inf))
+        # rescale = min(scale_lower, scale_upper, 1)
+        rescale = 1
+
+        action = rescale*PI_control + bias - constraint
         return action
 
     def _positiong(self, q):
