@@ -271,7 +271,7 @@ class URScriptWrapper(ActionWrapper):
         if ur_command['gripper']['type'] == gripper_command_type_list[0]:
             gripper_action = self._positiong(q=ur_command['gripper']['command'])
         elif ur_command['gripper']['type'] == gripper_command_type_list[1]:
-            gripper_action = self._velocityg(qf=ur_command['gripper']['command'])
+            gripper_action = self._velocityg(qd=ur_command['gripper']['command'])
         elif ur_command['gripper']['type'] == gripper_command_type_list[2]:
             gripper_action = self._forceg(qf=ur_command['gripper']['command'])
         else:
@@ -365,14 +365,14 @@ class URScriptWrapper(ActionWrapper):
         assert q.shape[0] == self.ngripperdof
         bias = self.env._get_gripper_bias() # Internal forces
         err = np.array([q[0], q[0], q[1], q[1]]) - self.env._get_gripper_qpos()
-        action = scale_factor_gripper*err + np.array([bias[2], bias[7], bias[12], bias[17]]) # P control
+        action = self.gripper_scale_factor*err + np.array([bias[2], bias[7], bias[12], bias[17]]) # P control
         return action
     
     def _velocityg(self, qd):
-        assert q.shape[0] == self.ngripperdof
+        assert qd.shape[0] == self.ngripperdof
         bias = self.env._get_gripper_bias() # Internal forces
         err = np.array([qd[0], qd[0], qd[1], qd[1]]) - self.env._get_gripper_qvel()
-        action = scale_factor_gripper*err + np.array([bias[2], bias[7], bias[12], bias[17]]) # P control
+        action = self.gripper_scale_factor*err + np.array([bias[2], bias[7], bias[12], bias[17]]) # P control
         return action
 
     def _forceg(self, qf):
