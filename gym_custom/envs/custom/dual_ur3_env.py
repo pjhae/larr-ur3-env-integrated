@@ -17,8 +17,8 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'ur3', xml_filename)
         MujocoEnv.__init__(self, fullpath, 1)
 
-        self.ur3_nqpos, self.gripper_nqpos, self.objects_nqpos = 6, 10, [7, 7]
-        self.ur3_nqvel, self.gripper_nqvel, self.objects_nqvel = 6, 10, [6, 6]
+        self.ur3_nqpos, self.gripper_nqpos, self.objects_nqpos = 6, 10, [7, 7, 7, 7]
+        self.ur3_nqvel, self.gripper_nqvel, self.objects_nqvel = 6, 10, [6, 6, 6, 6]
         assert 2*self.ur3_nqpos + 2*self.gripper_nqpos + sum(self.objects_nqpos) == self.model.nq, 'Number of qpos elements mismatch'
         assert 2*self.ur3_nqvel + 2*self.gripper_nqvel + sum(self.objects_nqvel) == self.model.nv, 'Number of qvel elements mismatch'
         self.ur3_nact, self.gripper_nact = 12, 4

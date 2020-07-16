@@ -59,9 +59,9 @@ def test_fkine_ikine():
     # test forward kinematics
     q = env._get_ur3_qpos()[:env.ur3_nqpos] # right
     Rs, ps, Ts = env.forward_kinematics_DH(q, arm='right')
-    R_base, p_base, T_base = env.forward_kinematics(body_name='right_arm_rotz')
-    # R_hand, p_hand, T_hand = env.forward_kinematics(body_name='right_gripper:hand')
-    R_hand, p_hand, T_hand = env.forward_kinematics(body_name='right_ee_link')
+    R_base, p_base, T_base = env.get_body_se3(body_name='right_arm_rotz')
+    # R_hand, p_hand, T_hand = env.get_body_se3(body_name='right_gripper:hand')
+    R_hand, p_hand, T_hand = env.get_body_se3(body_name='right_gripper:hand')
     print('base:')
     print('  pos: (DH) %s vs. (MjData) %s'%(ps[0,:], p_base))
     print('  rotMat: (DH) \n%s \nvs. \n  rotMat: (MjData) \n%s'%(Rs[0,:,:], R_base))
@@ -71,8 +71,8 @@ def test_fkine_ikine():
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.8])
-    ee_pos_left = np.array([-0.1, -0.5, 0.8])
+    ee_pos_right = np.array([0.1, -0.5, 0.9])
+    ee_pos_left = np.array([-0.1, -0.5, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
 
@@ -94,8 +94,8 @@ def servoj_and_forceg(env_type='sim'):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.8])
-    ee_pos_left = np.array([-0.1, -0.5, 0.8])
+    ee_pos_right = np.array([0.1, -0.5, 0.9])
+    ee_pos_left = np.array([-0.1, -0.5, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
 
@@ -133,8 +133,8 @@ def speedj_and_forceg(env_type='sim'):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.8])
-    ee_pos_left = np.array([-0.1, -0.5, 0.8])
+    ee_pos_right = np.array([0.1, -0.5, 0.9])
+    ee_pos_left = np.array([-0.1, -0.5, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
 
@@ -199,8 +199,8 @@ def pick_and_place(env_type='sim'):
 
     # Move to position
     q_init = env.env._get_ur3_qpos()
-    ee_pos_right = np.array([0.0, -0.4, 0.8])
-    ee_pos_left = np.array([-0.3, -0.5, 0.8])
+    ee_pos_right = np.array([0.0, -0.4, 0.9])
+    ee_pos_left = np.array([-0.3, -0.5, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
     q_vel_des = (np.concatenate([q_right_des, q_left_des]) - q_init)/5.0
@@ -240,8 +240,8 @@ def pick_and_place(env_type='sim'):
 
     # Place right gripper
     q_init = env.env._get_ur3_qpos()
-    ee_pos_right = np.array([0.0, -0.4, 0.65])
-    ee_pos_left = np.array([-0.3, -0.5, 0.8])
+    ee_pos_right = np.array([0.0, -0.4, 0.78])
+    ee_pos_left = np.array([-0.3, -0.5, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
     q_vel_des = (np.concatenate([q_right_des, q_left_des]) - q_init)/5.0
@@ -297,8 +297,8 @@ def pick_and_place(env_type='sim'):
     # Lift right gripper
     env.PID_gains = {'P': 0.20, 'I': 5.0}
     q_init = env.env._get_ur3_qpos()
-    ee_pos_right = np.array([0.3, -0.5, 0.8])
-    ee_pos_left = np.array([-0.3, -0.5, 0.8])
+    ee_pos_right = np.array([0.3, -0.5, 0.9])
+    ee_pos_left = np.array([-0.3, -0.5, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
     q_vel_des = (np.concatenate([q_right_des, q_left_des]) - q_init)/5.0
@@ -389,8 +389,8 @@ def collide(env_type='sim'):
 
     # Move to position
     q_init = env.env._get_ur3_qpos()
-    ee_pos_right = np.array([0.15, -0.4, 0.8])
-    ee_pos_left = np.array([-0.3, -0.4, 0.8])
+    ee_pos_right = np.array([0.15, -0.4, 0.9])
+    ee_pos_left = np.array([-0.3, -0.4, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
     q_vel_des = (np.concatenate([q_right_des, q_left_des]) - q_init)/5.0
@@ -412,8 +412,8 @@ def collide(env_type='sim'):
 
     # Collide with surface
     q_init = env.env._get_ur3_qpos()
-    ee_pos_right = np.array([0.15, -0.4, 0.6])
-    ee_pos_left = np.array([-0.3, -0.4, 0.8])
+    ee_pos_right = np.array([0.15, -0.4, 0.69])
+    ee_pos_left = np.array([-0.3, -0.4, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
     q_vel_des = (np.concatenate([q_right_des, q_left_des]) - q_init)/5.0
@@ -449,5 +449,5 @@ if __name__ == '__main__':
     # test_fkine_ikine()
     # servoj_and_forceg()
     # speedj_and_forceg()
-    # pick_and_place()
-    collide()
+    pick_and_place()
+    # collide()
