@@ -10,9 +10,10 @@ extras = {
     # 'atari': ['atari_py~=0.2.0', 'Pillow', 'opencv-python'],
     # 'box2d': ['box2d-py~=2.3.5'],
     # 'classic_control': [],
-    # 'mujoco': ['mujoco_py>=1.50, <2.0', 'imageio'],
-    # 'robotics': ['mujoco_py>=1.50, <2.0', 'imageio'],
-    'custom': ['mujoco_py>=1.50, <2.0', 'imageio']
+    'mujoco': ['mujoco_py>=1.50, <2.0', 'imageio'],
+    'robotics': ['mujoco_py>=1.50, <2.0', 'imageio'],
+    'custom': ['mujoco_py>=1.50, <2.0', 'imageio'],
+    'real': [],
 }
 
 # Meta dependency groups.
@@ -44,6 +45,10 @@ setup(name='gym-custom',
     #     'envs/robotics/assets/textures/*.png']
     # },
     package_data={'gym_custom': [
+        'envs/mujoco/assets/*.xml',
+        'envs/robotics/assets/fetch/*.xml',
+        'envs/robotics/assets/stls/fetch/*.stl',
+        'envs/robotics/assets/textures/*.png',
         'env/custom/assets/*.xml',
         'envs/custom/assets/ur3/*.xml',
         'envs/custom/assets/meshes/ur3/*.stl',
