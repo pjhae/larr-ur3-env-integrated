@@ -1,4 +1,4 @@
-from gym_custom.envs.real.opencm_interface import OpenCMInterface
+from gym_custom.envs.real.opencm.interface import OpenCMInterface
 
 # TODO
 class ManipulatorHEnv(OpenCMInterface):

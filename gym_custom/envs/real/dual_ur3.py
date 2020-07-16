@@ -1,4 +1,4 @@
-from gym_custom.envs.real.ur_interface import URScriptInterface
+from gym_custom.envs.real.ur.interface import URScriptInterface
 
 # TODO
 class DualUR3ScriptEnv(URScriptInterface):
