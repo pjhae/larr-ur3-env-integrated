@@ -1,7 +1,7 @@
 from gym_custom.envs.real.ur.interface import URScriptInterface
 
 # TODO
-class DualUR3ScriptEnv(URScriptInterface):
+class DualUR3RealEnv(URScriptInterface):
     
     def __init__(self):
         raise NotImplementedError()
