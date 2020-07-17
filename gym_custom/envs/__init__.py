@@ -142,6 +142,36 @@ register(
     reward_threshold=0.0,
 )
 
+# Real hardware environments
+#
+register(
+    id='ur3-real-v0',
+    entry_point='gym_custom.envs.real:UR3RealEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+register(
+    id='dual-ur3-larr-real-v0',
+    entry_point='gym_custom.envs.real:DualUR3RealEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+register(
+    id='manipulator-h-real-v0',
+    entry_point='gym_custom.envs.real:ManipulatorXRealEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+register(
+    id='manipulator-x-real-v0',
+    entry_point='gym_custom.envs.real:ManipulatorXRealEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
 # Algorithmic
 # ----------------------------------------
 
