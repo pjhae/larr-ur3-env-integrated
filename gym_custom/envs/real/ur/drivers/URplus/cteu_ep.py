@@ -27,7 +27,7 @@ __copyright__ = "Copyright 2017, Rope Robotics ApS, Denmark"
 __license__ = "MIT License"
 
 import time
-import URBasic
+from .. import URBasic
 from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 
 class CTEU_EP(object):

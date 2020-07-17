@@ -31,7 +31,7 @@ import sympy as sp
 import math
 import scipy
 from scipy import linalg
-from URBasic.manipulation import *
+from ..URBasic.manipulation import *
 
 pi = np.pi
 # Disable the logging stream from ikpy

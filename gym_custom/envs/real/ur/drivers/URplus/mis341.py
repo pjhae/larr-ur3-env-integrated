@@ -37,7 +37,7 @@ import struct
 from bitstring import Bits
 from bitstring import BitArray
 import threading
-import URBasic
+from .. import URBasic
 
 
 class OperatingMode:

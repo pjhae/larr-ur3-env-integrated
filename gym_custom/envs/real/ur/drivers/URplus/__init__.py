@@ -25,12 +25,12 @@ __author__ = "Martin Huus Bjerge"
 __copyright__ = "Copyright 2017, Rope Robotics ApS, Denmark"
 __license__ = "MIT License"
 
-from URplus.forceTorqueSensor import ForceTorqueSensor
-from URplus.cteu_ep import CTEU_EP
-from URplus.adam6017 import ADAM6017
-from URplus.adamReader import AdamReader
-from URplus.mib import Mib
-from URplus.mis341 import MIS341
-from URplus.airosSander import AirosSander
-from URplus.xsensImu import XsensImu
+from ..URPlus.forceTorqueSensor import ForceTorqueSensor
+from ..URPlus.cteu_ep import CTEU_EP
+from ..URPlus.adam6017 import ADAM6017
+from ..URPlus.adamReader import AdamReader
+from ..URPlus.mib import Mib
+from ..URPlus.mis341 import MIS341
+from ..URPlus.airosSander import AirosSander
+from ..URPlus.xsensImu import XsensImu
 

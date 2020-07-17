@@ -26,7 +26,7 @@ __copyright__ = "Copyright 2017, Rope Robotics ApS, Denmark"
 __license__ = "MIT License"
 
 import threading
-import URBasic
+from .. import URBasic
 import numpy as np
 import time
 import xml.etree.ElementTree as ET

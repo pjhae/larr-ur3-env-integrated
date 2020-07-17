@@ -25,8 +25,8 @@ __author__ = "Martin Huus Bjerge"
 __copyright__ = "Copyright 2017, Rope Robotics ApS, Denmark"
 __license__ = "MIT License"
 
-import URBasic
-#import URplus #import if any UPplus modules is needed
+from .. import URBasic
+#from .. import URPlus #import if any UPplus modules is needed
 
 class RobotConnector(object):
     '''

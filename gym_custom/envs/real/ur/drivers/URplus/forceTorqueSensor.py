@@ -31,7 +31,7 @@ import struct
 import select
 import time
 import numpy as np
-import URBasic
+from .. import URBasic
 
 DEFAULT_TIMEOUT = 2.0
 

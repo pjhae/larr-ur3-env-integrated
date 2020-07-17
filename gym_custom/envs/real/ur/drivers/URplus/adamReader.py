@@ -21,14 +21,14 @@ Except as contained in this notice, the name of "Rope Robotics ApS" shall not be
 in advertising or otherwise to promote the sale, use or other dealings in this Software 
 without prior written authorization from "Rope Robotics ApS".
 '''
-from URplus.adam6017 import ADAM6017
+from ..URPlus.adam6017 import ADAM6017
 
 __author__ = "Martin Huus Bjerge"
 __copyright__ = "Copyright 2017, Rope Robotics ApS, Denmark"
 __license__ = "MIT License"
 
 import threading
-import URBasic
+from .. import URBasic
 
 class AdamReader(threading.Thread):
     
