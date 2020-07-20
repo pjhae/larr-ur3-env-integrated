@@ -8,13 +8,55 @@ COMMAND_LIMITS = {
         np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
     'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi]),
         np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi])], # [rad/s]
+    'move_gripper': [np.array([0]), np.array([1])] # [0: open, 1: close]
 }
+
+def convert_action_to_space(action_limits):
+    if isinstance(action_limits, dict):
+        space = spaces.Dict(OrderedDict([
+            (key, convert_observation_to_space(value))
+            for key, value in COMMAND_LIMITS.items()
+        ]))
+    elif isinstance(action_limits, list):
+        low = action_limits[0]
+        high = action_limits[1]
+        space = gym_custom.spaces.Box(low, high, dtype=action_limits.dtype)
+    else:
+        raise NotImplementedError(type(action_limits), action_limits)
+
+    return space
+
+def convert_observation_to_space(observation):
+    if isinstance(observation, dict):
+        space = spaces.Dict(OrderedDict([
+            (key, convert_observation_to_space(value))
+            for key, value in observation.items()
+        ]))
+    elif isinstance(observation, np.ndarray):
+        low = np.full(observation.shape, -float('inf'), dtype=np.float32)
+        high = np.full(observation.shape, float('inf'), dtype=np.float32)
+        space = gym_custom.spaces.Box(low, high, dtype=observation.dtype)
+    else:
+        raise NotImplementedError(type(observation), observation)
+
+    return space
 
 class URScriptInterface(object):
     
     def __init__(self, host_ip):
+        
+        gripper_kwargs = {
+            'robot': None,
+            'payload': 0.85,
+            'speed': 255, # 0~255
+            'force': 255,  # 0~255
+            'socket_host': host_ip,
+            'socket_port': find_free_port(),
+            'socket_name': 'gripper_socket'
+        }
+
         self.model = URBasic.robotModel.RobotModel()
-        self.comm = URBasic.urScriptExt.UrScriptExt(host=host_ip, robotModel=self.model)
+        self.comm = URBasic.urScriptExt.UrScriptExt(host=host_ip, robotModel=self.model, **gripper_kwargs)
 
     def close(self):
         self.comm.close()
@@ -76,12 +118,10 @@ class URScriptInterface(object):
 
     ## 2F-85 gripper
     def open_gripper(self, *args, **kwargs):
-        # TODO: dscho
-        raise NotImplementedError()
+        self.comm.operate_gripper(0)
 
     def close_gripper(self, *args, **kwargs):
-        # TODO: dscho
-        raise NotImplementedError()
+        self.comm.operate_gripper(255)
 
     def move_gripper(self, *args, **kwargs):
         # TODO: dscho
