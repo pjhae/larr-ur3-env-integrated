@@ -28,6 +28,10 @@ __license__ = "MIT License"
 from .. import URBasic
 import numpy as np
 import time
+import sys
+
+from .. import urx
+from ..urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripper 
 
 class UrScriptExt(URBasic.urScript.UrScript):
     '''
@@ -57,7 +61,8 @@ class UrScriptExt(URBasic.urScript.UrScript):
     '''
 
 
-    def __init__(self, host, robotModel, hasForceTorque=False):
+    # def __init__(self, host, robotModel, hasForceTorque=False): dscho modified
+    def __init__(self, host, robotModel, hasForceTorque=False, **gripper_Kwargs): 
         if host is None: #Only for enable code completion
             return
         super(UrScriptExt, self).__init__(host, robotModel, hasForceTorque)        
@@ -67,11 +72,32 @@ class UrScriptExt(URBasic.urScript.UrScript):
         self.print_actual_tcp_pose()
         self.print_actual_joint_positions()
         self.__logger.info('Init done')
+        # dscho modified
+        self.rob = urx.Robot(host)
+        self.robotiqgrip = Robotiq_Two_Finger_Gripper(**gripper_kwargs)
+
+    # dscho modified
+    def operate_gripper(self, value):
+        '''
+        On/Off control of Gripper, 0 : open, 255 : gripper
+        '''
+        if value >255/2 :
+            self.robotiqgrip.close_gripper()
+        elif value <=255/2 and value >= 0 :
+            self.robotiqgrip.open_gripper()
+        self.rob.send_program(self.robotiqgrip.ret_program_to_run())
+        self.robotiqgrip.reset()
+    
+    def get_gripper_position(self):
+        raise NotImplementedError   
+        self.robotiqgrip.get_gripper_position()
 
     def close(self):
         self.print_actual_tcp_pose()
         self.print_actual_joint_positions()
         self.robotConnector.close()
+        # dscho modified
+        self.rob.close()
 
     def reset_error(self):
         '''
