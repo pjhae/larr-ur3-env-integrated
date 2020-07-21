@@ -40,3 +40,7 @@ vizdoom.ini
 
 # vscode files
 .vscode/
+
+# UR data/event logs
+Ur*.csv
+Ur*.log
