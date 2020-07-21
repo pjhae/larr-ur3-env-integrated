@@ -1,7 +1,9 @@
+from collections import OrderedDict
 import numpy as np
 
-import gym_custom.envs.real.ur.drivers.URBasic
-
+import gym_custom
+from gym_custom import spaces
+from gym_custom.envs.real.ur.drivers import URBasic
 
 COMMAND_LIMITS = {
     'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
@@ -14,13 +16,13 @@ COMMAND_LIMITS = {
 def convert_action_to_space(action_limits):
     if isinstance(action_limits, dict):
         space = spaces.Dict(OrderedDict([
-            (key, convert_observation_to_space(value))
+            (key, convert_action_to_space(value))
             for key, value in COMMAND_LIMITS.items()
         ]))
     elif isinstance(action_limits, list):
         low = action_limits[0]
         high = action_limits[1]
-        space = gym_custom.spaces.Box(low, high, dtype=action_limits.dtype)
+        space = gym_custom.spaces.Box(low, high, dtype=action_limits[0].dtype)
     else:
         raise NotImplementedError(type(action_limits), action_limits)
 
@@ -51,7 +53,6 @@ class URScriptInterface(object):
             'speed': 255, # 0~255
             'force': 255,  # 0~255
             'socket_host': host_ip,
-            'socket_port': find_free_port(),
             'socket_name': 'gripper_socket'
         }
 
@@ -66,12 +67,13 @@ class URScriptInterface(object):
         self.comm.reset_error()
 
     ## UR3 manipulator
-    def movej(self, *args, **kwargs):
+    def movej(self, q=None, a=1.4, v =1.05, t =0, r =0, wait=True, pose=None):
         '''
         Move to position (linear in joint-space)
         blocking command, not suitable for online control
         '''
-        self.comm.movej(*args, **kwargs)
+        if type(q) == np.ndarray: q = q.tolist()
+        self.comm.movej(q=q, a=a, v=v, t=t, r=r, wait=wait, pose=pose)
 
     def movel(self, *args, **kwargs):
         raise NotImplementedError()
@@ -85,27 +87,29 @@ class URScriptInterface(object):
     def servoc(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def servoj(self, *args, **kwargs):
+    def servoj(self, q, t =0.008, lookahead_time=0.1, gain=100, wait=True):
         '''
         Servo to position (linear in joint-space)
         non-blocking command, suitable for online control
         '''
-        self.comm.servoj(*args, **kwargs)
+        if type(q) == np.ndarray: q = q.tolist()
+        self.comm.servoj(q=q, t=t, lookahead_time=lookahead_time, gain=gain, wait=wait)
 
-    def speedj(self, *args, **kwargs):
+    def speedj(self, qd, a, t , wait=True):
         '''
         non-blocking command, suitable for online control
         '''
-        self.comm.speedj(*args, **kwargs)
+        if type(qd) == np.ndarray: qd = qd.tolist()
+        self.comm.speedj(qd=qd, a=a, t=t, wait=wait)
 
     def speedl(self, *args, **kwargs):
         raise NotImplementedError()
     
-    def stopj(self, *args, **kwargs):
+    def stopj(self, a, wait=True):
         '''
-        ?
+        
         '''
-        self.comm.stopj(*args, **kwargs)
+        self.comm.stopj(a, wait)
 
     def stopl(self, *args, **kwargs):
         raise NotImplementedError()
@@ -125,12 +129,15 @@ class URScriptInterface(object):
 
     def move_gripper(self, *args, **kwargs):
         # TODO: dscho
-        raise NotImplementedError()
+        return None
+        # raise NotImplementedError()
 
     def get_gripper_position(self):
         # TODO: dscho
-        raise NotImplementedError()
+        return np.array([0.0])
+        # raise NotImplementedError()
 
     def get_gripper_speed(self):
         # TODO: dscho
-        raise NotImplementedError()
+        return np.array([0.0])
+        # raise NotImplementedError()

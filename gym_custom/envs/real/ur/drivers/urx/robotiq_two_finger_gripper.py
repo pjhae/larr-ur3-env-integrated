@@ -39,7 +39,6 @@ class Robotiq_Two_Finger_Gripper(object):
                 speed = 255,
                 force = 255,  
                 socket_host = '192.168.5.101',
-                socket_port = 63352,
                 socket_name = 'gripper_socket'
                 ):
 
@@ -50,7 +49,7 @@ class Robotiq_Two_Finger_Gripper(object):
         self.speed = speed
         self.force = force
         self.socket_host = socket_host
-        self.socket_port = socket_port
+        self.socket_port = 63352
         self.socket_name = socket_name
 
         self.reset()
