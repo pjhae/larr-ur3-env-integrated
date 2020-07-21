@@ -13,7 +13,7 @@ extras = {
     'mujoco': ['mujoco_py>=1.50, <2.0', 'imageio'],
     'robotics': ['mujoco_py>=1.50, <2.0', 'imageio'],
     'custom': ['mujoco_py>=1.50, <2.0', 'imageio'],
-    'real': ['math3d'],
+    'real': ['math3d', 'six'],
 }
 
 # Meta dependency groups.
