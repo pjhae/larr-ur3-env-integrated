@@ -62,7 +62,7 @@ class UrScriptExt(URBasic.urScript.UrScript):
 
 
     # def __init__(self, host, robotModel, hasForceTorque=False): dscho modified
-    def __init__(self, host, robotModel, hasForceTorque=False, **gripper_Kwargs): 
+    def __init__(self, host, robotModel, hasForceTorque=False, **gripper_kwargs): 
         if host is None: #Only for enable code completion
             return
         super(UrScriptExt, self).__init__(host, robotModel, hasForceTorque)        
