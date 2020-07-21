@@ -208,7 +208,8 @@ class RobotModel(object):
     def TargetCurrent(self):raise NotImplementedError('Function Not yet implemented')
     def TargetMoment(self):raise NotImplementedError('Function Not yet implemented')     
     def ActualQ(self):return self.dataDir['actual_q']
-    def ActualQD(self):raise NotImplementedError('Function Not yet implemented')
+    # def ActualQD(self):raise NotImplementedError('Function Not yet implemented')
+    def ActualQD(self):return self.dataDir['actual_qd']
     def ActualCurrent(self):raise NotImplementedError('Function Not yet implemented')
     def JointControlOutput(self):raise NotImplementedError('Function Not yet implemented')
     def ActualTCPSpeed(self):raise NotImplementedError('Function Not yet implemented')

@@ -767,7 +767,7 @@ end
         '''
         if(wait):
             self.sync()
-        return self.robotConnector.RobotModel.ActualQD
+        return self.robotConnector.RobotModel.ActualQD()
 
         
     def get_actual_tcp_pose(self, wait=True):
