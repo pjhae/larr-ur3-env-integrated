@@ -67,7 +67,7 @@ class DualUR3RealEnv(gym_custom.Env):
         reward = 1.0
         done = False
         finish = time.time()
-        if finish - start > 1.5*self.rate._actual_cycle_time:
+        if finish - start > 1.5/self.rate._freq:
             raise warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(finish-start)))
         return ob, reward, done, {}
 
