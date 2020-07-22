@@ -59,6 +59,9 @@ class URScriptInterface(object):
         self.model = URBasic.robotModel.RobotModel()
         self.comm = URBasic.urScriptExt.UrScriptExt(host=host_ip, robotModel=self.model, **gripper_kwargs)
 
+    def __del__(self):
+        self.comm.close()
+
     def close(self):
         self.comm.close()
 
@@ -107,7 +110,6 @@ class URScriptInterface(object):
     
     def stopj(self, a, wait=True):
         '''
-        
         '''
         self.comm.stopj(a, wait)
 
