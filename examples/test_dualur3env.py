@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 import gym_custom
-from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3_old as URScriptWrapper, NullObjectiveBase
+from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3_deprecated as URScriptWrapper, NullObjectiveBase
 
 class NoConstraint(NullObjectiveBase):
 
