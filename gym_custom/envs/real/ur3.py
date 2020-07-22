@@ -124,8 +124,8 @@ class UR3RealEnv(gym_custom.Env):
         return convert_observation_to_space(observation)
 
 
-def servoj_speedj_check(host_ip, rate):
-    
+## Examples
+def servoj_speedj_example(host_ip, rate):
     real_env = UR3RealEnv(host_ip=host_ip, rate=rate)
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
@@ -159,10 +159,10 @@ def servoj_speedj_check(host_ip, rate):
     for n, waypoint in enumerate(waypoints_qpos[1:,:]):
         real_env.step({
             'servoj': {'q': waypoint, 't': 2/real_env.rate._freq, 'wait': False},
-            # 'open_gripper': None
+            # 'close_gripper': {}
         })
         print('action %d sent!'%(n))
-    real_env.step({'stopj': {'a': 2.5}})
+    real_env.step({'stopj': {'a': 5}})
     finish = time.time()
     print('done! (elapsed time: %.3f [s])'%(finish - start))
     time.sleep(5)
@@ -173,7 +173,7 @@ def servoj_speedj_check(host_ip, rate):
     real_env.step({'movej': {'q': waypoints_qpos[0,:]}})
     print('done!')
 
-    if prompt_yes_or_no('servoj to %s deg?'%(np.rad2deg(goal_qpos))) is False:
+    if prompt_yes_or_no('speedj to %s deg?'%(np.rad2deg(goal_qpos))) is False:
         print('exiting program!')
         sys.exit()
     # speedj example
@@ -182,7 +182,7 @@ def servoj_speedj_check(host_ip, rate):
     for n, waypoint in enumerate(waypoints_qvel):
         real_env.step({
             'speedj': {'qd': waypoint, 'a': 5, 't': 2/real_env.rate._freq, 'wait': False},
-            # 'open_gripper': None
+            # 'close_gripper': {}
         })
         print('action %d sent!'%(n))
     real_env.step({'stopj': {'a': 5}})
@@ -305,7 +305,7 @@ def gripper_check(host_ip):
     robot.close()
 
 if __name__ == "__main__":
-    # sanity_check(host_ip='192.168.5.101') # both arms successful
-    # servoj_speedj_check(host_ip='192.168.5.101', rate=25) # both arms successful
-    # gripper_check(host_ip='192.168.5.101') # both hands successful
+    # sanity_check(host_ip='192.168.5.101')
+    # gripper_check(host_ip='192.168.5.101')
+    # servoj_speedj_example(host_ip='192.168.5.101', rate=25)
     pass
