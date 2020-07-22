@@ -130,6 +130,20 @@ class URScriptInterface(object):
         self.comm.operate_gripper(255)
 
     def move_gripper(self, *args, **kwargs):
+        '''Compatibility wrapper for move_gripper_position()'''
+        return self.move_gripper_position(args, kwargs)
+
+    def move_gripper_position(self, g):
+        # TODO: dscho
+        return None
+        # raise NotImplementedError()
+
+    def move_gripper_velocity(self, gd):
+        # TODO: dscho
+        return None
+        # raise NotImplementedError()
+
+    def move_gripper_force(self, gf):
         # TODO: dscho
         return None
         # raise NotImplementedError()
