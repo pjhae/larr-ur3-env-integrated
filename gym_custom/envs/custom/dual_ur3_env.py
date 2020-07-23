@@ -10,29 +10,51 @@ from gym_custom.envs.mujoco import MujocoEnv
 
 class DualUR3Env(MujocoEnv, utils.EzPickle):
 
+    # class variables
+    ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
+    ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
+    ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
+    objects_nqpos = [7, 7, 7, 7]
+    objects_nqvel = [6, 6, 6, 6]
+
     def __init__(self):
+        self._ezpickle_init()
+        self._mujocoenv_init()
+        self._check_model_parameter_dimensions()
+        self._define_class_variables()
+
+    def _ezpickle_init(self):
+        '''overridable method'''
         utils.EzPickle.__init__(self)
-        xml_filename = 'dual_ur3_larr.xml'
+
+    def _mujocoenv_init(self):
+        '''overridable method'''
+        xml_filename = 'dual_ur3_base.xml'
         fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'ur3', xml_filename)
         MujocoEnv.__init__(self, fullpath, 1)
 
-        self.ur3_nqpos, self.gripper_nqpos, self.objects_nqpos = 6, 10, [7, 7, 7, 7]
-        self.ur3_nqvel, self.gripper_nqvel, self.objects_nqvel = 6, 10, [6, 6, 6, 6]
+    def _check_model_parameter_dimensions(self):
+        '''overridable method'''
         assert 2*self.ur3_nqpos + 2*self.gripper_nqpos + sum(self.objects_nqpos) == self.model.nq, 'Number of qpos elements mismatch'
         assert 2*self.ur3_nqvel + 2*self.gripper_nqvel + sum(self.objects_nqvel) == self.model.nv, 'Number of qvel elements mismatch'
-        self.ur3_nact, self.gripper_nact = 12, 4
-        assert self.ur3_nact + self.gripper_nact == self.model.nu, 'Number of action elements mismatch'
+        assert 2*self.ur3_nact + 2*self.gripper_nact == self.model.nu, 'Number of action elements mismatch'
 
+    def _define_class_variables(self):
+        '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
             np.array([-90.0, -90.0, -90.0, -90.0, -135.0, 90.0])*np.pi/180.0 # right arm
         self.init_qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos] = \
             np.array([90.0, -90.0, 90.0, -90.0, 135.0, -90.0])*np.pi/180.0 # left arm
         
-        # Settings for forward/inverse kinematics
+        # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
         self.kinematics_params = {}
-        self.kinematics_params['d'] = np.array([0.1519, 0, 0, 0.11235, 0.08535, 0.0819+0.12*1]) # in m
+
+        # 1. Last frame aligns with (right/left)_ee_link body frame
+        # self.kinematics_params['d'] = np.array([0.1519, 0, 0, 0.11235, 0.08535, 0.0819]) # in m
+        # 2. Last frame aligns with (right/left)_gripper:hand body frame
+        self.kinematics_params['d'] = np.array([0.1519, 0, 0, 0.11235, 0.08535, 0.0819+0.12]) # in m
         self.kinematics_params['a'] = np.array([0, -0.24365, -0.21325, 0, 0, 0]) # in m
         self.kinematics_params['alpha'] =np.array([np.pi/2, 0, 0, np.pi/2, -np.pi/2, 0]) # in rad
         self.kinematics_params['offset'] = np.array([0, 0, 0, 0, 0, 0])
@@ -40,27 +62,15 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         self.kinematics_params['lb'] = np.array([-2*np.pi for _ in range(6)])
         
         self.kinematics_params['T_wb_right'] = np.eye(4)
-        right_base_idx = self.model.body_names.index('right_arm_rotz')
-        self.kinematics_params['T_wb_right'][0:3,0:3] = self.sim.data.body_xmat[right_base_idx].reshape([3,3])
-        self.kinematics_params['T_wb_right'][0:3,3] = self.sim.data.body_xpos[right_base_idx]
+        self.kinematics_params['T_wb_right'][0:3,0:3] = self.sim.data.get_body_xmat('right_arm_rotz').reshape([3,3])
+        self.kinematics_params['T_wb_right'][0:3,3] = self.sim.data.get_body_xpos('right_arm_rotz')
         
         self.kinematics_params['T_wb_left'] = np.eye(4)
-        left_base_idx = self.model.body_names.index('left_arm_rotz')
-        self.kinematics_params['T_wb_left'][0:3,0:3] = self.sim.data.body_xmat[left_base_idx].reshape([3,3])
-        self.kinematics_params['T_wb_left'][0:3,3] = self.sim.data.body_xpos[left_base_idx]
+        self.kinematics_params['T_wb_left'][0:3,0:3] = self.sim.data.get_body_xmat('left_arm_rotz').reshape([3,3])
+        self.kinematics_params['T_wb_left'][0:3,3] = self.sim.data.get_body_xpos('left_arm_rotz')
 
-    def step(self, a):
-        reward = 1.0
-        self.do_simulation(a, self.frame_skip)
-        ob = self._get_obs()
-        done = False
-        return ob, reward, done, {}
-
-    def reset_model(self):
-        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
-        qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
-        self.set_state(qpos, qvel)
-        return self._get_obs()
+    #
+    # Utilities (general)
 
     def forward_kinematics_DH(self, q, arm):
         assert len(q) == self.ur3_nqpos
@@ -126,19 +136,17 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         '''
         # Set initial guess
         if arm == 'right':
-            if q_init == 'current': q = self._get_ur3_qpos()[:self.ur3_nqpos]
+            if type(q_init).__name__ == 'ndarray': q = q_init.copy()
+            elif q_init == 'current': q = self._get_ur3_qpos()[:self.ur3_nqpos]
             elif q_init == 'zero': q = np.zeros([self.ur3_nqpos])
-            elif type(q_init).__name__ == 'ndarray': q = q_init
             else: raise ValueError("q_init must be one of the following: ['current', 'zero', numpy.ndarray]")
         elif arm == 'left':
-            if q_init == 'current': q = self._get_ur3_qpos()[self.ur3_nqpos:]
+            if type(q_init).__name__ == 'ndarray': q = q_init.copy()
+            elif q_init == 'current': q = self._get_ur3_qpos()[self.ur3_nqpos:]
             elif q_init == 'zero': q = np.zeros([self.ur3_nqpos])
-            elif type(q_init).__name__ == 'ndarray': q = q_init
             else: raise ValueError("q_init must be one of the following: ['current', 'zero', numpy.ndarray]")
         else:
             raise ValueError('Invalid arm type!')
-
-        arm_to_body_name = {'right': 'right_gripper:hand', 'left': 'left_gripper:hand'}
         
         SO3, x, _ = self.forward_kinematics_ee(q, arm)
         jac = self._jacobian_DH(q, arm)
@@ -178,19 +186,17 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         
         return q, iter_taken, err, null_obj_val
 
+    #
+    # Utilities (MujocoEnv related)
+
     def get_body_se3(self, body_name):
-        # assert len(q) == self.ur3_nqpos
-        body_idx = self.model.body_names.index(body_name)
-        R = self.sim.data.body_xmat[body_idx].reshape([3,3])
-        p = self.sim.data.body_xpos[body_idx]
+        R = self.sim.data.get_body_xmat(body_name).reshape([3,3])
+        p = self.sim.data.get_body_xpos(body_name)
         T = np.eye(4)
         T[0:3,0:3] = R
         T[0:3,3] = p
 
         return R, p, T
-
-    def _get_obs(self):
-        return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
 
     def _get_ur3_qpos(self):
         return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos], 
@@ -224,7 +230,30 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         return np.concatenate([self.sim.data.qfrc_actuator[0:self.ur3_nqvel], 
             self.sim.data.qfrc_actuator[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
 
+    def _get_obs(self):
+        '''overridable method'''
+        return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
+
+    #
+    # Overrided MujocoEnv methods
+
+    def step(self, a):
+        '''overridable method'''
+        reward = 1.0
+        self.do_simulation(a, self.frame_skip)
+        ob = self._get_obs()
+        done = False
+        return ob, reward, done, {}
+
+    def reset_model(self):
+        '''overridable method'''
+        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+        self.set_state(qpos, qvel)
+        return self._get_obs()
+
     def viewer_setup(self):
+        '''overridable method'''
         v = self.viewer
         v.cam.trackbodyid = 0
         v.cam.distance = self.model.stat.extent
