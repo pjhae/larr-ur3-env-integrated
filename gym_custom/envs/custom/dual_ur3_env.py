@@ -11,6 +11,8 @@ from gym_custom.envs.mujoco import MujocoEnv
 class DualUR3Env(MujocoEnv, utils.EzPickle):
 
     # class variables
+    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/dual_ur3_base.xml')
+    mujocoenv_frame_skip = 1
     ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
@@ -29,9 +31,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
     def _mujocoenv_init(self):
         '''overridable method'''
-        xml_filename = 'dual_ur3_base.xml'
-        fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'ur3', xml_filename)
-        MujocoEnv.__init__(self, fullpath, 1)
+        MujocoEnv.__init__(self, self.mujoco_xml_full_path, self.mujocoenv_frame_skip)
 
     def _check_model_parameter_dimensions(self):
         '''overridable method'''
