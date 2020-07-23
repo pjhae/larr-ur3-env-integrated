@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<mujoco model="dual ur3 larr">
+<mujoco model="dual ur3 base">
     <include file="dual_ur3_configs.xml"/>
     <include file="dual_ur3_constraints.xml"/>
 
