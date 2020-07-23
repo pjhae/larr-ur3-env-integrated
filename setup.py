@@ -51,6 +51,7 @@ setup(name='gym-custom',
         'envs/robotics/assets/textures/*.png',
         'env/custom/assets/*.xml',
         'envs/custom/assets/ur3/*.xml',
+        'envs/custom/assets/meshes/objects/*.stl'
         'envs/custom/assets/meshes/ur3/*.stl',
         'envs/custom/assets/meshes/ur3/dual_ur3_stand_collision_box/*.stl',
         'envs/custom/assets/textures/*.png']
