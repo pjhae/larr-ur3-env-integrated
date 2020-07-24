@@ -31,6 +31,7 @@ class ROSRate(object):
     http://docs.ros.org/diamondback/api/rostime/html/rate_8cpp_source.html
     '''
     def __init__(self, frequency):
+        assert frequency > 0, 'Frequency must be greated than zero!'
         self._freq = frequency
         self._start = time.time()
         self._actual_cycle_time = 1/self._freq
