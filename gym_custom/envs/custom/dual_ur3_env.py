@@ -234,6 +234,22 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
 
+    def get_obs_dict(self):
+        '''overridable method'''
+        return {'right': {
+                'qpos': self._get_ur3_qpos()[:self.ur3_nqpos],
+                'qvel': self._get_ur3_qvel()[:self.ur3_nqvel],
+                'gripperpos': self._get_gripper_qpos()[:self.gripper_nqpos],
+                'grippervel': self._get_gripper_qvel()[:self.gripper_nqvel]
+            },
+            'left': {
+                'qpos': self._get_ur3_qpos()[self.ur3_nqpos:],
+                'qvel': self._get_ur3_qvel()[self.ur3_nqvel:],
+                'gripperpos': self._get_gripper_qpos()[self.gripper_nqpos:],
+                'grippervel':self._get_gripper_qvel()[self.gripper_nqvel:]
+            }
+        }
+
     #
     # Overrided MujocoEnv methods
 

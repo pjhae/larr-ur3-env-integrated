@@ -91,7 +91,7 @@ class UR3RealEnv(gym_custom.Env):
         self._episode_step = 0
         return self._get_obs()
 
-    def _get_obs_dict(self):
+    def get_obs_dict(self):
         return {
             'qpos': self.interface.get_joint_positions(),
             'qvel': self.interface.get_joint_speeds(),
@@ -100,7 +100,7 @@ class UR3RealEnv(gym_custom.Env):
         }
 
     def _get_obs(self):
-        return UR3RealEnv._dict_to_nparray(self._get_obs_dict())
+        return UR3RealEnv._dict_to_nparray(self.get_obs_dict())
 
     @staticmethod
     def _dict_to_nparray(obs_dict):
