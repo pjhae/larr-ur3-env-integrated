@@ -1,11 +1,15 @@
 import argparse
 import numpy as np
 import time
+import sys
 
 import gym_custom
+
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
 from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3_deprecated as URScriptWrapper_deprecated
 from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3 as URScriptWrapper
+
+from gym_custom.envs.real.utils import ROSRate, prompt_yes_or_no
 
 class NoConstraint(NullObjectiveBase):
 
@@ -132,8 +136,19 @@ def servoj_and_forceg(env_type='sim', render=False):
         env = gym_custom.make('dual-ur3-larr-v0')
         servoj_args = {'t': None, 'wait': None}
     elif env_type == list_of_env_types[1]:
-        env = gym_custom.make('dual-ur3-larr-real-v0')
+        env = gym_custom.make('dual-ur3-larr-real-v0',
+            host_ip_right='192.168.5.102',
+            host_ip_left='192.168.5.101',
+            rate=25
+        )
         servoj_args = {'t': 2/env.rate._freq, 'wait': False}
+        # 1. Set initial as current configuration
+        env.set_initial_joint_pos('current')
+        env.set_initial_gripper_pos('current')
+        # 2. Set inital as default configuration
+        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
+        env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+        assert render is False
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
     obs = env.reset()
     dt = env.dt
@@ -153,9 +168,15 @@ def servoj_and_forceg(env_type='sim', render=False):
     elif env_type == list_of_env_types[1]:
         env.env = env
 
+    if env_type == list_of_env_types[1]:
+        if prompt_yes_or_no('current qpos is \r\n right: %s deg\r\n left: %s deg\r\n?'
+            %(np.rad2deg(env.env._init_qpos[:6]), np.rad2deg(env.env._init_qpos[6:]))) is False:
+            print('exiting program!')
+            sys.exit()
+
     t = 0
     qpos_err, qvel = np.inf, np.inf
-    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e-1):
+    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e0):
         ob, _, _, _ = env.step({
             'right': {
                 'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
@@ -176,7 +197,12 @@ def servoj_and_forceg(env_type='sim', render=False):
         qpos_err = max(right_err, left_err)
         qvel = np.linalg.norm(np.concatenate([obs_dict['right']['qvel'], obs_dict['left']['qvel']]))
         t += 1
-    time.sleep(100)
+    
+    if env_type == list_of_env_types[0]:
+        time.sleep(100)
+    else:
+        env.close()
+        sys.exit()
 
 def speedj_and_forceg_deprecated():
 
@@ -243,8 +269,18 @@ def speedj_and_forceg(env_type='sim', render=False):
         env = gym_custom.make('dual-ur3-larr-v0')
         speedj_args = {'a': 5, 't': None, 'wait': None}
     elif env_type == list_of_env_types[1]:
-        env = gym_custom.make('dual-ur3-larr-real-v0')
+        env = gym_custom.make('dual-ur3-larr-real-v0',
+            host_ip_right='192.168.5.102',
+            host_ip_left='192.168.5.101',
+            rate=25
+        )
         speedj_args = {'a': 5, 't': 2/env.rate._freq, 'wait': False}
+        env.set_initial_joint_pos('current')
+        env.set_initial_gripper_pos('current')
+        # 2. Set inital as default configuration
+        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
+        env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+        assert render is False
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
     obs = env.reset()
     dt = env.dt
@@ -264,11 +300,18 @@ def speedj_and_forceg(env_type='sim', render=False):
     elif env_type == list_of_env_types[1]:
         env.env = env
 
+    if env_type == list_of_env_types[1]:
+        if prompt_yes_or_no('current qpos is \r\n right: %s deg\r\n left: %s deg\r\n?'
+            %(np.rad2deg(env.env._init_qpos[:6]), np.rad2deg(env.env._init_qpos[6:]))) is False:
+            print('exiting program!')
+            sys.exit()
+
     # Move to goal
     duration = 3.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
     q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/duration
+    start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
@@ -281,20 +324,24 @@ def speedj_and_forceg(env_type='sim', render=False):
             }
         })
         if render: env.render()
-        obs_dict = env.env.get_obs_dict()
-        right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
-        right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
-        left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
-        print('time: %f [s]'%(t*dt))
-        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
-        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+        # TODO: get_obs_dict() takes a long time causing timing issues.
+        #   Is it due to Upboard's lackluster performance or some deeper
+        #   issues within UR Script wrppaer?
+        # obs_dict = env.env.get_obs_dict()
+        # right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
+        # left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
+        # right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
+        # left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
+        # print('time: %f [s]'%(t*dt))
+        # print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
+        # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+    finish = time.time()
 
     # Stop
     t = 0
     qvel_err = np.inf
     q_right_des_vel, q_left_des_vel = np.zeros([env.ur3_nqpos]), np.zeros([env.ur3_nqpos])
-    while qvel_err > np.deg2rad(1e-1):
+    while qvel_err > np.deg2rad(1e0):
         obs, _, _, _ = env.step({
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -316,7 +363,13 @@ def speedj_and_forceg(env_type='sim', render=False):
         print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
         qvel_err = np.linalg.norm(np.concatenate([obs_dict['right']['qvel'], obs_dict['left']['qvel']]) - np.concatenate([q_right_des_vel, q_left_des_vel]))
         t += 1
-    time.sleep(100)
+    
+    if env_type == list_of_env_types[0]:
+        time.sleep(100)
+    else:
+        env.close()
+        print('%.3f seconds'%(finish-start))
+        sys.exit()
 
 def pick_and_place_deprecated():
 
@@ -941,9 +994,9 @@ if __name__ == '__main__':
     # test_fkine_ikine()
 
     # 2.1 Updated UR wrapper examples
-    # servoj_and_forceg(env_type='sim', render=True)
-    # speedj_and_forceg(env_type='sim', render=True)
-    pick_and_place(env_type='sim', render=True)
+    servoj_and_forceg(env_type='real', render=False)
+    # speedj_and_forceg(env_type='real', render=False)
+    # pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)
 
     # 2.2 Deprecated UR wrapper examples 
