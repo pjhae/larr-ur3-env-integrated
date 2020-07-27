@@ -7,7 +7,7 @@ from gym_custom.envs.registration import registry, register, make, spec
 #
 register(
     id='Practice1-motor-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv1',
     max_episode_steps=1000,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'motor'},
@@ -15,7 +15,7 @@ register(
 
 register(
     id='Practice1-motor-nogravity-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv1',
     max_episode_steps=1000,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'motor(nogravity)'},
@@ -23,7 +23,7 @@ register(
 
 register(
     id='Practice1-position-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv1',
     max_episode_steps=1000,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'position'},
@@ -31,7 +31,7 @@ register(
 
 register(
     id='Practice1-position-dyntype-integrator-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv1',
     max_episode_steps=1000,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'position(dyntype=integrator)'},
@@ -39,7 +39,7 @@ register(
 
 register(
     id='Practice1-velocity-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv1',
     max_episode_steps=1000,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'velocity'},
@@ -47,7 +47,7 @@ register(
 
 register(
     id='Practice1-nodynamics-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv1',
     max_episode_steps=1000,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'nodynamics'}
@@ -55,7 +55,7 @@ register(
 
 register(
     id='Practice1-motor-notimelimit-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv1',
     max_episode_steps=None,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'motor'},
@@ -63,7 +63,7 @@ register(
 
 register(
     id='Practice1-motor-doublependulum-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv1',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv1',
     max_episode_steps=1000,
     reward_threshold=0.0,
     kwargs={'actuator_type': 'double'}
@@ -73,14 +73,14 @@ register(
 #
 register(
     id='Practice2-motor-notimelimit-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv2',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv2',
     max_episode_steps=None,
     reward_threshold=0.0,
 )
 
 register(
     id='Practice2-motor-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv2',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv2',
     max_episode_steps=1000,
     reward_threshold=0.0,
 )
@@ -89,7 +89,7 @@ register(
 #
 register(
     id='Practice3-gripper-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv3',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv3',
     max_episode_steps=1000,
     reward_threshold=0.0,
 )
@@ -98,7 +98,7 @@ register(
 #
 register(
     id='Practice4-v0',
-    entry_point='gym_custom.envs.custom:PracticeEnv4',
+    entry_point='gym_custom.envs.custom.practice_env:PracticeEnv4',
     max_episode_steps=1000,
     reward_threshold=0.0,
 )
@@ -107,28 +107,28 @@ register(
 #
 register(
     id='ur3-practice-v0',
-    entry_point='gym_custom.envs.custom:UR3PracticeEnv',
+    entry_point='gym_custom.envs.custom.ur3_env:UR3PracticeEnv',
     max_episode_steps=None,
     reward_threshold=0.0,
 )
 
 register(
     id='ur3-practice-withgripper-v0',
-    entry_point='gym_custom.envs.custom:UR3PracticewithGripperEnv',
+    entry_point='gym_custom.envs.custom.ur3_env:UR3PracticewithGripperEnv',
     max_episode_steps=None,
     reward_threshold=0.0,
 )
 
 register(
     id='ur3-dscho-v0',
-    entry_point='gym_custom.envs.custom:UR3dschoEnv',
+    entry_point='gym_custom.envs.custom.ur3_env:UR3dschoEnv',
     max_episode_steps=None,
     reward_threshold=0.0,
 )
 
 register(
     id='dual-ur3-larr-v0',
-    entry_point='gym_custom.envs.custom:DualUR3Env',
+    entry_point='gym_custom.envs.custom.dual_ur3_env:DualUR3Env',
     max_episode_steps=None,
     reward_threshold=0.0,
 )
@@ -137,7 +137,7 @@ register(
 #
 register(
     id='robotiq-practice-v0',
-    entry_point='gym_custom.envs.custom:Robotiq85PracticeEnv',
+    entry_point='gym_custom.envs.custom.gripper_env:Robotiq85PracticeEnv',
     max_episode_steps=None,
     reward_threshold=0.0,
 )
