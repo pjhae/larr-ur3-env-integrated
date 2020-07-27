@@ -51,6 +51,8 @@ class URScriptWrapper(ActionWrapper):
                 'gbias': lambda : np.array([self.env._get_gripper_bias()[2], self.env._get_gripper_bias()[7]]),
                 'dt': self.env.dt
             }
+        else:
+            self._env_getters = _env_getters
 
         self._initialize_attributes(copy.deepcopy(PID_gains), ur3_scale_factor.copy(), gripper_scale_factor.copy())
 
@@ -95,9 +97,9 @@ class URScriptWrapper(ActionWrapper):
         # generate actions
         actions = {}
         for command_type, command_val in ur_command.items():
-            key, action = getattr(self, command_type)(**command_val)
-            if key in actions.keys(): raise ValueError('Multiple commands for a single entity!')
-            else: actions[key] = action
+            action, entity = getattr(self, command_type)(**command_val)
+            if entity in actions.keys(): raise ValueError('Multiple commands for a single entity!')
+            else: actions[entity] = action
         ur3_action = actions.get('ur3', np.zeros([self.ndof]))
         gripper_action = actions.get('gripper', np.zeros([self.ngripperdof]))
 
@@ -106,22 +108,27 @@ class URScriptWrapper(ActionWrapper):
     def movej(self, q=None, a=1.4, v =1.05, t =0, r =0, wait=True, pose=None):
         '''No analogy for this UR Script command'''
         raise NotImplementedError()
+        return action, 'ur3'
 
     def movel(self, *args, **kwargs):
         '''No analogy for this UR Script command'''
         raise NotImplementedError()
+        return action, 'ur3'
 
     def movep(self, *args, **kwargs):
         '''No analogy for this UR Script command'''
         raise NotImplementedError()
+        return action, 'ur3'
 
     def movec(self, *args, **kwargs):
         '''No analogy for this UR Script command'''
         raise NotImplementedError()
+        return action, 'ur3'
 
     def servoc(self, *args, **kwargs):
         '''No analogy for this UR Script command'''
         raise NotImplementedError()
+        return action, 'ur3'
 
     # def servoj(self, q, t =0.008, lookahead_time=0.1, gain=100, wait=True): # as defined in UR Script
     def servoj(self, q, t=None, lookahead_time=None, gain=None, wait=None): # we only use q here
@@ -129,7 +136,7 @@ class URScriptWrapper(ActionWrapper):
         Servo to position (linear in joint-space)
         non-blocking command, suitable for online control
         '''
-        raise NotImplementedError() # TODO: this needs to be tested and/or debugged
+        # raise NotImplementedError() # TODO: this needs to be tested and/or debugged
         assert q.shape[0] == self.ndof
         # Calculate error
         current_theta = self._env_getters['qpos']()
@@ -163,7 +170,7 @@ class URScriptWrapper(ActionWrapper):
         rescale = 1
 
         action = rescale*PID_control + bias - constraint
-        return action
+        return action, 'ur3'
 
     # def speedj(self, qd, a, t , wait=True): # as defined in UR Script
     def speedj(self, qd, a=None, t=None, wait=None): # we only use qd here
@@ -173,7 +180,7 @@ class URScriptWrapper(ActionWrapper):
             a: joint acceleration [rad/s^2] (of leading axis)
             t: time [s] before the function returns (optional)
         '''
-        raise NotImplementedError() # TODO: this needs to be tested and/or debugged
+        # raise NotImplementedError() # TODO: this needs to be tested and/or debugged
         assert qd.shape[0] == self.ndof
         # Calculate error
         current_thetadot = self._env_getters['qvel']()
@@ -184,7 +191,7 @@ class URScriptWrapper(ActionWrapper):
         bias = self._env_getters['qbias']()
 
         # External forces
-        constraint = ent_getters['qconstraint']()
+        constraint = self._env_getters['qconstraint']()
         constraint = np.clip(constraint, -0.50*self.ur3_torque_limit, 0.50*self.ur3_torque_limit)
 
         # PID controller
@@ -201,47 +208,52 @@ class URScriptWrapper(ActionWrapper):
         rescale = 1
 
         action = rescale*PI_control + bias - constraint
-        return action
+        return action, 'ur3'
 
     def speedl(self, *args, **kwargs):
         '''No analogy for this UR Script command'''
         raise NotImplementedError()
+        return action, 'ur3'
 
     def stopj(self, a, wait=True):
         '''No analogy for this UR Script command'''
         raise NotImplementedError()
+        return action, 'ur3'
 
     def stopl(self, *args, **kwargs):
         '''No analogy for this UR Script command'''
         raise NotImplementedError()
+        return action, 'ur3'
 
     def open_gripper(self, *args, **kwargs):
         raise NotImplementedError()
         self.move_gripper_position()
+        return action, 'gripper'
 
     def close_gripper(self, *args, **kwargs):
         raise NotImplementedError()
         self.move_gripper_position()
+        return action, 'gripper'
 
     def move_gripper_position(self, g):
         raise NotImplementedError() # TODO: this needs to be tested and/or debugged
         assert g.shape[0] == self.ngripperdof
-        err = np.array([g, g]) - self._env_getters['gpos']()
+        err = np.concatenate([g, g]) - self._env_getters['gpos']()
         action = self.gripper_scale_factor*err + self._env_getters['gbias']() # P control
-        return action
+        return action, 'gripper'
     
     def move_gripper_velocity(self, gd):
         raise NotImplementedError() # TODO: this needs to be tested and/or debugged
-        asser gd.shape[0] == self.ngripperdof
-        err = np.array([gd, gd]) - self._env_getters['gvel']()
+        assert gd.shape[0] == self.ngripperdof
+        err = np.concatenate([gd, gd]) - self._env_getters['gvel']()
         action = self.gripper_scale_factor*err + self._env_getters['gbias']() # P control
-        return action
+        return action, 'gripper'
 
-    def move_gripper_force(self, gf)):
-        raise NotImplementedError() # TODO: this needs to be tested and/or debugged
+    def move_gripper_force(self, gf):
+        # raise NotImplementedError() # TODO: this needs to be tested and/or debugged
         assert gf.shape[0] == self.ngripperdof
-        action = np.array([gf, gf]) + self._env_getters['gbias']()
-        return action
+        action = np.concatenate([gf, gf]) + self._env_getters['gbias']()
+        return action, 'gripper'
 
     def reset(self, **kwargs):
         self._clear_integration_term()
@@ -257,20 +269,20 @@ class URScriptWrapper_DualUR3(ActionWrapper):
 
         # cf. f = lambda : np.zeros([5])
         wrapper_right_env_getters = {
-            'qpos': lambda : env._get_ur3_qpos()[:env.ur3_nqpos]
-            'qvel': lambda : env._get_ur3_qvel()[:env.ur3_nqvel]
-            'qbias': lambda : env._get_ur3_bias[:env.ur3_nqvel]
-            'qconstraint': lambda : env._get_ur3_constraint[:env.ur3_nqvel]
+            'qpos': lambda : env._get_ur3_qpos()[:env.ur3_nqpos],
+            'qvel': lambda : env._get_ur3_qvel()[:env.ur3_nqvel],
+            'qbias': lambda : env._get_ur3_bias()[:env.ur3_nqvel],
+            'qconstraint': lambda : env._get_ur3_constraint()[:env.ur3_nqvel],
             'gpos': lambda : np.array([self.env._get_gripper_qpos()[2], self.env._get_gripper_qpos()[7]]),
             'gvel': lambda : np.array([self.env._get_gripper_qvel()[2], self.env._get_gripper_qvel()[7]]),
             'gbias': lambda : np.array([self.env._get_gripper_bias()[2], self.env._get_gripper_bias()[7]]),
             'dt': env.dt
         }
         wrapper_left_env_getters = {
-            'qpos': lambda : env._get_ur3_qpos()[env.ur3_nqpos:]
-            'qvel': lambda : env._get_ur3_qpos()[env.ur3_nvel:]
-            'qbias': lambda : env._get_ur3_bias[env.ur3_nqvel:]
-            'qconstraint': lambda : env._get_ur3_bias[:env.ur3_nqvel:]
+            'qpos': lambda : env._get_ur3_qpos()[env.ur3_nqpos:],
+            'qvel': lambda : env._get_ur3_qvel()[env.ur3_nqvel:],
+            'qbias': lambda : env._get_ur3_bias()[env.ur3_nqvel:],
+            'qconstraint': lambda : env._get_ur3_constraint()[env.ur3_nqvel:],
             'gpos': lambda : np.array([self.env._get_gripper_qpos()[12], self.env._get_gripper_qpos()[17]]),
             'gvel': lambda : np.array([self.env._get_gripper_qvel()[12], self.env._get_gripper_qvel()[17]]),
             'gbias': lambda : np.array([self.env._get_gripper_bias()[12], self.env._get_gripper_bias()[17]]),
@@ -286,8 +298,8 @@ class URScriptWrapper_DualUR3(ActionWrapper):
     def action(self, ur_command):
         right_action = self.wrapper_right.action(ur_command['right'])
         left_action = self.wrapper_left.action(ur_command['left'])
-        right_ur3_action, right_gripper_action = right_action[:self.wrapper_right.ndof], right_action[-self.wrapper_right.ngripperdof:]
-        left_ur3_action, left_gripper_action = left_action[:self.wrapper_left.ndof], left_action[-self.wrapper_left.ngripperdof:]
+        right_ur3_action, right_gripper_action = right_action[:self.wrapper_right.ndof], right_action[self.wrapper_right.ndof:]
+        left_ur3_action, left_gripper_action = left_action[:self.wrapper_left.ndof], left_action[self.wrapper_left.ndof:]
 
         return np.concatenate([right_ur3_action, left_ur3_action, right_gripper_action, left_gripper_action])
 
@@ -296,59 +308,59 @@ class URScriptWrapper_DualUR3(ActionWrapper):
         self.wrapper_left._clear_integration_term()
         return self.env.reset(**kwargs)
 
-class URScriptWrapper_DualUR3_fail(URScriptWrapper):
-    '''
-    UR Script action wrapper for DualUR3Env
-    '''
+# class URScriptWrapper_DualUR3_fail(URScriptWrapper):
+#     '''
+#     UR Script action wrapper for DualUR3Env
+#     '''
 
-    # class variables
-    ur3_command_types = ['servoj', 'speedj']
-    gripper_command_types = ['move_gripper_position', 'move_gripper_velocity', 'move_gripper_force']
-    command_type_list = ur3_command_types + gripper_command_types
-    ur3_torque_limit = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0, 50.0, 50.0, 25.0, 10.0, 10.0, 10.0])
+#     # class variables
+#     ur3_command_types = ['servoj', 'speedj']
+#     gripper_command_types = ['move_gripper_position', 'move_gripper_velocity', 'move_gripper_force']
+#     command_type_list = ur3_command_types + gripper_command_types
+#     ur3_torque_limit = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0, 50.0, 50.0, 25.0, 10.0, 10.0, 10.0])
 
-    def _initialize_attributes(self, PID_gains, ur3_scale_factor, gripper_scale_factor):
-        self.ur3_scale_factor = np.concatenate([ur3_scale_factor, ur3_scale_factor]) # 2 x ndof
-        self.gripper_scale_factor = np.concatenate([gripper_scale_factor, gripper_scale_factor]) # 2 x ngripper
-        self.ndof, self.ngripperdof = ur3_scale_factor.shape[0], gripper_scale_factor.shape[0]
-        assert self.ndof == self.env.ur3_nact and self.ngripperdof == self.env.gripper_nact, 'DOF mismatch'
+#     def _initialize_attributes(self, PID_gains, ur3_scale_factor, gripper_scale_factor):
+#         self.ur3_scale_factor = np.concatenate([ur3_scale_factor, ur3_scale_factor]) # 2 x ndof
+#         self.gripper_scale_factor = np.concatenate([gripper_scale_factor, gripper_scale_factor]) # 2 x ngripper
+#         self.ndof, self.ngripperdof = ur3_scale_factor.shape[0], gripper_scale_factor.shape[0]
+#         assert self.ndof == self.env.ur3_nact and self.ngripperdof == self.env.gripper_nact, 'DOF mismatch'
         
-        self.servoj_gains = PID_gains.get('servoj', {'P': None, 'I': None, 'D': None})
-        self.speedj_gains = PID_gains.get('speedj', {'P': None, 'I': None, 'D': None})
-        self.ur3_err_integ, self.gripper_err_integ = np.zeros([2*self.ndof]), np.zeros([2*self.ngripperdof])
-        # self.ur3_err_integ_limits, self.gripper_err_integ_limits = [-2.5, 2.5], [-1.0, 1.0]
-        self.ur3_err_integ_right, self.ur3_err_integ_left = self.ur3_err_integ[:self.ndof], self.ur3_err_integ[self.ndof:]
-        self.gripper_err_integ_right, self.gripper_err_integ_left = self.gripper_err_integ[:self.ngripperdof], self.gripper_err_integ[self.ngripperdof:]
+#         self.servoj_gains = PID_gains.get('servoj', {'P': None, 'I': None, 'D': None})
+#         self.speedj_gains = PID_gains.get('speedj', {'P': None, 'I': None, 'D': None})
+#         self.ur3_err_integ, self.gripper_err_integ = np.zeros([2*self.ndof]), np.zeros([2*self.ngripperdof])
+#         # self.ur3_err_integ_limits, self.gripper_err_integ_limits = [-2.5, 2.5], [-1.0, 1.0]
+#         self.ur3_err_integ_right, self.ur3_err_integ_left = self.ur3_err_integ[:self.ndof], self.ur3_err_integ[self.ndof:]
+#         self.gripper_err_integ_right, self.gripper_err_integ_left = self.gripper_err_integ[:self.ngripperdof], self.gripper_err_integ[self.ngripperdof:]
         
-        self.command_type_ur3_right, self.command_type_ur3_left = None, None
-        self.command_type_gripper_right, self.command_type_gripper_left = None, None
+#         self.command_type_ur3_right, self.command_type_ur3_left = None, None
+#         self.command_type_gripper_right, self.command_type_gripper_left = None, None
 
-    def action(self, ur_command):
-        if not all([command_type in self.command_type_list for command_type in ur_command['right'].keys()]):
-            raise ValueError('Invalid command type!')
-        if not all([command_type in self.command_type_list for command_type in ur_command['left'].keys()]):
-            raise ValueError('Invalid command type!')
-        self._clear_integration_term(ur_command['right'], tag='right', force=False) # clear integration term if command type has changed
-        self._clear_integration_term(ur_command['left'], tag='left', force=False) # clear integration term if command type has changed
+#     def action(self, ur_command):
+#         if not all([command_type in self.command_type_list for command_type in ur_command['right'].keys()]):
+#             raise ValueError('Invalid command type!')
+#         if not all([command_type in self.command_type_list for command_type in ur_command['left'].keys()]):
+#             raise ValueError('Invalid command type!')
+#         self._clear_integration_term(ur_command['right'], tag='right', force=False) # clear integration term if command type has changed
+#         self._clear_integration_term(ur_command['left'], tag='left', force=False) # clear integration term if command type has changed
 
-        # generate actions
-        actions = {}
-        for command_type, command_val in ur_command['right'].items():
-            key, action = getattr(self, command_type)(**command_val)
-            key = key + '_right'
-            if key in actions.keys(): raise ValueError('Multiple commands for a single entity!')
-            else: actions[key] = action
-        for command_type, command_val in ur_command['left'].items():
-            key, action = getattr(self, command_type)(**command_val)
-            key = key + '_left'
-            if key in actions.keys(): raise ValueError('Multiple commands for a single entity!')
-            else: actions[key] = action
-        ur3_right_action = actions.get('ur3_right', np.zeros([self.ndof]))
-        ur3_left_action = actions.get('ur3_left', np.zeros([self.ndof]))
-        gripper_right_action = actions.get('gripper_right', np.zeros([self.ngripperdof]))
-        gripper_left_action = actions.get('gripper_left', np.zeros([self.ngripperdof]))
+#         # generate actions
+#         actions = {}
+#         for command_type, command_val in ur_command['right'].items():
+#             key, action = getattr(self, command_type)(**command_val)
+#             key = key + '_right'
+#             if key in actions.keys(): raise ValueError('Multiple commands for a single entity!')
+#             else: actions[key] = action
+#         for command_type, command_val in ur_command['left'].items():
+#             key, action = getattr(self, command_type)(**command_val)
+#             key = key + '_left'
+#             if key in actions.keys(): raise ValueError('Multiple commands for a single entity!')
+#             else: actions[key] = action
+#         ur3_right_action = actions.get('ur3_right', np.zeros([self.ndof]))
+#         ur3_left_action = actions.get('ur3_left', np.zeros([self.ndof]))
+#         gripper_right_action = actions.get('gripper_right', np.zeros([self.ngripperdof]))
+#         gripper_left_action = actions.get('gripper_left', np.zeros([self.ngripperdof]))
 
-        return np.concatenate([ur3_right_action, ur3_left_action, gripper_right_action, gripper_left_action])
+#         return np.concatenate([ur3_right_action, ur3_left_action, gripper_right_action, gripper_left_action])
 
 
 ### Deprecated class
@@ -359,12 +371,12 @@ class URScriptWrapper_DualUR3_deprecated(ActionWrapper):
         Original action wrapper for DualUR3Env (command type fixed for both arms and command type fixed for both grippers)
     '''
     def __init__(self, env, PID_gains, ur3_scale_factor, gripper_scale_factor):
-        warnings.warn('This wrapper has been deprecated and is only preserved for compatibility with legacy source code!', warnings.DeprecationWarning)
+        warnings.warn('This wrapper has been deprecated and is only preserved for compatibility with legacy source code!', DeprecationWarning)
         super().__init__(env)
         self.ur3_scale_factor = np.concatenate([ur3_scale_factor, ur3_scale_factor])
         self.gripper_scale_factor = np.concatenate([gripper_scale_factor, gripper_scale_factor])
         self.ndof, self.ngripperdof = ur3_scale_factor.shape[0], gripper_scale_factor.shape[0]
-        assert self.ndof == self.env.ur3_nact/2 and self.ngripperdof == self.env.gripper_nact/2, 'DOF mismatch'
+        assert self.ndof == self.env.ur3_nact and self.ngripperdof == self.env.gripper_nact, 'DOF mismatch'
         
         self.PID_gains = copy.deepcopy(PID_gains)
         self.ur3_err_integ, self.gripper_err_integ = 0.0, 0.0

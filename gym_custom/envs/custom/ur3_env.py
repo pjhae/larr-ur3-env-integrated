@@ -14,7 +14,7 @@ from gym_custom.envs.mujoco import MujocoEnv
 class UR3PracticeEnv(MujocoEnv, utils.EzPickle):
 
     def __init__(self):
-        warnings.warn('This environment is for debugging and is only preserved for compatibility with legacy source code!', warnings.DeprecationWarning)
+        warnings.warn('This environment is for debugging and is only preserved for compatibility with legacy source code!', DeprecationWarning)
         utils.EzPickle.__init__(self)
         xml_filename = 'ur3_pedestalmounted.xml'
         # xml_filename = 'shared_config.xml'
@@ -47,7 +47,7 @@ class UR3PracticeEnv(MujocoEnv, utils.EzPickle):
 class UR3PracticewithGripperEnv(MujocoEnv, utils.EzPickle):
 
     def __init__(self):
-        warnings.warn('This environment is for debugging and is only preserved for compatibility with legacy source code!', warnings.DeprecationWarning)
+        warnings.warn('This environment is for debugging and is only preserved for compatibility with legacy source code!', DeprecationWarning)
         utils.EzPickle.__init__(self)
         xml_filename = 'ur3_withgripper_pedestalmounted.xml'
         fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'ur3', xml_filename)
@@ -79,7 +79,7 @@ class UR3PracticewithGripperEnv(MujocoEnv, utils.EzPickle):
 class UR3dschoEnv(MujocoEnv, utils.EzPickle): # sanity check
 
     def __init__(self):
-        warnings.warn('This environment is for debugging and is only preserved for compatibility with legacy source code!', warnings.DeprecationWarning)
+        warnings.warn('This environment is for debugging and is only preserved for compatibility with legacy source code!', DeprecationWarning)
         utils.EzPickle.__init__(self)
         xml_filename = 'ur3_pick_and_place_dscho.xml'
         fullpath = os.path.join(os.path.dirname(__file__), 'assets', 'ur3', xml_filename)
