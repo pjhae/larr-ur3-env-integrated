@@ -1,3 +1,7 @@
+import numpy as np
+import os
+import pickle
+import sys
 import time
 import warnings
 
@@ -33,7 +37,7 @@ class DualUR3RealEnv(gym_custom.Env):
         # Define spaces
         self.action_space = DualUR3RealEnv._set_action_space()
         obs = self._get_obs()
-        self.observation_space = DualUR3RealEnv._set_observation_space()
+        self.observation_space = DualUR3RealEnv._set_observation_space(obs)
 
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
@@ -49,16 +53,20 @@ class DualUR3RealEnv(gym_custom.Env):
         self.kinematics_params['ub'] = np.array([2*np.pi for _ in range(6)])
         self.kinematics_params['lb'] = np.array([-2*np.pi for _ in range(6)])
         
-        self.kinematics_params['T_wb_right'] = np.eye(4)
-        self.kinematics_params['T_wb_right'][0:3,0:3] = self.sim.data.get_body_xmat('right_arm_rotz').reshape([3,3])
-        self.kinematics_params['T_wb_right'][0:3,3] = self.sim.data.get_body_xpos('right_arm_rotz')
-        
-        self.kinematics_params['T_wb_left'] = np.eye(4)
-        self.kinematics_params['T_wb_left'][0:3,0:3] = self.sim.data.get_body_xmat('left_arm_rotz').reshape([3,3])
-        self.kinematics_params['T_wb_left'][0:3,3] = self.sim.data.get_body_xpos('left_arm_rotz')
+        path_to_pkl = os.path.join(os.path.dirname(__file__), 'ur/dual_ur3_kinematics_params.pkl')
+        if os.path.isfile(path_to_pkl):
+            kinematics_params_from_pkl = pickle.load(open(path_to_pkl, 'rb'))
+            self.kinematics_params['T_wb_right'] = kinematics_params_from_pkl['T_wb_right']
+            self.kinematics_params['T_wb_left'] = kinematics_params_from_pkl['T_wb_left']
+        else:
+            raise FileNotFoundError('No such file: %s. Run MuJoCo-based simulated environment to generate file.'%(path_to_pkl))
 
         # Misc
         self._episode_step = None
+
+    def close(self):
+        self.interface_right.comm.close()
+        self.interface_left.comm.close()
 
     #
     # Utilities (general)
@@ -128,12 +136,12 @@ class DualUR3RealEnv(gym_custom.Env):
         # Set initial guess
         if arm == 'right':
             if type(q_init).__name__ == 'ndarray': q = q_init.copy()
-            elif q_init == 'current': q = self._get_ur3_qpos()[:self.ur3_nqpos]
+            elif q_init == 'current': q = self.interface_right.get_joint_positions()
             elif q_init == 'zero': q = np.zeros([self.ur3_nqpos])
             else: raise ValueError("q_init must be one of the following: ['current', 'zero', numpy.ndarray]")
         elif arm == 'left':
             if type(q_init).__name__ == 'ndarray': q = q_init.copy()
-            elif q_init == 'current': q = self._get_ur3_qpos()[self.ur3_nqpos:]
+            elif q_init == 'current': q = self.interface_left.get_joint_positions()
             elif q_init == 'zero': q = np.zeros([self.ur3_nqpos])
             else: raise ValueError("q_init must be one of the following: ['current', 'zero', numpy.ndarray]")
         else:
@@ -256,8 +264,8 @@ class DualUR3RealEnv(gym_custom.Env):
         # TODO: Send commands to both arms simultaneously?
         self.interface_right.movej(q=self._init_qpos[:6])
         self.interface_left.movej(q=self._init_qpos[6:])
-        self.interface_right.move_gripper(q=self._init_gripperpos[:1])
-        self.interface_left.move_gripper(q=self._init_gripperpos[1:])
+        self.interface_right.move_gripper(g=self._init_gripperpos[:1])
+        self.interface_left.move_gripper(g=self._init_gripperpos[1:])
         self._episode_step = 0
         return self._get_obs()
 
@@ -343,7 +351,7 @@ def servoj_speedj_example(host_ip_right, host_ip_left, rate):
     time.sleep(5.0)
 
     if prompt_yes_or_no('servoj to \r\n right: %s deg\r\n left: %s deg\r\n?'
-        %(np.rad2deg(goal_qpos_right), np.rad2deg(goal_pos_left))) is False:
+        %(np.rad2deg(goal_qpos_right), np.rad2deg(goal_qpos_left))) is False:
         print('exiting program!')
         sys.exit()
     # servoj example
@@ -368,14 +376,14 @@ def servoj_speedj_example(host_ip_right, host_ip_left, rate):
     curr_obs_dict = real_env._nparray_to_dict(real_env._get_obs())
     curr_qpos_right, curr_qpos_left = curr_obs_dict['right']['qpos'], curr_obs_dict['left']['qpos']
     print('current - goal qpos is \r\n right: %s deg\r\n left: %s deg'
-        %(np.rad2deg(current_qpos_right - goal_qpos_right), np.rad2deg(current_qpos_left - goal_qpos_left)))
+        %(np.rad2deg(curr_qpos_right - goal_qpos_right), np.rad2deg(curr_qpos_left - goal_qpos_left)))
     time.sleep(5)
     print('Moving to initial position...')
     real_env.step({'right': {'movej': {'q': waypoints_qpos_right[0,:]}}, 'left': {'movej': {'q': waypoints_qpos_left[0,:]}}})
     print('done!')
 
     if prompt_yes_or_no('speedj to \r\n right: %s deg\r\n left: %s deg\r\n?'
-        %(np.rad2deg(goal_qpos_right), np.rad2deg(goal_pos_left))) is False:
+        %(np.rad2deg(goal_qpos_right), np.rad2deg(goal_qpos_left))) is False:
         print('exiting program!')
         sys.exit()
     # speedj example
@@ -393,13 +401,14 @@ def servoj_speedj_example(host_ip_right, host_ip_left, rate):
             }
         })
         print('action %d sent!'%(n))
+    real_env.step({'right': {'stopj': {'a': 5}}, 'left': {'stopj': {'a': 5}}})
     finish = time.time()
     print('done! (elapsed time: %.3f [s])'%(finish - start))
     time.sleep(5)
     curr_obs_dict = real_env._nparray_to_dict(real_env._get_obs())
     curr_qpos_right, curr_qpos_left = curr_obs_dict['right']['qpos'], curr_obs_dict['left']['qpos']
     print('current - goal qpos is \r\n right: %s deg\r\n left: %s deg'
-        %(np.rad2deg(current_qpos_right - goal_qpos_right), np.rad2deg(current_qpos_left - goal_qpos_left)))
+        %(np.rad2deg(curr_qpos_right - goal_qpos_right), np.rad2deg(curr_qpos_left - goal_qpos_left)))
     time.sleep(5)
     print('Moving to initial position...')
     real_env.step({'right': {'movej': {'q': waypoints_qpos_right[0,:]}}, 'left': {'movej': {'q': waypoints_qpos_left[0,:]}}})
@@ -417,5 +426,5 @@ def servoj_speedj_example(host_ip_right, host_ip_left, rate):
     time.sleep(5.0)
 
 if __name__ == "__main__":
-    # servoj_speedj_example()
+    servoj_speedj_example(host_ip_right='192.168.5.102', host_ip_left='192.168.5.101', rate=10)
     pass

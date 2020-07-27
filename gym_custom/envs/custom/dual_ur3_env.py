@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import pickle
 import os
 import warnings
 
@@ -68,6 +69,10 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         self.kinematics_params['T_wb_left'] = np.eye(4)
         self.kinematics_params['T_wb_left'][0:3,0:3] = self.sim.data.get_body_xmat('left_arm_rotz').reshape([3,3])
         self.kinematics_params['T_wb_left'][0:3,3] = self.sim.data.get_body_xpos('left_arm_rotz')
+
+        path_to_pkl = os.path.join(os.path.dirname(__file__), '../real/ur/dual_ur3_kinematics_params.pkl')
+        if not os.path.isfile(path_to_pkl):
+            pickle.dump(self.kinematics_params, open(path_to_pkl, 'wb'))
 
     #
     # Utilities (general)
