@@ -26,6 +26,9 @@ class UR3RealEnv(gym_custom.Env):
 
         self._episode_step = None
 
+    def close(self):
+        self.interface.comm.close()
+
     def set_initial_joint_pos(self, q=None):
         if q is None: pass
         elif q == 'current': self._init_qpos = self.interface.get_joint_positions()
@@ -87,7 +90,7 @@ class UR3RealEnv(gym_custom.Env):
 
     def reset_model(self):
         self.interface.movej(q=self._init_qpos)
-        self.interface.move_gripper(q=self._init_gripperpos)
+        self.interface.move_gripper(g=self._init_gripperpos)
         self._episode_step = 0
         return self._get_obs()
 
@@ -170,7 +173,7 @@ def servoj_speedj_example(host_ip, rate):
     print('current - goal qpos is %s deg'%(np.rad2deg(curr_qpos - goal_qpos)))
     time.sleep(5)
     print('Moving to initial position...')
-    real_env.step({'movej': {'q': waypoints_qpos[0,:]}})
+    real_env.step({'movej': {'q': init_qpos}})
     print('done!')
 
     if prompt_yes_or_no('speedj to %s deg?'%(np.rad2deg(goal_qpos))) is False:
@@ -193,7 +196,7 @@ def servoj_speedj_example(host_ip, rate):
     print('current - goal qpos is %s deg'%(np.rad2deg(curr_qpos - goal_qpos)))
     time.sleep(5)
     print('Moving to initial position...')
-    real_env.step({'movej': {'q': waypoints_qpos[0,:]}})
+    real_env.step({'movej': {'q': init_qpos}})
     print('done!')
     
     # open-close-open gripper

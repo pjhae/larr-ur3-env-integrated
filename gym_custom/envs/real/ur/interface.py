@@ -131,7 +131,7 @@ class URScriptInterface(object):
 
     def move_gripper(self, *args, **kwargs):
         '''Compatibility wrapper for move_gripper_position()'''
-        return self.move_gripper_position(args, kwargs)
+        return self.move_gripper_position(*args, **kwargs)
 
     def move_gripper_position(self, g):
         # TODO: dscho
