@@ -217,8 +217,7 @@ class URScriptWrapper(ActionWrapper):
 
     def stopj(self, a, wait=True):
         '''No analogy for this UR Script command'''
-        raise NotImplementedError()
-        return action, 'ur3'
+        return self.speedj(qd=np.zeros[self.ndof], a=a, wait=wait)
 
     def stopl(self, *args, **kwargs):
         '''No analogy for this UR Script command'''
