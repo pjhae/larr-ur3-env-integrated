@@ -135,18 +135,30 @@ class URScriptInterface(object):
 
     def move_gripper_position(self, g):
         # TODO: dscho
-        return None
-        # raise NotImplementedError()
+        if g < 0: # open
+            return self.open_gripper()
+        elif g > 0: # close
+            return self.close_gripper()
+        else: # do nothing
+            return None
 
     def move_gripper_velocity(self, gd):
         # TODO: dscho
-        return None
-        # raise NotImplementedError()
+        if gd < 0: # open
+            return self.open_gripper()
+        elif gd > 0: # close
+            return self.close_gripper()
+        else: # do nothing
+            return None
 
     def move_gripper_force(self, gf):
         # TODO: dscho
-        return None
-        # raise NotImplementedError()
+        if gf < 0: # open
+            return self.open_gripper()
+        elif gf > 0: # close
+            return self.close_gripper()
+        else: # do nothing
+            return None
 
     def get_gripper_position(self):
         # TODO: dscho
