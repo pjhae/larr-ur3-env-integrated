@@ -172,6 +172,7 @@ def servoj_and_forceg(env_type='sim', render=False):
         if prompt_yes_or_no('current qpos is \r\n right: %s deg\r\n left: %s deg\r\n?'
             %(np.rad2deg(env.env._init_qpos[:6]), np.rad2deg(env.env._init_qpos[6:]))) is False:
             print('exiting program!')
+            env.close()
             sys.exit()
 
     t = 0
@@ -304,6 +305,7 @@ def speedj_and_forceg(env_type='sim', render=False):
         if prompt_yes_or_no('current qpos is \r\n right: %s deg\r\n left: %s deg\r\n?'
             %(np.rad2deg(env.env._init_qpos[:6]), np.rad2deg(env.env._init_qpos[6:]))) is False:
             print('exiting program!')
+            env.close()
             sys.exit()
 
     # Move to goal
@@ -332,7 +334,7 @@ def speedj_and_forceg(env_type='sim', render=False):
         # left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
         # right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
         # left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
-        # print('time: %f [s]'%(t*dt))
+        print('time: %f [s]'%(t*dt))
         # print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
         # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
     finish = time.time()
@@ -567,8 +569,19 @@ def pick_and_place(env_type='sim', render=False):
         env = gym_custom.make('dual-ur3-larr-v0')
         servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
     elif env_type == list_of_env_types[1]:
-        env = gym_custom.make('dual-ur3-larr-real-v0')
+        env = gym_custom.make('dual-ur3-larr-real-v0',
+            host_ip_right='192.168.5.102',
+            host_ip_left='192.168.5.101',
+            rate=25
+        )
         servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 5, 't': 2/env.rate._freq, 'wait': False}
+        # 1. Set initial as current configuration
+        env.set_initial_joint_pos('current')
+        env.set_initial_gripper_pos('current')
+        # 2. Set inital as default configuration
+        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
+        env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+        assert render is False
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
     obs = env.reset()
     dt = env.dt
@@ -583,7 +596,14 @@ def pick_and_place(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    print('Moving to position... (step 1 of )')
+    if env_type == list_of_env_types[1]:
+        if prompt_yes_or_no('current qpos is \r\n right: %s deg\r\n left: %s deg\r\n?'
+            %(np.rad2deg(env.env._init_qpos[:6]), np.rad2deg(env.env._init_qpos[6:]))) is False:
+            print('exiting program!')
+            env.close()
+            sys.exit()
+
+    print('Moving to position... (step 1 of 6)')
     time.sleep(1.0)
     # 1. Move to initial position
     duration = 5.0
@@ -594,6 +614,7 @@ def pick_and_place(env_type='sim', render=False):
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
     q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/duration
+    start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
@@ -606,20 +627,24 @@ def pick_and_place(env_type='sim', render=False):
             }
         })
         if render: env.render()
-        obs_dict = env.env.get_obs_dict()
-        right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
-        right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
-        left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
+        # obs_dict = env.env.get_obs_dict()
+        # right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
+        # left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
+        # right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
+        # left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
         print('time: %f [s]'%(t*dt))
-        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
-        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+        # print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
+        # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+    finish = time.time()
+    env.step({'right': {'stopj': {'a': speedj_args['a']}}, 'left': {'stopj': {'a': speedj_args['a']}}})
+    print('speedj duration: %.3f (actual) vs. %.3f (desired)'%(finish-start, duration))
 
-    print('Opening right gripper... (step 2 of )')
+    print('Opening right gripper... (step 2 of 6)')
     time.sleep(1.0)
     # 2. Open right gripper
     duration = 5.0
     q_right_des_vel, q_left_des_vel = np.zeros_like(q_right_des_vel), np.zeros_like(q_left_des_vel)
+    start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
@@ -632,16 +657,18 @@ def pick_and_place(env_type='sim', render=False):
             }
         })
         if render: env.render()
-        obs_dict = env.env.get_obs_dict()
-        right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
-        right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
-        left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
+        # obs_dict = env.env.get_obs_dict()
+        # right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
+        # left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
+        # right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
+        # left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
         print('time: %f [s]'%(t*dt))
-        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
-        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+        # print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
+        # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+    finish = time.time()
+    print('speedj duration: %.3f (actual) vs. %.3f (desired)'%(finish-start, duration))
 
-    print('Placing right gripper... (step 3 of )')
+    print('Placing right gripper... (step 3 of 6)')
     time.sleep(1.0)
     # 3. Place right gripper
     duration = 5.0
@@ -652,6 +679,7 @@ def pick_and_place(env_type='sim', render=False):
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
     q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/duration
+    start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
@@ -664,16 +692,18 @@ def pick_and_place(env_type='sim', render=False):
             }
         })
         if render: env.render()
-        obs_dict = env.env.get_obs_dict()
-        right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
-        right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
-        left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
+        # obs_dict = env.env.get_obs_dict()
+        # right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
+        # left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
+        # right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
+        # left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
         print('time: %f [s]'%(t*dt))
-        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
-        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+        # print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
+        # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+    finish = time.time()
+    print('speedj duration: %.3f (actual) vs. %.3f (desired)'%(finish-start, duration))
     qpos_err, qvel = np.inf, np.inf
-    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e-1):
+    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e0):
         ob, _, _, _ = env.step({
             'right': {
                 'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
@@ -695,10 +725,17 @@ def pick_and_place(env_type='sim', render=False):
         qvel = np.linalg.norm(np.concatenate([obs_dict['right']['qvel'], obs_dict['left']['qvel']]))
         t += 1
 
-    print('Gripping object... (step 4 of )')
+    if env_type == list_of_env_types[1]:
+        if prompt_yes_or_no('grasp object?') is False:
+            print('exiting program!')
+            env.close()
+            sys.exit()
+
+    print('Gripping object... (step 4 of 6)')
     time.sleep(1.0)
     # 4. Grip object
     duration = 5.0
+    start = time.time()
     for t in range(int(duration/dt)):
         ob, _, _, _ = env.step({
             'right': {
@@ -711,14 +748,16 @@ def pick_and_place(env_type='sim', render=False):
             }
         })
         if render: env.render()
-        obs_dict = env.env.get_obs_dict()
-        right_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        left_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
+        # obs_dict = env.env.get_obs_dict()
+        # right_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
+        # left_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
         print('time: %f [s]'%(t*dt))
-        print('right arm joint error [deg]: %f'%(np.rad2deg(right_err)))
-        print('left arm joint error [deg]: %f'%(np.rad2deg(left_err)))
+        # print('right arm joint error [deg]: %f'%(np.rad2deg(right_err)))
+        # print('left arm joint error [deg]: %f'%(np.rad2deg(left_err)))
+    finish = time.time()
+    print('speedj duration: %.3f (actual) vs. %.3f (desired)'%(finish-start, duration))
 
-    print('Lifting object... (step 5 of )')
+    print('Lifting object... (step 5 of 6)')
     time.sleep(1.0)
     # 5. Lift object
     duration = 5.0
@@ -730,6 +769,7 @@ def pick_and_place(env_type='sim', render=False):
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
     q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/duration
+    start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
@@ -742,14 +782,14 @@ def pick_and_place(env_type='sim', render=False):
             }
         })
         if render: env.render()
-        obs_dict = env.env.get_obs_dict()
-        right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
-        right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
-        left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
+        # obs_dict = env.env.get_obs_dict()
+        # right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
+        # left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
+        # right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
+        # left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
         print('time: %f [s]'%(t*dt))
-        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
-        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+        # print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
+        # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
         if env_type == list_of_env_types[0]: # sim only attributes
             right_actuator_torque = np.linalg.norm(env.env._get_ur3_actuator()[:env.ur3_nqvel])
             left_actuator_torque = np.linalg.norm(env.env._get_ur3_actuator()[-env.ur3_nqvel:])
@@ -761,9 +801,11 @@ def pick_and_place(env_type='sim', render=False):
                 %(right_actuator_torque, right_bias_torque, right_constraint_torque))
             print('left arm actuator torque [Nm]: %f bias torque [Nm]: %f constraint torque [Nm]: %f'
                 %(left_actuator_torque, left_bias_torque, left_constraint_torque))
+    finish = time.time()
+    print('speedj duration: %.3f (actual) vs. %.3f (desired)'%(finish-start, duration))
     qpos_err, qvel = np.inf, np.inf
     env.wrapper_right.servoj_gains, env.wrapper_left.servoj_gains = {'P': 1.0, 'I': 2.5, 'D': 0.2}, {'P': 1.0, 'I': 2.5, 'D': 0.2}
-    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e-1):
+    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e0):
         ob, _, _, _ = env.step({
             'right': {
                 'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
@@ -788,7 +830,7 @@ def pick_and_place(env_type='sim', render=False):
 
     time.sleep(3.0)
 
-    print('Opening gripper... (step 6 of )')
+    print('Opening gripper... (step 6 of 6)')
     time.sleep(1.0)
     # 6. Open gripper
     duration = 5.0
@@ -892,14 +934,14 @@ def collide_deprecated():
         print('    err_integ: %s'%(env.ur3_err_integ[-env.ur3_nqpos:]))
 
 def collide(env_type='sim', render=False):
-    list_of_env_types = ['sim', 'real']
+    list_of_env_types = ['sim']
 
     if env_type == list_of_env_types[0]:
         env = gym_custom.make('dual-ur3-larr-v0')
         speedj_args = {'a': 5, 't': None, 'wait': None}
-    elif env_type == list_of_env_types[1]:
-        env = gym_custom.make('dual-ur3-larr-real-v0')
-        speedj_args = {'a': 5, 't': 2/env.rate._freq, 'wait': False}
+    # elif env_type == list_of_env_types[1]:
+    #     env = gym_custom.make('dual-ur3-larr-real-v0')
+    #     speedj_args = {'a': 5, 't': 2/env.rate._freq, 'wait': False}
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
     obs = env.reset()
     dt = env.dt
@@ -994,9 +1036,9 @@ if __name__ == '__main__':
     # test_fkine_ikine()
 
     # 2.1 Updated UR wrapper examples
-    servoj_and_forceg(env_type='real', render=False)
-    # speedj_and_forceg(env_type='real', render=False)
-    # pick_and_place(env_type='sim', render=True)
+    # servoj_and_forceg(env_type='real', render=False)
+    speedj_and_forceg(env_type='real', render=False)
+    # pick_and_place(env_type='real', render=False)
     # collide(env_type='sim', render=True)
 
     # 2.2 Deprecated UR wrapper examples 
