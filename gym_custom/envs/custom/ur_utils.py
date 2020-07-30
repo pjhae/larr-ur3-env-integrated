@@ -85,7 +85,7 @@ class URScriptWrapper(ActionWrapper):
                 elif command_type in self.gripper_command_types:
                     if command_type != getattr(self, 'command_type_gripper' + tag):
                         setattr(self, 'command_type_gripper' + tag, command_type)
-                        setattr(self, 'gripper_err_integ' + tag, np.zeros([self.ngripperdof]))
+                        setattr(self, 'gripper_err_integ' + tag, np.zeros([2*self.ngripperdof]))
                 else:
                     raise ValueError('Invalid command type!')
 
@@ -101,7 +101,7 @@ class URScriptWrapper(ActionWrapper):
             if entity in actions.keys(): raise ValueError('Multiple commands for a single entity!')
             else: actions[entity] = action
         ur3_action = actions.get('ur3', np.zeros([self.ndof]))
-        gripper_action = actions.get('gripper', np.zeros([self.ngripperdof]))
+        gripper_action = actions.get('gripper', np.zeros([2*self.ngripperdof]))
 
         return np.concatenate([ur3_action, gripper_action])
 
@@ -297,8 +297,8 @@ class URScriptWrapper_DualUR3(ActionWrapper):
     def action(self, ur_command):
         right_action = self.wrapper_right.action(ur_command['right'])
         left_action = self.wrapper_left.action(ur_command['left'])
-        right_ur3_action, right_gripper_action = right_action[:self.wrapper_right.ndof], right_action[self.wrapper_right.ndof:]
-        left_ur3_action, left_gripper_action = left_action[:self.wrapper_left.ndof], left_action[self.wrapper_left.ndof:]
+        right_ur3_action, right_gripper_action = right_action[:self.wrapper_right.ndof], right_action[self.wrapper_right.ndof:] # ndof, 2*ngripperdof
+        left_ur3_action, left_gripper_action = left_action[:self.wrapper_left.ndof], left_action[self.wrapper_left.ndof:] # ndof, 2*ngripperdof
 
         return np.concatenate([right_ur3_action, left_ur3_action, right_gripper_action, left_gripper_action])
 
