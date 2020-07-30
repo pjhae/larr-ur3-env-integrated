@@ -6,11 +6,12 @@ Custom OpenAI Gym
 Quick Start Guide
 =================
 
-Download the [latest release](https://github.com/snu-larr/dual-ur3-env/releases/latest) and install via pip.
+Download the `latest release <https://github.com/snu-larr/dual-ur3-env/releases/latest>`_ and install via pip.
 
 .. code:: shell
 
-    wget https://github.com/snu-larr/dual-ur3-env/releases/latest
+    tar -zxvf dual-ur3-env-<latest release version>.tar.gz
+    cd dual-ur3-env-<latest release version>
     pip install '.[all]'
     
 Read the original README from OpenAI for instructions on installing MuJoCo.
