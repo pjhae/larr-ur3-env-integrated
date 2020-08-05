@@ -63,12 +63,12 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         self.kinematics_params['lb'] = np.array([-2*np.pi for _ in range(6)])
         
         self.kinematics_params['T_wb_right'] = np.eye(4)
-        self.kinematics_params['T_wb_right'][0:3,0:3] = self.sim.data.get_body_xmat('right_arm_rotz').reshape([3,3])
-        self.kinematics_params['T_wb_right'][0:3,3] = self.sim.data.get_body_xpos('right_arm_rotz')
+        self.kinematics_params['T_wb_right'][0:3,0:3] = self.sim.data.get_body_xmat('right_arm_rotz').reshape([3,3]).copy()
+        self.kinematics_params['T_wb_right'][0:3,3] = self.sim.data.get_body_xpos('right_arm_rotz').copy()
         
         self.kinematics_params['T_wb_left'] = np.eye(4)
-        self.kinematics_params['T_wb_left'][0:3,0:3] = self.sim.data.get_body_xmat('left_arm_rotz').reshape([3,3])
-        self.kinematics_params['T_wb_left'][0:3,3] = self.sim.data.get_body_xpos('left_arm_rotz')
+        self.kinematics_params['T_wb_left'][0:3,0:3] = self.sim.data.get_body_xmat('left_arm_rotz').reshape([3,3]).copy()
+        self.kinematics_params['T_wb_left'][0:3,3] = self.sim.data.get_body_xpos('left_arm_rotz').copy()
 
         path_to_pkl = os.path.join(os.path.dirname(__file__), '../real/ur/dual_ur3_kinematics_params.pkl')
         if not os.path.isfile(path_to_pkl):
@@ -195,8 +195,8 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
     # Utilities (MujocoEnv related)
 
     def get_body_se3(self, body_name):
-        R = self.sim.data.get_body_xmat(body_name).reshape([3,3])
-        p = self.sim.data.get_body_xpos(body_name)
+        R = self.sim.data.get_body_xmat(body_name).reshape([3,3]).copy()
+        p = self.sim.data.get_body_xpos(body_name).copy()
         T = np.eye(4)
         T[0:3,0:3] = R
         T[0:3,3] = p
