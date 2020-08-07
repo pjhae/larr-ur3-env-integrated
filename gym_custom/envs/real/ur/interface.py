@@ -123,6 +123,11 @@ class URScriptInterface(object):
         return np.array(self.comm.get_actual_joint_speeds())
 
     ## 2F-85 gripper
+    '''
+    TODO: dscho
+    Gripper commands via urx causes excessive delays under the current implementation.
+    Gripper commands should be used in isolation and not alongside UR3 commands for now.
+    '''
     def open_gripper(self, *args, **kwargs):
         self.comm.operate_gripper(0)
 
@@ -135,6 +140,7 @@ class URScriptInterface(object):
 
     def move_gripper_position(self, g):
         # TODO: dscho
+        g = 0
         if g < 0: # open
             return self.open_gripper()
         elif g > 0: # close
@@ -144,6 +150,7 @@ class URScriptInterface(object):
 
     def move_gripper_velocity(self, gd):
         # TODO: dscho
+        gd = 0
         if gd < 0: # open
             return self.open_gripper()
         elif gd > 0: # close
@@ -153,6 +160,7 @@ class URScriptInterface(object):
 
     def move_gripper_force(self, gf):
         # TODO: dscho
+        gf = 0
         if gf < 0: # open
             return self.open_gripper()
         elif gf > 0: # close

@@ -641,6 +641,7 @@ def pick_and_place(env_type='sim', render=False):
 
     print('Opening right gripper... (step 2 of 6)')
     time.sleep(1.0)
+    env.step({'right': {'open_gripper': {}}})
     # 2. Open right gripper
     duration = 5.0
     q_right_des_vel, q_left_des_vel = np.zeros_like(q_right_des_vel), np.zeros_like(q_left_des_vel)
@@ -733,6 +734,7 @@ def pick_and_place(env_type='sim', render=False):
 
     print('Gripping object... (step 4 of 6)')
     time.sleep(1.0)
+    env.step({'right': {'close_gripper': {}}})
     # 4. Grip object
     duration = 5.0
     start = time.time()
@@ -804,7 +806,8 @@ def pick_and_place(env_type='sim', render=False):
     finish = time.time()
     print('speedj duration: %.3f (actual) vs. %.3f (desired)'%(finish-start, duration))
     qpos_err, qvel = np.inf, np.inf
-    env.wrapper_right.servoj_gains, env.wrapper_left.servoj_gains = {'P': 1.0, 'I': 2.5, 'D': 0.2}, {'P': 1.0, 'I': 2.5, 'D': 0.2}
+    if env_type == list_of_env_types[0]:
+        env.wrapper_right.servoj_gains, env.wrapper_left.servoj_gains = {'P': 1.0, 'I': 2.5, 'D': 0.2}, {'P': 1.0, 'I': 2.5, 'D': 0.2}
     while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e0):
         ob, _, _, _ = env.step({
             'right': {
@@ -834,6 +837,7 @@ def pick_and_place(env_type='sim', render=False):
     time.sleep(1.0)
     # 6. Open gripper
     duration = 5.0
+    env.step({'right': {'open_gripper': {}}})
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
