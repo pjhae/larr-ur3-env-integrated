@@ -1032,6 +1032,36 @@ def collide(env_type='sim', render=False):
                 %(left_actuator_torque, left_bias_torque, left_constraint_torque))
             print('    err_integ: %s'%(env.wrapper_left.ur3_err_integ))
     
+def real_env_get_obs_rate_test():
+    env = gym_custom.make('dual-ur3-larr-real-v0',
+            host_ip_right='192.168.5.102',
+            host_ip_left='192.168.5.101',
+            rate=25
+        )
+    stime = time.time()
+    [env._get_obs() for _ in range(100)]
+    ftime = time.time()
+    print('time per call: %f'%((ftime-stime)/100))
+
+def real_env_command_send_rate_test():
+    env = gym_custom.make('dual-ur3-larr-real-v0',
+            host_ip_right='192.168.5.102',
+            host_ip_left='192.168.5.101',
+            rate=1000
+        )
+    command = {
+        'right': {'speedj': {'qd': np.zeros([6]), 'a': 1.0, 't': 1.0, 'wait': False}},
+        'left': {'speedj': {'qd': np.zeros([6]), 'a': 1.0, 't': 1.0, 'wait': False}}
+    }
+    stime = time.time()
+    [env.step(command) for _ in range(100)]
+    ftime = time.time()
+    command = {
+        'right': {'stopj': {'a': 1.0}},
+        'left': {'stopj': {'a': 1.0}}
+    }
+    env.step(command)
+    print('time per call: %f'%((ftime-stime)/100))
 
 if __name__ == '__main__':
     # 1. MuJoCo model verification
@@ -1050,3 +1080,7 @@ if __name__ == '__main__':
     # speedj_and_forceg_deprecated()
     # pick_and_place_deprecated()
     # collide_deprecated()
+
+    # 3. Misc. tests
+    # real_env_get_obs_rate_test()
+    # real_env_command_send_rate_test()
