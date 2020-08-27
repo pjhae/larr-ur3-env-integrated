@@ -35,9 +35,9 @@ class DualUR3RealEnv(gym_custom.Env):
         self._init_grippervel = np.zeros([2])
 
         # Define spaces
-        self.action_space = DualUR3RealEnv._set_action_space()
+        self.action_space = self._set_action_space()
         obs = self._get_obs()
-        self.observation_space = DualUR3RealEnv._set_observation_space(obs)
+        self.observation_space = self._set_observation_space(obs)
 
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
@@ -285,7 +285,7 @@ class DualUR3RealEnv(gym_custom.Env):
         }
 
     def _get_obs(self):
-        return DualUR3RealEnv._dict_to_nparray(self.get_obs_dict())
+        return self._dict_to_nparray(self.get_obs_dict())
 
     @staticmethod
     def _dict_to_nparray(obs_dict):
