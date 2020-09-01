@@ -641,9 +641,10 @@ def pick_and_place(env_type='sim', render=False):
 
     print('Opening right gripper... (step 2 of 6)')
     time.sleep(1.0)
-    env.step({'right': {'open_gripper': {}}})
+    env.step({'right': {'open_gripper': {}}, 'left': {}})
+    time.sleep(3.0)
     # 2. Open right gripper
-    duration = 5.0
+    duration = 1.0
     q_right_des_vel, q_left_des_vel = np.zeros_like(q_right_des_vel), np.zeros_like(q_left_des_vel)
     start = time.time()
     for t in range(int(duration/dt)):
@@ -704,7 +705,7 @@ def pick_and_place(env_type='sim', render=False):
     finish = time.time()
     print('speedj duration: %.3f (actual) vs. %.3f (desired)'%(finish-start, duration))
     qpos_err, qvel = np.inf, np.inf
-    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e0):
+    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(3e0):
         ob, _, _, _ = env.step({
             'right': {
                 'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
@@ -734,9 +735,10 @@ def pick_and_place(env_type='sim', render=False):
 
     print('Gripping object... (step 4 of 6)')
     time.sleep(1.0)
-    env.step({'right': {'close_gripper': {}}})
+    env.step({'right': {'close_gripper': {}}, 'left': {}})
+    time.sleep(3.0)
     # 4. Grip object
-    duration = 5.0
+    duration = 1.0
     start = time.time()
     for t in range(int(duration/dt)):
         ob, _, _, _ = env.step({
@@ -808,7 +810,7 @@ def pick_and_place(env_type='sim', render=False):
     qpos_err, qvel = np.inf, np.inf
     if env_type == list_of_env_types[0]:
         env.wrapper_right.servoj_gains, env.wrapper_left.servoj_gains = {'P': 1.0, 'I': 2.5, 'D': 0.2}, {'P': 1.0, 'I': 2.5, 'D': 0.2}
-    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(1e0):
+    while qpos_err > np.deg2rad(1e-1) or qvel > np.deg2rad(3e0):
         ob, _, _, _ = env.step({
             'right': {
                 'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
@@ -836,8 +838,9 @@ def pick_and_place(env_type='sim', render=False):
     print('Opening gripper... (step 6 of 6)')
     time.sleep(1.0)
     # 6. Open gripper
-    duration = 5.0
-    env.step({'right': {'open_gripper': {}}})
+    duration = 1.0
+    env.step({'right': {'open_gripper': {}}, 'left': {}})
+    time.sleep(3.0)
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
@@ -867,6 +870,7 @@ def pick_and_place(env_type='sim', render=False):
                 %(right_actuator_torque, right_bias_torque, right_constraint_torque))
             print('left arm actuator torque [Nm]: %f bias torque [Nm]: %f constraint torque [Nm]: %f'
                 %(left_actuator_torque, left_bias_torque, left_constraint_torque))
+    print('done!')
 
 def collide_deprecated():
 
@@ -1084,3 +1088,4 @@ if __name__ == '__main__':
     # 3. Misc. tests
     # real_env_get_obs_rate_test()
     # real_env_command_send_rate_test()
+    # pass
