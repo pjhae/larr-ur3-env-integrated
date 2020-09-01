@@ -1036,36 +1036,47 @@ def collide(env_type='sim', render=False):
                 %(left_actuator_torque, left_bias_torque, left_constraint_torque))
             print('    err_integ: %s'%(env.wrapper_left.ur3_err_integ))
     
-def real_env_get_obs_rate_test():
+def real_env_get_obs_rate_test(wait=True):
     env = gym_custom.make('dual-ur3-larr-real-v0',
             host_ip_right='192.168.5.102',
             host_ip_left='192.168.5.101',
             rate=25
         )
     stime = time.time()
-    [env._get_obs() for _ in range(100)]
+    [env._get_obs(wait=wait) for _ in range(100)]
     ftime = time.time()
-    print('time per call: %f'%((ftime-stime)/100))
+    # stats
+    # single call: 8ms (wait=True, default), <1ms (wait=False)
+    # 2 calls: 16ms (wait=True, default), <1ms (wait=False)
+    # 3 calls: 17ms (wait=True, default), <1ms (wait=False)
+    # 4 calls: 24ms (wait=True, default), <1ms (wait=False)
+    print('\r\ntime per call: %f ms'%((ftime-stime)/100*1000))
+    print('done!\r\n')
 
-def real_env_command_send_rate_test():
+def real_env_command_send_rate_test(wait=True):
+    # ~25ms (wait=True, default), ~11ms (wait=False)
     env = gym_custom.make('dual-ur3-larr-real-v0',
             host_ip_right='192.168.5.102',
             host_ip_left='192.168.5.101',
-            rate=1000
+            rate=100
         )
+    env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
+    env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+    env.reset()
     command = {
         'right': {'speedj': {'qd': np.zeros([6]), 'a': 1.0, 't': 1.0, 'wait': False}},
         'left': {'speedj': {'qd': np.zeros([6]), 'a': 1.0, 't': 1.0, 'wait': False}}
     }
     stime = time.time()
-    [env.step(command) for _ in range(100)]
+    [env.step(command, wait=wait) for _ in range(100)]
     ftime = time.time()
     command = {
         'right': {'stopj': {'a': 1.0}},
         'left': {'stopj': {'a': 1.0}}
     }
     env.step(command)
-    print('time per call: %f'%((ftime-stime)/100))
+    print('\r\ntime per call: %f ms'%((ftime-stime)/100*1000))
+    print('done!\r\n')
 
 if __name__ == '__main__':
     # 1. MuJoCo model verification
@@ -1086,6 +1097,6 @@ if __name__ == '__main__':
     # collide_deprecated()
 
     # 3. Misc. tests
-    # real_env_get_obs_rate_test()
-    # real_env_command_send_rate_test()
+    # real_env_get_obs_rate_test(wait=False)
+    # real_env_command_send_rate_test(wait=False)
     # pass

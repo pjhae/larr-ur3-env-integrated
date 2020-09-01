@@ -64,10 +64,6 @@ class DualUR3RealEnv(gym_custom.Env):
         # Misc
         self._episode_step = None
 
-    def close(self):
-        self.interface_right.comm.close()
-        self.interface_left.comm.close()
-
     #
     # Utilities (general)
 
@@ -227,7 +223,7 @@ class DualUR3RealEnv(gym_custom.Env):
     #
     # Overrided GymEnv methods for compatibility with MujocoEnv methods
 
-    def step(self, action):
+    def step(self, action, wait=True):
         start = time.time()
         assert self._episode_step is not None, 'Must reset before step!'
         # TODO: Send commands to both arms simultaneously?
@@ -237,7 +233,7 @@ class DualUR3RealEnv(gym_custom.Env):
             getattr(self.interface_left, command_type)(**command_val)
         self._episode_step += 1
         self.rate.sleep()
-        ob = self._get_obs()
+        ob = self._get_obs(wait=wait)
         reward = 1.0
         done = False
         finish = time.time()
@@ -269,23 +265,23 @@ class DualUR3RealEnv(gym_custom.Env):
         self._episode_step = 0
         return self._get_obs()
 
-    def get_obs_dict(self):
+    def get_obs_dict(self, wait=True):
         return {'right': {
-                'qpos': self.interface_right.get_joint_positions(),
-                'qvel': self.interface_right.get_joint_speeds(),
+                'qpos': self.interface_right.get_joint_positions(wait=wait),
+                'qvel': self.interface_right.get_joint_speeds(wait=wait),
                 'gripperpos': self.interface_right.get_gripper_position(),
                 'grippervel': self.interface_right.get_gripper_speed()
             },
             'left': {
-                'qpos': self.interface_left.get_joint_positions(),
-                'qvel': self.interface_left.get_joint_speeds(),
+                'qpos': np.array([0]),#self.interface_left.get_joint_positions(wait=wait),
+                'qvel': self.interface_left.get_joint_speeds(wait=wait),
                 'gripperpos': self.interface_left.get_gripper_position(),
                 'grippervel': self.interface_left.get_gripper_speed()
             }
         }
 
-    def _get_obs(self):
-        return self._dict_to_nparray(self.get_obs_dict())
+    def _get_obs(self, wait=True):
+        return self._dict_to_nparray(self.get_obs_dict(wait=wait))
 
     @staticmethod
     def _dict_to_nparray(obs_dict):
