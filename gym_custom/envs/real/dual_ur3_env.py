@@ -34,11 +34,6 @@ class DualUR3RealEnv(gym_custom.Env):
         self._init_gripperpos = np.zeros([2])
         self._init_grippervel = np.zeros([2])
 
-        # Define spaces
-        self.action_space = self._set_action_space()
-        obs = self._get_obs()
-        self.observation_space = self._set_observation_space(obs)
-
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
         self.kinematics_params = {}
@@ -60,6 +55,11 @@ class DualUR3RealEnv(gym_custom.Env):
             self.kinematics_params['T_wb_left'] = kinematics_params_from_pkl['T_wb_left']
         else:
             raise FileNotFoundError('No such file: %s. Run MuJoCo-based simulated environment to generate file.'%(path_to_pkl))
+        
+        # Define spaces
+        self.action_space = self._set_action_space()
+        obs = self._get_obs()
+        self.observation_space = self._set_observation_space(obs)
 
         # Misc
         self._episode_step = None
