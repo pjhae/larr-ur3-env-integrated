@@ -224,7 +224,6 @@ class DualUR3RealEnv(gym_custom.Env):
     # Overrided GymEnv methods for compatibility with MujocoEnv methods
 
     def step(self, action, wait=True):
-        start = time.time()
         assert self._episode_step is not None, 'Must reset before step!'
         # TODO: Send commands to both arms simultaneously?
         for command_type, command_val in action['right'].items():
@@ -232,13 +231,12 @@ class DualUR3RealEnv(gym_custom.Env):
         for command_type, command_val in action['left'].items():
             getattr(self.interface_left, command_type)(**command_val)
         self._episode_step += 1
-        self.rate.sleep()
+        lag_occured = self.rate.sleep()
         ob = self._get_obs(wait=wait)
         reward = 1.0
         done = False
-        finish = time.time()
-        if finish - start > 1.5/self.rate._freq:
-            warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(finish-start)))
+        if lag_occured:
+            warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(self.rate._actual_cycle_time) ))
         return ob, reward, done, {}
 
     def reset(self):
