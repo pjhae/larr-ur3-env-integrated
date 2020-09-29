@@ -231,11 +231,11 @@ class DualUR3RealEnv(gym_custom.Env):
         for command_type, command_val in action['left'].items():
             getattr(self.interface_left, command_type)(**command_val)
         self._episode_step += 1
-        lag_occured = self.rate.sleep()
+        lag_occurred = self.rate.sleep()
         ob = self._get_obs(wait=wait)
         reward = 1.0
         done = False
-        if lag_occured:
+        if lag_occurred:
             warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(self.rate._actual_cycle_time) ))
         return ob, reward, done, {}
 
