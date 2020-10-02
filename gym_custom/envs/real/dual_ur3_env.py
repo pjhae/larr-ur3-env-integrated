@@ -224,7 +224,6 @@ class DualUR3RealEnv(gym_custom.Env):
     # Overrided GymEnv methods for compatibility with MujocoEnv methods
 
     def step(self, action, wait=True):
-        start = time.time()
         assert self._episode_step is not None, 'Must reset before step!'
         # TODO: Send commands to both arms simultaneously?
         for command_type, command_val in action['right'].items():
@@ -232,13 +231,12 @@ class DualUR3RealEnv(gym_custom.Env):
         for command_type, command_val in action['left'].items():
             getattr(self.interface_left, command_type)(**command_val)
         self._episode_step += 1
-        self.rate.sleep()
+        lag_occurred = self.rate.sleep()
         ob = self._get_obs(wait=wait)
         reward = 1.0
         done = False
-        finish = time.time()
-        if finish - start > 1.5/self.rate._freq:
-            warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(finish-start)))
+        if lag_occurred:
+            warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(self.rate._actual_cycle_time) ))
         return ob, reward, done, {}
 
     def reset(self):
@@ -273,7 +271,7 @@ class DualUR3RealEnv(gym_custom.Env):
                 'grippervel': self.interface_right.get_gripper_speed()
             },
             'left': {
-                'qpos': np.array([0]),#self.interface_left.get_joint_positions(wait=wait),
+                'qpos': self.interface_left.get_joint_positions(wait=wait),
                 'qvel': self.interface_left.get_joint_speeds(wait=wait),
                 'gripperpos': self.interface_left.get_gripper_position(),
                 'grippervel': self.interface_left.get_gripper_speed()

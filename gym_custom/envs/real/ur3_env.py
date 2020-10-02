@@ -62,17 +62,15 @@ class UR3RealEnv(gym_custom.Env):
         print('Initial gripper velocity is set to %s'%(gd))
 
     def step(self, action):
-        start = time.time()
         assert self._episode_step is not None, 'Must reset before step!'
         for command_type, command_val in action.items():
             getattr(self.interface, command_type)(**command_val)
         self._episode_step += 1
-        self.rate.sleep()
+        lag_occurred = self.rate.sleep()
         ob = self._get_obs()
         reward = 1.0
         done = False
-        finish = time.time()
-        if finish - start > 1.5/self.rate._freq:
+        if lag_occurred:
             warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz, current time interval: %.4f)'%(self.rate._freq, 1/(finish-start), finish-start))
         return ob, reward, done, {}
 
