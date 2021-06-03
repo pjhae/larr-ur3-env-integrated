@@ -15,10 +15,11 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
-usage="usage: vpnshift -c <config> [<command> [<arg>...]]
+usage="usage: vpnshift -c <config> -i <interface> [<command> [<arg>...]]
 optional:
 	-u <user>      Execute <command> as <user>
 	-d             Toggle namespace debug shell
+
 if not otherwise specified:
 	- The command defaults to the user's shell (${SHELL}).
 	- The user must be inferred from sudo.
@@ -84,6 +85,11 @@ clean_exit() {
 		>&2 echo "openvpn exited"
 	fi
 
+	# cleanup ufw
+	if which ufw && [[ $(ufw status | head -n 1) == *active ]]; then
+		ufw route delete allow in on "${veth_default}" out on "${interface}" &>/dev/null
+	fi
+
 	# don't start cleaning up until openvpn is gone
 	hush ip netns delete "${namespace}"
 	hush rm --recursive --force "${namespace_dir}"
@@ -112,11 +118,12 @@ _debug=0
 main() {
 	local config=
 	local user="${SUDO_USER}"
-	while getopts "hdc:u:" opt; do
+	while getopts "hdc:i:u:" opt; do
 		case "${opt}" in
 			h) quick_die "${usage}" ;;
 			d) _debug=1 ;;
 			c) config="$(realpath "${OPTARG}")" ;;
+			i) interface="${OPTARG}" ;;
 			u) user="${OPTARG}" ;;
 			*) quick_die "unknown option: %s" "${opt}" ;;
 		esac
@@ -125,6 +132,10 @@ main() {
 
 	if [[ -z "${config}" ]]; then
 		quick_die "openvpn config is required"
+	fi
+
+	if [[ -z "${interface}" ]]; then
+		quick_die "physical interface required to send packets through ufw"
 	fi
 
 	if [[ -z "${user}" ]]; then
@@ -211,6 +222,11 @@ main() {
 		"1.1.1.1" \
 		"1.0.0.1"
 
+	# allow packets to flow through ufw
+	if which ufw && [[ $(ufw status | head -n 1) == *active ]]; then
+		ufw route allow in on "${veth_default}" out on "${interface}"
+	fi
+
 	# drop in a shell to debug namespace connectivity ... the exit trap will catch exit from this and clean up
 	if [[ "$_debug" == 1 ]]; then
 		nsdo "${SHELL}"
@@ -222,24 +238,24 @@ main() {
 		--cd "$(dirname "${config}")" \
 		--config "${config}" \
 		--dev "${tun}" \
-		--errors-to-stderr &
-
-	openvpn_pid=$(ps --ppid "$!" \
-		--format "pid" \
-		--no-headers
-	)
+		--errors-to-stderr \
+		--daemon \
+		--writepid "openvpn.pid"
+	
+	openvpn_pid=$(<$(dirname "${config}")/openvpn.pid)
+	# openvpn_pid=$(ps --ppid "$!" \
+	# 	--format "pid" \
+	# 	--no-headers
+	# )
 
 	>&2 printf "waiting for openvpn (pid = %d)\n" "${openvpn_pid}"
 	
-	systemd-tty-ask-password-agent
-	sleep 0.5
-	systemd-tty-ask-password-agent
+	# systemd-tty-ask-password-agent
+	# sleep 0.3
+	# systemd-tty-ask-password-agent
 
-	while ! hush nsdo ip link show "${tun}"; do
-		if ! is_running "${openvpn_pid}"; then
-			clean_exit 1
-		fi
-		sleep 0.2
+	while ! hush nsdo ip link show "${tun}" || ! is_running "${openvpn_pid}" ; do
+		sleep 0.1
 	done
 
 	# Removing the default route protects from exposure if openvpn exits
