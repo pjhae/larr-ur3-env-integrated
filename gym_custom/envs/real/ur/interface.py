@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from types import SimpleNamespace
 import numpy as np
 
 import gym_custom
@@ -68,6 +69,11 @@ class URScriptInterface(object):
     ## UR Controller
     def reset_controller(self):
         self.comm.reset_error()
+
+    def get_controller_status(self):
+        robot_status = self.comm.robotConnector.RobotModel.RobotStatus()
+        safety_status = self.comm.robotConnector.RobotModel.SafetyStatus()
+        return SimpleNamespace(robot=robot_status, safety=safety_status)
 
     ## UR3 manipulator
     def movej(self, q=None, a=1.4, v =1.05, t =0, r =0, wait=True, pose=None):

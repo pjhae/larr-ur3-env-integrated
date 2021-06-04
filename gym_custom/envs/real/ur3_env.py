@@ -1,3 +1,4 @@
+from logging import warn
 import numpy as np
 import time
 import sys
@@ -71,8 +72,30 @@ class UR3RealEnv(gym_custom.Env):
         reward = 1.0
         done = False
         if lag_occurred:
-            warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz, current time interval: %.4f)'%(self.rate._freq, 1/(finish-start), finish-start))
-        return ob, reward, done, {}
+            warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(self.rate._actual_cycle_time) ))
+        status = self.interface.get_controller_status()
+        controller_error = lambda status: (status.safety.StoppedDueToSafety) or (not status.robot.PowerOn)
+        if controller_error(status):
+            done_info = {
+                'real_env': True, 
+                'error_flags': [attr for attr in status.robot if getattr(status.robot)==True] + \
+                    [attr for attr in status.safety if getattr(status.safety)==True]
+            }
+            warnings.warn('UR3 controller error! %s'%(done_info))
+            print('Resetting UR3 controller...')
+            controller_error = not self.interface.reset_controller()
+            if controller_error:
+                while controller_error(self.interface.get_controller_status()):
+                    print('Failed to reset UR3 controller. Manual reset is required.')
+                    if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
+                        print('exiting program!')
+                        sys.exit()
+                print('UR3 controller manual reset ok')
+            else:
+                print('UR3 controller reset ok')
+            return ob, reward, True, done_info
+        else:
+            return ob, reward, done, {}
 
     def reset(self):
         self.interface.reset_controller()
