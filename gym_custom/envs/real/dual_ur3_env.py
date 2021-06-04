@@ -243,20 +243,26 @@ class DualUR3RealEnv(gym_custom.Env):
         if controller_error([status_right, status_left]):
             done_info = {
                 'real_env': True,
-                'error_flags_right': [attr for attr in status_right.robot if getattr(status_right.robot)==True] + \
-                    [attr for attr in status_right.safety if getattr(status_right.safety)==True],
-                'error_flags_left': [attr for attr in status_left.robot if getattr(status_left.robot)==True] + \
-                    [attr for attr in status_left.safety if getattr(status_left.safety)==True]
+                'error_flags_right': [attr for attr in dir(status_right.robot) if getattr(status_right.robot, attr)==True] + \
+                    [attr for attr in dir(status_right.safety) if getattr(status_right.safety, attr)==True],
+                'error_flags_left': [attr for attr in dir(status_left.robot) if getattr(status_left.robot, attr)==True] + \
+                    [attr for attr in dir(status_left.safety) if getattr(status_left.safety, attr)==True]
             }
             warnings.warn('UR3 controller error! %s'%(done_info))
             print('Resetting UR3 controller...')
-            controller_error = (not self.interface_right.reset_controller()) or (not self.interface_left.reset_controller())
-            if controller_error:
+            self.interface_right.reset_controller()
+            self.interface_left.reset_controller()
+            for _ in range(2): # sometimes require 2 calls
+                right_reset_done = self.interface_right.reset_controller()
+                left_reset_done = self.interface_left.reset_controller()
+            if (not right_reset_done) or (not left_reset_done):
                 while controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
                     print('Failed to reset UR3 controller. Manual reset is required.')
                     if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
                         print('exiting program!')
                         sys.exit()
+                    self.interface_right.reset_controller()
+                    self.interface_left.reset_controller()
                 print('UR3 controller manual reset ok')
             else:
                 print('UR3 controller reset ok')

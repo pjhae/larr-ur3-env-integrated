@@ -78,18 +78,20 @@ class UR3RealEnv(gym_custom.Env):
         if controller_error(status):
             done_info = {
                 'real_env': True, 
-                'error_flags': [attr for attr in status.robot if getattr(status.robot)==True] + \
-                    [attr for attr in status.safety if getattr(status.safety)==True]
+                'error_flags': [attr for attr in dir(status.robot) if getattr(status.robot, attr)==True] + \
+                    [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
             }
             warnings.warn('UR3 controller error! %s'%(done_info))
             print('Resetting UR3 controller...')
-            controller_error = not self.interface.reset_controller()
-            if controller_error:
+            for _ in range(2): # sometimes require 2 calls
+                reset_done = self.interface.reset_controller()
+            if not reset_done:
                 while controller_error(self.interface.get_controller_status()):
                     print('Failed to reset UR3 controller. Manual reset is required.')
                     if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
                         print('exiting program!')
                         sys.exit()
+                    self.interface.reset_controller()
                 print('UR3 controller manual reset ok')
             else:
                 print('UR3 controller reset ok')
