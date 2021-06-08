@@ -68,7 +68,7 @@ class URScriptInterface(object):
 
     ## UR Controller
     def reset_controller(self):
-        self.comm.reset_error()
+        return self.comm.reset_error(tsleep=0)
 
     def get_controller_status(self):
         robot_status = self.comm.robotConnector.RobotModel.RobotStatus()

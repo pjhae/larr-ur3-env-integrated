@@ -99,7 +99,7 @@ class UrScriptExt(URBasic.urScript.UrScript):
         # dscho modified
         self.rob.close()
 
-    def reset_error(self):
+    def reset_error(self, tsleep=2):
         '''
         Check if the UR controller is powered on and ready to run.
         If controller isn't power on it will be power up.
@@ -109,16 +109,20 @@ class UrScriptExt(URBasic.urScript.UrScript):
         state (boolean): True of power is on and no safety errors active.
 
         '''
+        
+        robot_error = not self.robotConnector.RobotModel.RobotStatus().PowerOn
+        safety_error = self.robotConnector.RobotModel.SafetyStatus().StoppedDueToSafety #self.get_safety_status()['StoppedDueToSafety']:
 
-        if not self.robotConnector.RobotModel.RobotStatus().PowerOn:
+        if robot_error or safety_error:
+            self.robotConnector.DashboardClient.wait_dbs()
+        if robot_error:
             #self.robotConnector.DashboardClient.PowerOn()
             self.robotConnector.DashboardClient.ur_power_on()
             self.robotConnector.DashboardClient.wait_dbs()
             #self.robotConnector.DashboardClient.BrakeRelease()
             self.robotConnector.DashboardClient.ur_brake_release()
             self.robotConnector.DashboardClient.wait_dbs()
-            time.sleep(2)
-        if self.robotConnector.RobotModel.SafetyStatus().StoppedDueToSafety:         #self.get_safety_status()['StoppedDueToSafety']:
+        if safety_error:
             #self.robotConnector.DashboardClient.UnlockProtectiveStop()
             self.robotConnector.DashboardClient.ur_unlock_protective_stop()
             self.robotConnector.DashboardClient.wait_dbs()
@@ -128,10 +132,14 @@ class UrScriptExt(URBasic.urScript.UrScript):
             #self.robotConnector.DashboardClient.BrakeRelease()
             self.robotConnector.DashboardClient.ur_brake_release()
             self.robotConnector.DashboardClient.wait_dbs()
-            time.sleep(2)
+        if robot_error or safety_error:
+            time.sleep(tsleep) # from original code
 
-        #return self.get_robot_status()['PowerOn'] & (not self.get_safety_status()['StoppedDueToSafety'])
-        return self.robotConnector.RobotModel.RobotStatus().PowerOn & (not self.robotConnector.RobotModel.SafetyStatus().StoppedDueToSafety)
+        if robot_error or safety_error:
+            #return self.get_robot_status()['PowerOn'] & (not self.get_safety_status()['StoppedDueToSafety'])
+            return self.robotConnector.RobotModel.RobotStatus().PowerOn & (not self.robotConnector.RobotModel.SafetyStatus().StoppedDueToSafety)
+        else:
+            return True
 
     def get_in(self, port, wait=True):
         '''

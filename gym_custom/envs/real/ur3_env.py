@@ -76,22 +76,27 @@ class UR3RealEnv(gym_custom.Env):
         status = self.interface.get_controller_status()
         controller_error = lambda status: (status.safety.StoppedDueToSafety) or (not status.robot.PowerOn)
         if controller_error(status):
+            robot_status = [attr for attr in dir(status.robot) if getattr(status.robot, attr)==True]
+            safety_status = [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
             done_info = {
                 'real_env': True, 
-                'error_flags': [attr for attr in dir(status.robot) if getattr(status.robot, attr)==True] + \
-                    [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
+                'error_flags': robot_status + safety_status
             }
             warnings.warn('UR3 controller error! %s'%(done_info))
             print('Resetting UR3 controller...')
             for _ in range(2): # sometimes require 2 calls
                 reset_done = self.interface.reset_controller()
             if not reset_done:
-                while controller_error(self.interface.get_controller_status()):
+                while not reset_done:
+                    status = self.interface.get_controller_status()
+                    robot_status = [attr for attr in dir(status.robot) if getattr(status.robot, attr)==True]
+                    safety_status = [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
                     print('Failed to reset UR3 controller. Manual reset is required.')
+                    print('ERR_FLAGS: \r\n right - %s, %s'%(robot_status, safety_status))
                     if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
                         print('exiting program!')
                         sys.exit()
-                    self.interface.reset_controller()
+                    reset_done = self.interface.reset_controller()
                 print('UR3 controller manual reset ok')
             else:
                 print('UR3 controller reset ok')

@@ -241,28 +241,35 @@ class DualUR3RealEnv(gym_custom.Env):
         status_left = self.interface_left.get_controller_status()
         controller_error = lambda stats: np.any([(stat.safety.StoppedDueToSafety) or (not stat.robot.PowerOn) for stat in stats])
         if controller_error([status_right, status_left]):
+            robot_right =[attr for attr in dir(status_right.robot) if getattr(status_right.robot, attr)==True]
+            safety_right = [attr for attr in dir(status_right.safety) if getattr(status_right.safety, attr)==True]
+            robot_left = [attr for attr in dir(status_left.robot) if getattr(status_left.robot, attr)==True]
+            safety_left = [attr for attr in dir(status_left.safety) if getattr(status_left.safety, attr)==True]
             done_info = {
                 'real_env': True,
-                'error_flags_right': [attr for attr in dir(status_right.robot) if getattr(status_right.robot, attr)==True] + \
-                    [attr for attr in dir(status_right.safety) if getattr(status_right.safety, attr)==True],
-                'error_flags_left': [attr for attr in dir(status_left.robot) if getattr(status_left.robot, attr)==True] + \
-                    [attr for attr in dir(status_left.safety) if getattr(status_left.safety, attr)==True]
+                'error_flags_right': robot_right + safety_right,
+                'error_flags_left': robot_left + safety_left
             }
             warnings.warn('UR3 controller error! %s'%(done_info))
             print('Resetting UR3 controller...')
-            self.interface_right.reset_controller()
-            self.interface_left.reset_controller()
             for _ in range(2): # sometimes require 2 calls
                 right_reset_done = self.interface_right.reset_controller()
                 left_reset_done = self.interface_left.reset_controller()
             if (not right_reset_done) or (not left_reset_done):
-                while controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
+                while (not right_reset_done) or (not left_reset_done):
+                    status_right = self.interface_right.get_controller_status()
+                    status_left = self.interface_left.get_controller_status()
+                    robot_right =[attr for attr in dir(status_right.robot) if getattr(status_right.robot, attr)==True]
+                    safety_right = [attr for attr in dir(status_right.safety) if getattr(status_right.safety, attr)==True]
+                    robot_left = [attr for attr in dir(status_left.robot) if getattr(status_left.robot, attr)==True]
+                    safety_left = [attr for attr in dir(status_left.safety) if getattr(status_left.safety, attr)==True]
                     print('Failed to reset UR3 controller. Manual reset is required.')
+                    print('ERR_FLAGS: \r\n right - %s, %s \r\n left - %s, %s'%(robot_right, safety_right, robot_left, safety_left))
                     if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
                         print('exiting program!')
                         sys.exit()
-                    self.interface_right.reset_controller()
-                    self.interface_left.reset_controller()
+                    right_reset_done = self.interface_right.reset_controller()
+                    left_reset_done = self.interface_left.reset_controller()
                 print('UR3 controller manual reset ok')
             else:
                 print('UR3 controller reset ok')
