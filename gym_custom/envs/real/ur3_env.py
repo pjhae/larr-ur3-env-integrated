@@ -73,42 +73,48 @@ class UR3RealEnv(gym_custom.Env):
         done = False
         if lag_occurred:
             warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(self.rate._actual_cycle_time) ))
-        status = self.interface.get_controller_status()
         controller_error = lambda status: (status.safety.StoppedDueToSafety) or (not status.robot.PowerOn)
-        if controller_error(status):
-            robot_status = [attr for attr in dir(status.robot) if getattr(status.robot, attr)==True]
-            safety_status = [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
-            done_info = {
-                'real_env': True, 
-                'error_flags': robot_status + safety_status
-            }
-            warnings.warn('UR3 controller error! %s'%(done_info))
-            print('Resetting UR3 controller...')
-            for _ in range(2): # sometimes require 2 calls
-                reset_done = self.interface.reset_controller()
-            if not reset_done:
-                while not reset_done:
-                    status = self.interface.get_controller_status()
-                    robot_status = [attr for attr in dir(status.robot) if getattr(status.robot, attr)==True]
-                    safety_status = [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
-                    print('Failed to reset UR3 controller. Manual reset is required.')
-                    print('ERR_FLAGS: \r\n right - %s, %s'%(robot_status, safety_status))
-                    if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
-                        print('exiting program!')
-                        sys.exit()
-                    reset_done = self.interface.reset_controller()
-                print('UR3 controller manual reset ok')
-            else:
-                print('UR3 controller reset ok')
+        if controller_error(self.interface.get_controller_status()):
+            done_info = self._recover_from_controller_error()
             return ob, reward, True, done_info
         else:
             return ob, reward, done, {}
 
     def reset(self):
-        self.interface.reset_controller()
+        controller_error = lambda status: (status.safety.StoppedDueToSafety) or (not status.robot.PowerOn)
+        if controller_error(self.interface.get_controller_status()):
+            self._recover_from_controller_error()
         ob = self.reset_model()
         self.rate.reset()
         return ob
+
+    def _recover_from_controller_error(self):
+        status = self.interface.get_controller_status()
+        robot_status = [attr for attr in dir(status.robot) if getattr(status.robot, attr)==True]
+        safety_status = [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
+        status_info = {
+            'real_env': True, 
+            'error_flags': robot_status + safety_status
+        }
+        warnings.warn('UR3 controller error! %s'%(status_info))
+        print('Resetting UR3 controller...')
+        for _ in range(2): # sometimes require 2 calls
+            reset_done = self.interface.reset_controller()
+        if not reset_done:
+            while not reset_done:
+                status = self.interface.get_controller_status()
+                robot_status = [attr for attr in dir(status.robot) if getattr(status.robot, attr)==True]
+                safety_status = [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
+                print('Failed to reset UR3 controller. Manual reset is required.')
+                print('ERR_FLAGS: \r\n right - %s, %s'%(robot_status, safety_status))
+                if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
+                    print('exiting program!')
+                    sys.exit()
+                reset_done = self.interface.reset_controller()
+            print('UR3 controller manual reset ok')
+        else:
+            print('UR3 controller reset ok')
+        return status_info
 
     def render(self, mode='human'):
         warnings.warn('Real environment. "Render" with your own two eyes!')
