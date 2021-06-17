@@ -19,8 +19,8 @@ class DualUR3RealEnv(gym_custom.Env):
     def __init__(self, host_ip_right, host_ip_left, rate):
         self.host_ip_right = host_ip_right
         self.host_ip_left = host_ip_left
-        self.interface_right = URScriptInterface(host_ip_right)
-        self.interface_left = URScriptInterface(host_ip_left)
+        self.interface_right = URScriptInterface(host_ip_right, alias='right')
+        self.interface_left = URScriptInterface(host_ip_left, alias='left')
         self.rate = ROSRate(rate)
         self.dt = 1/rate
 
@@ -223,7 +223,7 @@ class DualUR3RealEnv(gym_custom.Env):
     #
     # Overrided GymEnv methods for compatibility with MujocoEnv methods
 
-    def step(self, action, wait=True):
+    def step(self, action, wait=False):
         assert self._episode_step is not None, 'Must reset before step!'
         # TODO: Send commands to both arms simultaneously?
         for command_type, command_val in action['right'].items():
@@ -246,6 +246,8 @@ class DualUR3RealEnv(gym_custom.Env):
 
     def reset(self):
         # TODO: Send commands to both arms simultaneously?
+        self.interface_right.stopj(a=5, wait=True) # prevent protecive stop(invalid setpoints: sudden stop) error
+        self.interface_left.stopj(a=5, wait=True) # prevent protecive stop(invalid setpoints: sudden stop) error
         controller_error = lambda stats: np.any([(stat.safety.StoppedDueToSafety) or (not stat.robot.PowerOn) for stat in stats])
         if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
             self._recover_from_controller_error()
@@ -306,7 +308,7 @@ class DualUR3RealEnv(gym_custom.Env):
         self._episode_step = 0
         return self._get_obs()
 
-    def get_obs_dict(self, wait=True):
+    def get_obs_dict(self, wait=False):
         return {'right': {
                 'qpos': self.interface_right.get_joint_positions(wait=wait),
                 'qvel': self.interface_right.get_joint_speeds(wait=wait),
@@ -321,7 +323,7 @@ class DualUR3RealEnv(gym_custom.Env):
             }
         }
 
-    def _get_obs(self, wait=True):
+    def _get_obs(self, wait=False):
         return self._dict_to_nparray(self.get_obs_dict(wait=wait))
 
     @staticmethod
