@@ -46,7 +46,7 @@ def convert_observation_to_space(observation):
 
 class URScriptInterface(object):
     
-    def __init__(self, host_ip):
+    def __init__(self, host_ip, alias=''):
         
         gripper_kwargs = {
             'robot': None,
@@ -59,12 +59,26 @@ class URScriptInterface(object):
 
         self.model = URBasic.robotModel.RobotModel()
         self.comm = URBasic.urScriptExt.UrScriptExt(host=host_ip, robotModel=self.model, **gripper_kwargs)
+        self.alias = alias
+
+        logger = URBasic.dataLogging.DataLogging()
+        name = logger.AddEventLogging(__name__)
+        self.__logger = logger.__dict__[name]
+        self.log('init done')
 
     def __del__(self):
         self.comm.close()
 
     def close(self):
         self.comm.close()
+
+    ## UR Logger
+    def log(self, msg, level='INFO'):
+        assert type(msg) == str, 'log message must be string'
+        if level == 'INFO': self.__logger.info('[%s] '%(self.alias) + msg)
+        elif level == 'DEBUG': self.__logger.debug('[%s] '%(self.alias) + msg)
+        elif level == 'ERROR': self.__logger.error('[%s] '%(self.alias) + msg)
+        else: pass
 
     ## UR Controller
     def reset_controller(self):
@@ -123,10 +137,16 @@ class URScriptInterface(object):
         raise NotImplementedError()
 
     def get_joint_positions(self, *args, **kwargs):
-        return np.array(self.comm.get_actual_joint_positions(*args, **kwargs))
+        # self.log('Reading joint positions...')
+        joint_pos = np.array(self.comm.get_actual_joint_positions(*args, **kwargs))
+        # self.log('Obtained joint positions')
+        return joint_pos
 
     def get_joint_speeds(self, *args, **kwargs):
-        return np.array(self.comm.get_actual_joint_speeds(*args, **kwargs))
+        # self.log('Reading joint speeds...')
+        joint_speed = np.array(self.comm.get_actual_joint_speeds(*args, **kwargs))
+        # self.log('Obtained joint speeds')
+        return joint_speed
 
     ## 2F-85 gripper
     '''
