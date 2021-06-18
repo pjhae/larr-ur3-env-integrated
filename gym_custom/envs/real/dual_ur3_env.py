@@ -232,7 +232,9 @@ class DualUR3RealEnv(gym_custom.Env):
             getattr(self.interface_left, command_type)(**command_val)
         self._episode_step += 1
         lag_occurred = self.rate.sleep()
+        # self.interface_right.log('rate.sleep()') ## TEMP TIMESTAMPING
         ob = self._get_obs(wait=wait)
+        # self.interface_right.log('_get_obs() for s\'') ## TEMP TIMESTAMPING
         reward = 1.0
         done = False
         if lag_occurred:
