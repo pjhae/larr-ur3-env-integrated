@@ -309,7 +309,14 @@ class DualUR3RealEnv(gym_custom.Env):
             try:
                 self.interface_right.movej(q=self._init_qpos[:6])
                 self.interface_left.movej(q=self._init_qpos[6:])
-                movej_success = True
+                obs_dict = self.get_obs_dict()
+                movej_success = (np.linalg.norm(obs_dict['right']['qpos'] - self._init_qpos[:6], np.inf) < np.deg2rad(3)) and \
+                    (np.linalg.norm(obs_dict['left']['qpos'] - self._init_qpos[6:], np.inf) < np.deg2rad(3))
+                if not movej_success:
+                    print('movej of reset_model did not register for some reason..')
+                    if prompt_yes_or_no("Press 'Y' to resend movej command. Press 'n' to terminate program.") is False:
+                        print('exiting program!')
+                        sys.exit()
             except:
                 print('hardware error during movej of reset_model')
                 if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
@@ -317,6 +324,7 @@ class DualUR3RealEnv(gym_custom.Env):
                 if prompt_yes_or_no("Press 'Y' after untangling robot arms. Press 'n' to terminate program.") is False:
                     print('exiting program!')
                     sys.exit()
+            
         self.interface_right.move_gripper(g=self._init_gripperpos[:1])
         self.interface_left.move_gripper(g=self._init_gripperpos[1:])
         self._episode_step = 0
