@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import pickle
+import pkg_resources
 import sys
 import time
 import warnings
@@ -15,6 +16,7 @@ class DualUR3RealEnv(gym_custom.Env):
     ur3_nqpos, gripper_nqpos = 6, 1 # per ur3/gripper joint pos dim
     # ur3_nqvel, gripper_nqvel = 6, 1 # per ur3/gripper joint vel dim
     # ur3_nact, gripper_nact = 6, 1 # per ur3/gripper action dim
+    ENABLE_COLLISION_CHECKER = False
 
     def __init__(self, host_ip_right, host_ip_left, rate):
         self.host_ip_right = host_ip_right
@@ -25,6 +27,16 @@ class DualUR3RealEnv(gym_custom.Env):
         self.dt = 1/rate
 
         self._define_class_variables()
+        
+        if self.ENABLE_COLLISION_CHECKER:
+            mujoco_py_version = pkg_resources.get_distribution('mujoco-py').version
+            assert mujoco_py_version == '1.50.1.68', 'mujoco-py version 1.50.1.68 required! got %s instead'%(mujoco_py_version)
+            try:
+                import mujoco_py
+            except:
+                print('mujoco_py required for ENABLE_COLLISION_CHECKER!')
+                sys.exit()
+            self._define_collision_checker_variables()
 
     def _define_class_variables(self):
         '''overridable method'''
@@ -63,6 +75,21 @@ class DualUR3RealEnv(gym_custom.Env):
 
         # Misc
         self._episode_step = None
+
+    def _define_collision_checker_variables(self):
+        from gym_custom.envs.custom.dual_ur3_env import DualUR3Env
+        self.collision_env = DualUR3Env()
+        self.collision_env.reset()
+
+    def _is_collision(self, right_ur3_qpos):
+        if self.ENABLE_COLLISION_CHECKER:
+            qpos = self.collision_env.sim.data.qpos.copy()
+            qvel = np.zeros_like(self.collision_env.sim.data.qvel)
+            qpos[:6] = right_ur3_qpos
+            self.collision_env.set_state(qpos, qvel)
+            return self.collision_env.data.nefc > 0
+        else:
+            return False
 
     #
     # Utilities (general)
