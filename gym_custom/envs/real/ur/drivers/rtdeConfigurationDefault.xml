@@ -12,7 +12,7 @@
         <field name="actual_qd" type="VECTOR6D"/>
         <!--<field name="actual_current" type="VECTOR6D"/>-->
         <!--<field name="joint_control_output" type="VECTOR6D"/>-->
-        <!-- <field name="actual_TCP_pose" type="VECTOR6D"/> -->
+        <field name="actual_TCP_pose" type="VECTOR6D"/>
         <!--<field name="actual_TCP_speed" type="VECTOR6D"/>-->
         <!-- <field name="actual_TCP_force" type="VECTOR6D"/> -->
         <!--<field name="target_TCP_pose" type="VECTOR6D"/>-->
