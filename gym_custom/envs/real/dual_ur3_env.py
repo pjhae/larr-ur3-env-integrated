@@ -1,9 +1,11 @@
+import beepy
 import numpy as np
 import os
 import pickle
 import pkg_resources
 import sys
 import time
+import traceback
 import warnings
 
 import gym_custom
@@ -311,6 +313,7 @@ class DualUR3RealEnv(gym_custom.Env):
                 safety_left = [attr for attr in dir(status_left.safety) if getattr(status_left.safety, attr)==True]
                 print('Failed to reset UR3 controller. Manual reset is required.')
                 print('ERR_FLAGS: \r\n right - %s, %s \r\n left - %s, %s'%(robot_right, safety_right, robot_left, safety_left))
+                beepy.beep('error')
                 if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
                     print('exiting program!')
                     sys.exit()
@@ -336,18 +339,25 @@ class DualUR3RealEnv(gym_custom.Env):
             try:
                 self.interface_right.movej(q=self._init_qpos[:6])
                 self.interface_left.movej(q=self._init_qpos[6:])
-                obs_dict = self.get_obs_dict()
-                movej_success = (np.linalg.norm(obs_dict['right']['qpos'] - self._init_qpos[:6], np.inf) < np.deg2rad(3)) and \
-                    (np.linalg.norm(obs_dict['left']['qpos'] - self._init_qpos[6:], np.inf) < np.deg2rad(3))
+                for _ in range(2):
+                    obs_dict = self.get_obs_dict()
+                    movej_success = np.linalg.norm(obs_dict['right']['qpos'] - self._init_qpos[:6], np.inf) < np.deg2rad(3)
+                    if movej_success: break
+                    time.sleep(0.1)
+                    self.interface_right.movej(q=self._init_qpos[:6])
+                    self.interface_left.movej(q=self._init_qpos[6:])
                 if not movej_success:
                     print('movej of reset_model did not register for some reason..')
+                    beepy.beep('error')
                     if prompt_yes_or_no("Press 'Y' to resend movej command. Press 'n' to terminate program.") is False:
                         print('exiting program!')
                         sys.exit()
-            except:
+            except Exception as e:
                 print('hardware error during movej of reset_model')
+                traceback.print_exc()
                 if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
                     self._recover_from_controller_error()
+                beepy.beep('error')
                 if prompt_yes_or_no("Press 'Y' after untangling robot arms. Press 'n' to terminate program.") is False:
                     print('exiting program!')
                     sys.exit()
