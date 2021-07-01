@@ -40,6 +40,9 @@ class DualUR3RealEnv(gym_custom.Env):
                 sys.exit()
             self._define_collision_checker_variables()
 
+        self.run_before_rate_sleep() # clear _run_before_rate_sleep_func
+        self.run_before_rate_sleep_return = {}
+
     def _define_class_variables(self):
         '''overridable method'''
         # Initial position/velocity
@@ -260,7 +263,11 @@ class DualUR3RealEnv(gym_custom.Env):
         for command_type, command_val in action['left'].items():
             getattr(self.interface_left, command_type)(**command_val)
         self._episode_step += 1
+
+        self.run_before_rate_sleep_return = self._run_before_rate_sleep_func() # run _run_before_rate_sleep_func
         lag_occurred = self.rate.sleep()
+        self.run_before_rate_sleep() # clear _run_before_rate_sleep_func
+
         # self.interface_right.log('rate.sleep()') ## TEMP TIMESTAMPING
         ob = self._get_obs(wait=wait)
         # self.interface_right.log('_get_obs() for s\'') ## TEMP TIMESTAMPING
@@ -274,6 +281,9 @@ class DualUR3RealEnv(gym_custom.Env):
             return ob, reward, True, done_info
         else:
             return ob, reward, done, {}
+    
+    def run_before_rate_sleep(self, func=lambda: {}):
+        self._run_before_rate_sleep_func = func
 
     def reset(self):
         # TODO: Send commands to both arms simultaneously?
