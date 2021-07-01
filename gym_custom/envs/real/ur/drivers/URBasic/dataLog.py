@@ -121,6 +121,7 @@ class DataLog(threading.Thread):
         self.__stop_event = disable_data_log
         if self.__stop_event:
             self.__logger.info('Data logging (not event logging) is disabled')
+            self.__dataLogger.info('Data logging disabled by user')
         while not self.__stop_event:
             try:
                 dataDirCopy = self.__robotModel.dataDir.copy()
