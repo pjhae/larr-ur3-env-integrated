@@ -12,6 +12,8 @@ import gym_custom
 from gym_custom.envs.real.ur.interface import URScriptInterface, convert_action_to_space, convert_observation_to_space, COMMAND_LIMITS
 from gym_custom.envs.real.utils import ROSRate, prompt_yes_or_no
 
+TEMP_DISABLE_LEFT_ARM = False
+
 class DualUR3RealEnv(gym_custom.Env):
     
     # class variables
@@ -260,8 +262,9 @@ class DualUR3RealEnv(gym_custom.Env):
         # TODO: Send commands to both arms simultaneously?
         for command_type, command_val in action['right'].items():
             getattr(self.interface_right, command_type)(**command_val)
-        for command_type, command_val in action['left'].items():
-            getattr(self.interface_left, command_type)(**command_val)
+        if not TEMP_DISABLE_LEFT_ARM:
+            for command_type, command_val in action['left'].items():
+                getattr(self.interface_left, command_type)(**command_val)
         self._episode_step += 1
 
         self.run_before_rate_sleep_return = self._run_before_rate_sleep_func() # run _run_before_rate_sleep_func
@@ -276,11 +279,18 @@ class DualUR3RealEnv(gym_custom.Env):
         if lag_occurred:
             warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(self.rate._actual_cycle_time) ))
         controller_error = lambda stats: np.any([(stat.safety.StoppedDueToSafety) or (not stat.robot.PowerOn) for stat in stats])
-        if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
-            done_info = self._recover_from_controller_error()
-            return ob, reward, True, done_info
+        if not TEMP_DISABLE_LEFT_ARM:
+            if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
+                done_info = self._recover_from_controller_error()
+                return ob, reward, True, done_info
+            else:
+                return ob, reward, done, {}
         else:
-            return ob, reward, done, {}
+            if controller_error([self.interface_right.get_controller_status()]):
+                done_info = self._recover_from_controller_error()
+                return ob, reward, True, done_info
+            else:
+                return ob, reward, done, {}
     
     def run_before_rate_sleep(self, func=lambda: {}):
         self._run_before_rate_sleep_func = func
@@ -288,10 +298,15 @@ class DualUR3RealEnv(gym_custom.Env):
     def reset(self):
         # TODO: Send commands to both arms simultaneously?
         self.interface_right.stopj(a=5, wait=True) # prevent protecive stop(invalid setpoints: sudden stop) error
-        self.interface_left.stopj(a=5, wait=True) # prevent protecive stop(invalid setpoints: sudden stop) error
+        if not TEMP_DISABLE_LEFT_ARM:
+            self.interface_left.stopj(a=5, wait=True) # prevent protecive stop(invalid setpoints: sudden stop) error
         controller_error = lambda stats: np.any([(stat.safety.StoppedDueToSafety) or (not stat.robot.PowerOn) for stat in stats])
-        if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
-            self._recover_from_controller_error()
+        if not TEMP_DISABLE_LEFT_ARM:
+            if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
+                self._recover_from_controller_error()
+        else:
+            if controller_error([self.interface_right.get_controller_status()]):
+                self._recover_from_controller_error()
         ob = self.reset_model()
         self.rate.reset()
         return ob
@@ -312,7 +327,10 @@ class DualUR3RealEnv(gym_custom.Env):
         print('Resetting UR3 controller...')
         for _ in range(2): # sometimes require 2 calls
             right_reset_done = self.interface_right.reset_controller()
-            left_reset_done = self.interface_left.reset_controller()
+            if not TEMP_DISABLE_LEFT_ARM:
+                left_reset_done = self.interface_left.reset_controller()
+            else:
+                left_reset_done = True
         if (not right_reset_done) or (not left_reset_done):
             while (not right_reset_done) or (not left_reset_done):
                 status_right = self.interface_right.get_controller_status()
@@ -328,7 +346,10 @@ class DualUR3RealEnv(gym_custom.Env):
                     print('exiting program!')
                     sys.exit()
                 right_reset_done = self.interface_right.reset_controller()
-                left_reset_done = self.interface_left.reset_controller()
+                if not TEMP_DISABLE_LEFT_ARM:
+                    left_reset_done = self.interface_left.reset_controller()
+                else:
+                    left_reset_done = True
             print('UR3 controller manual reset ok')
         else:
             print('UR3 controller reset ok')
@@ -348,14 +369,16 @@ class DualUR3RealEnv(gym_custom.Env):
         while not movej_success:
             try:
                 self.interface_right.movej(q=self._init_qpos[:6])
-                self.interface_left.movej(q=self._init_qpos[6:])
+                if not TEMP_DISABLE_LEFT_ARM:
+                    self.interface_left.movej(q=self._init_qpos[6:])
                 for _ in range(2):
                     obs_dict = self.get_obs_dict()
                     movej_success = np.linalg.norm(obs_dict['right']['qpos'] - self._init_qpos[:6], np.inf) < np.deg2rad(3)
                     if movej_success: break
                     time.sleep(0.1)
                     self.interface_right.movej(q=self._init_qpos[:6])
-                    self.interface_left.movej(q=self._init_qpos[6:])
+                    if not TEMP_DISABLE_LEFT_ARM:
+                        self.interface_left.movej(q=self._init_qpos[6:])
                 if not movej_success:
                     print('movej of reset_model did not register for some reason..')
                     beepy.beep('error')
@@ -365,15 +388,20 @@ class DualUR3RealEnv(gym_custom.Env):
             except Exception as e:
                 print('hardware error during movej of reset_model')
                 traceback.print_exc()
-                if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
-                    self._recover_from_controller_error()
+                if not TEMP_DISABLE_LEFT_ARM:
+                    if controller_error([self.interface_right.get_controller_status(), self.interface_left.get_controller_status()]):
+                        self._recover_from_controller_error()
+                else:
+                    if controller_error([self.interface_right.get_controller_status()]):
+                        self._recover_from_controller_error()
                 beepy.beep('error')
                 if prompt_yes_or_no("Press 'Y' after untangling robot arms. Press 'n' to terminate program.") is False:
                     print('exiting program!')
                     sys.exit()
             
         self.interface_right.move_gripper(g=self._init_gripperpos[:1])
-        self.interface_left.move_gripper(g=self._init_gripperpos[1:])
+        if not TEMP_DISABLE_LEFT_ARM:
+            self.interface_left.move_gripper(g=self._init_gripperpos[1:])
         self._episode_step = 0
         return self._get_obs()
 
