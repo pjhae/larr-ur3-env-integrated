@@ -73,11 +73,21 @@ class UrScriptExt(URBasic.urScript.UrScript):
         self.print_actual_joint_positions()
         self.__logger.info('Init done')
         # dscho modified
-        self.rob = urx.Robot(host)
-        self.robotiqgrip = Robotiq_Two_Finger_Gripper(**gripper_kwargs)
+        # self.rob = urx.Robot(host)
+        # self.robotiqgrip = Robotiq_Two_Finger_Gripper(**gripper_kwargs)
+
+        # latest dscho modified (2021 0723)
+        self.robotiq_gripper = URBasic.robotiq_gripper.RobotiqGripper()
+        self.robotiq_gripper.connect(hostname=host, port=63352)
+        self.robotiq_gripper.activate()
+        print('robotiq gripper activated')
+        if not self.robotiq_gripper.is_active():
+            print('robotiq gripper is not activated!')
+
 
     # dscho modified
     def operate_gripper(self, value):
+        raise NotImplementedError('Use move_gripper_position method to control the gripper simultaneously')
         '''
         On/Off control of Gripper, 0 : open, 255 : gripper
         '''
@@ -88,16 +98,24 @@ class UrScriptExt(URBasic.urScript.UrScript):
         self.rob.send_program(self.robotiqgrip.ret_program_to_run())
         self.robotiqgrip.reset()
     
+    # latest dscho modified (2021 0723)
+    def move_gripper_position(self, desired_pos, wait = True):
+        if wait:
+            self.robotiq_gripper.move_and_wait_for_pos(position=desired_pos, speed=1, force=0) # Actually, speed has no effect
+        else :
+            self.robotiq_gripper.move(position=desired_pos, speed=1, force=0)
+
     def get_gripper_position(self):
-        raise NotImplementedError   
-        self.robotiqgrip.get_gripper_position()
+        return self.robotiq_gripper.get_current_position()
 
     def close(self):
         self.print_actual_tcp_pose()
         self.print_actual_joint_positions()
         self.robotConnector.close()
         # dscho modified
-        self.rob.close()
+        # self.rob.close()
+        # latest dscho modified (2021 0723)
+        self.robotiq_gripper.disconnect()
 
     def reset_error(self, tsleep=2):
         '''

@@ -179,16 +179,31 @@ def servoj_speedj_example(host_ip, rate):
     waypoints_qvel = np.diff(waypoints_qpos, axis=0)*real_env.rate._freq
     
     # close-open-close gripper
-    print('close')
-    real_env.step({'close_gripper': {}})
-    time.sleep(3.0)
-    print('open')
-    real_env.step({'open_gripper': {}})
-    time.sleep(3.0)
-    print('close')
-    real_env.step({'close_gripper': {}})
-    time.sleep(5.0)
+    # print('close')
+    # real_env.step({'close_gripper': {}})
+    # time.sleep(3.0)
+    # print('open')
+    # real_env.step({'open_gripper': {}})
+    # time.sleep(3.0)
+    # print('close')
+    # real_env.step({'close_gripper': {}})
+    # time.sleep(5.0)
     
+    # dscho mod
+    wait = True
+    
+    print('test open gripper')
+    real_env.interface.move_gripper(g=10, wait=wait)
+    time.sleep(3)
+    grip_pos = real_env.interface.get_gripper_position()
+    print('grip pos : ', grip_pos)
+
+    print('test close gripper')
+    real_env.interface.move_gripper(g=150, wait=wait)
+    time.sleep(3)
+    grip_pos = real_env.interface.get_gripper_position()
+    print('grip pos : ', grip_pos)
+
     if prompt_yes_or_no('servoj to %s deg?'%(np.rad2deg(goal_qpos))) is False:
         print('exiting program!')
         sys.exit()
@@ -236,15 +251,15 @@ def servoj_speedj_example(host_ip, rate):
     print('done!')
     
     # open-close-open gripper
-    print('open')
-    real_env.step({'open_gripper': {}})
-    time.sleep(3.0)
-    print('close')
-    real_env.step({'close_gripper': {}})
-    time.sleep(3.0)
-    print('open')
-    real_env.step({'open_gripper': {}})
-    time.sleep(5.0)
+    # print('open')
+    # real_env.step({'open_gripper': {}})
+    # time.sleep(3.0)
+    # print('close')
+    # real_env.step({'close_gripper': {}})
+    # time.sleep(3.0)
+    # print('open')
+    # real_env.step({'open_gripper': {}})
+    # time.sleep(5.0)
 
 def sanity_check(host_ip):
     from gym_custom.envs.real.ur.drivers import URBasic

@@ -6,6 +6,10 @@ import gym_custom
 from gym_custom import spaces
 from gym_custom.envs.real.ur.drivers import URBasic
 
+# dscho add
+import warnings
+from gym_custom.utils import colorize
+
 COMMAND_LIMITS = {
     'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
         np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
@@ -48,17 +52,19 @@ class URScriptInterface(object):
     
     def __init__(self, host_ip, alias=''):
         
-        gripper_kwargs = {
-            'robot': None,
-            'payload': 0.85,
-            'speed': 255, # 0~255
-            'force': 255,  # 0~255
-            'socket_host': host_ip,
-            'socket_name': 'gripper_socket'
-        }
+        # gripper_kwargs = {
+        #     'robot': None,
+        #     'payload': 0.85,
+        #     'speed': 255, # 0~255
+        #     'force': 255,  # 0~255
+        #     'socket_host': host_ip,
+        #     'socket_name': 'gripper_socket'
+        # }
 
         self.model = URBasic.robotModel.RobotModel()
-        self.comm = URBasic.urScriptExt.UrScriptExt(host=host_ip, robotModel=self.model, **gripper_kwargs)
+        # self.comm = URBasic.urScriptExt.UrScriptExt(host=host_ip, robotModel=self.model, **gripper_kwargs)
+        # latest dscho modified (2021 0723)
+        self.comm = URBasic.urScriptExt.UrScriptExt(host=host_ip, robotModel=self.model)
         self.alias = alias
 
         logger = URBasic.dataLogging.DataLogging()
@@ -155,27 +161,23 @@ class URScriptInterface(object):
     Gripper commands should be used in isolation and not alongside UR3 commands for now.
     '''
     def open_gripper(self, *args, **kwargs):
-        self.comm.operate_gripper(0)
+        # self.comm.operate_gripper(0)
+        self.move_gripper_position(g=0, *args, **kwargs)
 
     def close_gripper(self, *args, **kwargs):
-        self.comm.operate_gripper(255)
+        # self.comm.operate_gripper(255)
+        self.move_gripper_position(g=255, *args, **kwargs)
 
     def move_gripper(self, *args, **kwargs):
         '''Compatibility wrapper for move_gripper_position()'''
         return self.move_gripper_position(*args, **kwargs)
 
-    def move_gripper_position(self, g):
-        # TODO: dscho
-        g = 0
-        if g < 0: # open
-            return self.open_gripper()
-        elif g > 0: # close
-            return self.close_gripper()
-        else: # do nothing
-            return None
+    def move_gripper_position(self, g, wait=True):
+        self.comm.move_gripper_position(g, wait)
 
     def move_gripper_velocity(self, gd):
         # TODO: dscho
+        warnings.warn(colorize('%s: %s'%('WARNING', 'Use move_gripper_position instead of this move_gripper_velocity'), 'yellow'))
         gd = 0
         if gd < 0: # open
             return self.open_gripper()
@@ -186,6 +188,7 @@ class URScriptInterface(object):
 
     def move_gripper_force(self, gf):
         # TODO: dscho
+        warnings.warn(colorize('%s: %s'%('WARNING', 'Use move_gripper_position instead of this move_gripper_force'), 'yellow'))
         gf = 0
         if gf < 0: # open
             return self.open_gripper()
@@ -196,8 +199,8 @@ class URScriptInterface(object):
 
     def get_gripper_position(self):
         # TODO: dscho
-        return np.array([0.0])
-        # raise NotImplementedError()
+        # return np.array([0.0])
+        return np.array([self.comm.get_gripper_position()])
 
     def get_gripper_speed(self):
         # TODO: dscho

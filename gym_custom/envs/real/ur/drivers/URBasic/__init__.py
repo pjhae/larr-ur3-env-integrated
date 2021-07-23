@@ -40,3 +40,4 @@ from ..URBasic.robotModel import RobotModel
 from ..URBasic.rtde import RTDE
 from ..URBasic.urScript import UrScript
 from ..URBasic.urScriptExt import UrScriptExt
+from ..URBasic.robotiq_gripper import RobotiqGripper
