@@ -199,7 +199,7 @@ def servoj_speedj_example(host_ip, rate):
     print('grip pos : ', grip_pos)
 
     print('test close gripper')
-    real_env.interface.move_gripper(g=150, wait=wait)
+    real_env.interface.move_gripper(g=250, wait=wait)
     time.sleep(3)
     grip_pos = real_env.interface.get_gripper_position()
     print('grip pos : ', grip_pos)
@@ -214,8 +214,11 @@ def servoj_speedj_example(host_ip, rate):
         real_env.step({
             'servoj': {'q': waypoint, 't': 2/real_env.rate._freq, 'wait': False},
             # 'close_gripper': {}
+            'move_gripper_position' : {'g': 10, 'wait': False}
         })
-        print('action %d sent!'%(n))
+        gripper_pos = real_env.interface.get_gripper_position()
+        
+        print('action %d sent!. gripper pos : %d '%(n, gripper_pos))
     real_env.step({'stopj': {'a': 5}})
     finish = time.time()
     print('done! (elapsed time: %.3f [s])'%(finish - start))
@@ -358,8 +361,39 @@ def gripper_check(host_ip):
     print('done')
     robot.close()
 
+def simple_gripper_example(host_ip, rate):
+    real_env = UR3RealEnv(host_ip=host_ip, rate=rate)
+    real_env.set_initial_joint_pos('current')
+    real_env.set_initial_gripper_pos('current')
+    if prompt_yes_or_no('current qpos is %s deg?'%(np.rad2deg(real_env._init_qpos))) is False:
+        print('exiting program!')
+        sys.exit()
+    obs = real_env.reset()
+    '''
+    init_qpos = real_env._nparray_to_dict(obs)['qpos']
+    goal_qpos = init_qpos.copy()
+    goal_qpos[-1] += np.pi/2*1.5
+    waypoints_qpos = np.linspace(init_qpos, goal_qpos, rate*2, axis =0)
+    waypoints_qvel = np.diff(waypoints_qpos, axis=0)*real_env.rate._freq
+    '''
+    # dscho mod
+    wait = False
+    
+    print('test open gripper')
+    real_env.interface.move_gripper(g=10, wait=wait)
+    time.sleep(3)
+    grip_pos = real_env.interface.get_gripper_position()
+    print('grip pos : ', grip_pos)
+
+    print('test close gripper')
+    real_env.interface.move_gripper(g=150, wait=wait)
+    time.sleep(3)
+    grip_pos = real_env.interface.get_gripper_position()
+    print('grip pos : ', grip_pos)
+
 if __name__ == "__main__":
     # sanity_check(host_ip='192.168.5.101')
     # gripper_check(host_ip='192.168.5.101')
-    # servoj_speedj_example(host_ip='192.168.5.101', rate=25)
+    # servoj_speedj_example(host_ip='192.168.5.102', rate=25)
+    #simple_gripper_example(host_ip='192.168.5.101', rate=25)
     pass

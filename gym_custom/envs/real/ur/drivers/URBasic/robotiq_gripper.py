@@ -74,7 +74,8 @@ class RobotiqGripper:
         # construct unique command
         cmd = "SET"
         for variable, value in var_dict.items():
-            cmd += f" {variable} {str(value)}"
+            # cmd += f" {variable} {str(value)}"
+            cmd += " {} {}".format(variable, str(value)) # for compatibility with lower versions of python
         cmd += '\n'  # new line is required for the command to finish
         # atomic commands send/rcv
         with self.command_lock:
@@ -99,7 +100,8 @@ class RobotiqGripper:
         """
         # atomic commands send/rcv
         with self.command_lock:
-            cmd = f"GET {variable}\n"
+            # cmd = f"GET {variable}\n"
+            cmd = "GET {}\n".format(variable) # for compatibility with lower versions of python
             self.socket.sendall(cmd.encode(self.ENCODING))
             data = self.socket.recv(1024)
 
@@ -107,7 +109,8 @@ class RobotiqGripper:
         # note some special variables (like FLT) may send 2 bytes, instead of an integer. We assume integer here
         var_name, value_str = data.decode(self.ENCODING).split()
         if var_name != variable:
-            raise ValueError(f"Unexpected response {data} ({data.decode(self.ENCODING)}): does not match '{variable}'")
+            # raise ValueError(f"Unexpected response {data} ({data.decode(self.ENCODING)}): does not match '{variable}'")
+            raise ValueError("Unexpected response {} ({}): does not match '{}'".format(data, data.decode(self.ENCODING), variable)) # for compatibility with lower versions of python
         value = int(value_str)
         return value
 
@@ -223,24 +226,27 @@ class RobotiqGripper:
         # first try to open in case we are holding an object
         (position, status) = self.move_and_wait_for_pos(self.get_open_position(), 64, 1)
         if RobotiqGripper.ObjectStatus(status) != RobotiqGripper.ObjectStatus.AT_DEST:
-            raise RuntimeError(f"Calibration failed opening to start: {str(status)}")
-
+            # raise RuntimeError(f"Calibration failed opening to start: {str(status)}")
+            raise RuntimeError("Calibration failed opening to start: {}".format(str(status))) # for compatibility with lower versions of python
         # try to close as far as possible, and record the number
         (position, status) = self.move_and_wait_for_pos(self.get_closed_position(), 64, 1)
         if RobotiqGripper.ObjectStatus(status) != RobotiqGripper.ObjectStatus.AT_DEST:
-            raise RuntimeError(f"Calibration failed because of an object: {str(status)}")
+            # raise RuntimeError(f"Calibration failed because of an object: {str(status)}")
+            raise RuntimeError("Calibration failed because of an object: {}".format(str(status))) # for compatibility with lower versions of python
         assert position <= self._max_position
         self._max_position = position
 
         # try to open as far as possible, and record the number
         (position, status) = self.move_and_wait_for_pos(self.get_open_position(), 64, 1)
         if RobotiqGripper.ObjectStatus(status) != RobotiqGripper.ObjectStatus.AT_DEST:
-            raise RuntimeError(f"Calibration failed because of an object: {str(status)}")
+            # raise RuntimeError(f"Calibration failed because of an object: {str(status)}")
+            raise RuntimeError("Calibration failed because of an object: {}".format(str(status))) # for compatibility with lower versions of python
         assert position >= self._min_position
         self._min_position = position
 
         if log:
-            print(f"Gripper auto-calibrated to [{self.get_min_position()}, {self.get_max_position()}]")
+            # print(f"Gripper auto-calibrated to [{self.get_min_position()}, {self.get_max_position()}]")
+            print("Gripper auto-calibrated to [{}, {}]".format(self.get_min_position(), self.get_max_position())) # for compatibility with lower versions of python
 
     def move(self, position: int, speed: int, force: int) -> Tuple[bool, int]:
         """Sends commands to start moving towards the given position, with the specified speed and force.

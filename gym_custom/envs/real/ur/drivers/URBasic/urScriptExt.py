@@ -30,8 +30,9 @@ import numpy as np
 import time
 import sys
 
-from .. import urx
-from ..urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripper 
+# Deprecated (07/23)
+#from .. import urx
+#from ..urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripper 
 
 class UrScriptExt(URBasic.urScript.UrScript):
     '''
@@ -72,7 +73,7 @@ class UrScriptExt(URBasic.urScript.UrScript):
         self.print_actual_tcp_pose()
         self.print_actual_joint_positions()
         self.__logger.info('Init done')
-        # dscho modified
+        # Deprecated (07/23)
         # self.rob = urx.Robot(host)
         # self.robotiqgrip = Robotiq_Two_Finger_Gripper(**gripper_kwargs)
 
@@ -99,7 +100,7 @@ class UrScriptExt(URBasic.urScript.UrScript):
         self.robotiqgrip.reset()
     
     # latest dscho modified (2021 0723)
-    def move_gripper_position(self, desired_pos, wait = True):
+    def move_gripper_position(self, desired_pos, wait=True):
         if wait:
             self.robotiq_gripper.move_and_wait_for_pos(position=desired_pos, speed=1, force=0) # Actually, speed has no effect
         else :
