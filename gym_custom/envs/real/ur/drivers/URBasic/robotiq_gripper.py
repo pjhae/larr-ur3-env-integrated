@@ -4,7 +4,11 @@ import socket
 import threading
 import time
 from enum import Enum
-from typing import Union, Tuple, OrderedDict
+try:
+    from typing import Union, Tuple, OrderedDict
+except:
+    from typing import MutableMapping
+    OrderedDict = MutableMapping
 
 class RobotiqGripper:
     """
