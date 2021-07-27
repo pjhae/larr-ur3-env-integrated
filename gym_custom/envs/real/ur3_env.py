@@ -394,6 +394,6 @@ def simple_gripper_example(host_ip, rate):
 if __name__ == "__main__":
     # sanity_check(host_ip='192.168.5.101')
     # gripper_check(host_ip='192.168.5.101')
-    # servoj_speedj_example(host_ip='192.168.5.102', rate=25)
-    #simple_gripper_example(host_ip='192.168.5.101', rate=25)
+    # servoj_speedj_example(host_ip='192.168.5.101', rate=25)
+    # simple_gripper_example(host_ip='192.168.5.101', rate=25)
     pass
