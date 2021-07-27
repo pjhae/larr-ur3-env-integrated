@@ -108,7 +108,7 @@ class UR3RealEnv(gym_custom.Env):
                 safety_status = [attr for attr in dir(status.safety) if getattr(status.safety, attr)==True]
                 print('Failed to reset UR3 controller. Manual reset is required.')
                 print('ERR_FLAGS: \r\n right - %s, %s'%(robot_status, safety_status))
-                beepy.beep('error')
+                # beepy.beep('error')
                 if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
                     print('exiting program!')
                     sys.exit()

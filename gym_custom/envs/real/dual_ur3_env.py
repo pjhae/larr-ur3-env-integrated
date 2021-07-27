@@ -341,7 +341,7 @@ class DualUR3RealEnv(gym_custom.Env):
                 safety_left = [attr for attr in dir(status_left.safety) if getattr(status_left.safety, attr)==True]
                 print('Failed to reset UR3 controller. Manual reset is required.')
                 print('ERR_FLAGS: \r\n right - %s, %s \r\n left - %s, %s'%(robot_right, safety_right, robot_left, safety_left))
-                beepy.beep('error')
+                # beepy.beep('error')
                 if prompt_yes_or_no("Press 'Y' after manual reset to proceed. Press 'n' to terminate program.") is False:
                     print('exiting program!')
                     sys.exit()
@@ -381,7 +381,7 @@ class DualUR3RealEnv(gym_custom.Env):
                         self.interface_left.movej(q=self._init_qpos[6:])
                 if not movej_success:
                     print('movej of reset_model did not register for some reason..')
-                    beepy.beep('error')
+                    # beepy.beep('error')
                     if prompt_yes_or_no("Press 'Y' to resend movej command. Press 'n' to terminate program.") is False:
                         print('exiting program!')
                         sys.exit()
@@ -394,7 +394,7 @@ class DualUR3RealEnv(gym_custom.Env):
                 else:
                     if controller_error([self.interface_right.get_controller_status()]):
                         self._recover_from_controller_error()
-                beepy.beep('error')
+                # beepy.beep('error')
                 if prompt_yes_or_no("Press 'Y' after untangling robot arms. Press 'n' to terminate program.") is False:
                     print('exiting program!')
                     sys.exit()
