@@ -1,8 +1,9 @@
 import beepy
 from logging import warn
 import numpy as np
-import time
 import sys
+import time
+import traceback
 import warnings
 
 import gym_custom
@@ -126,6 +127,34 @@ class UR3RealEnv(gym_custom.Env):
 
     def reset_model(self):
         self.interface.movej(q=self._init_qpos)
+
+        controller_error = lambda stats: np.any([(stat.safety.StoppedDueToSafety) or (not stat.robot.PowerOn) for stat in stats])
+        movej_success = False
+        while not movej_success:
+            try:
+                self.interface.movej(q=self._init_qpos[:6])
+                for _ in range(2):
+                    obs_dict = self.get_obs_dict()
+                    movej_success = np.linalg.norm(obs_dict['right']['qpos'] - self._init_qpos[:6], np.inf) < np.deg2rad(3)
+                    if movej_success: break
+                    time.sleep(0.1)
+                    self.interface.movej(q=self._init_qpos[:6])
+                if not movej_success:
+                    print('movej of reset_model did not register for some reason..')
+                    # beepy.beep('error')
+                    if prompt_yes_or_no("Press 'Y' to resend movej command. Press 'n' to terminate program.") is False:
+                        print('exiting program!')
+                        sys.exit()
+            except Exception as e:
+                print('hardware error during movej of reset_model')
+                traceback.print_exc()
+                if controller_error([self.interface.get_controller_status()]):
+                    self._recover_from_controller_error()
+                # beepy.beep('error')
+                if prompt_yes_or_no("Press 'Y' after untangling robot arms. Press 'n' to terminate program.") is False:
+                    print('exiting program!')
+                    sys.exit()
+
         self.interface.move_gripper(g=self._init_gripperpos)
         self._episode_step = 0
         return self._get_obs()
