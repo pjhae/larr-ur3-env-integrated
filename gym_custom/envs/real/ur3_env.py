@@ -29,6 +29,9 @@ class UR3RealEnv(gym_custom.Env):
 
         self._episode_step = None
 
+        self.run_before_rate_sleep() # clear _run_before_rate_sleep_func
+        self.run_before_rate_sleep_return = {}
+
     def close(self):
         self.interface.comm.close()
 
@@ -69,7 +72,11 @@ class UR3RealEnv(gym_custom.Env):
         for command_type, command_val in action.items():
             getattr(self.interface, command_type)(**command_val)
         self._episode_step += 1
+
+        self.run_before_rate_sleep_return = self._run_before_rate_sleep_func() # run _run_before_rate_sleep_func
         lag_occurred = self.rate.sleep()
+        self.run_before_rate_sleep() # clear _run_before_rate_sleep_func
+
         ob = self._get_obs()
         reward = 1.0
         done = False
@@ -81,6 +88,9 @@ class UR3RealEnv(gym_custom.Env):
             return ob, reward, True, done_info
         else:
             return ob, reward, done, {}
+
+    def run_before_rate_sleep(self, func=lambda: {}):
+        self._run_before_rate_sleep_func = func
 
     def reset(self):
         controller_error = lambda status: (status.safety.StoppedDueToSafety) or (not status.robot.PowerOn)
