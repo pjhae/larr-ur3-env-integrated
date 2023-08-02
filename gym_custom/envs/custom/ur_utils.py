@@ -294,7 +294,7 @@ class URScriptWrapper_DualUR3(ActionWrapper):
         self.wrapper_right.env = None
         self.wrapper_left.env = None
 
-    def action(self, ur_command):
+    def action(self, ur_command): # note that ur_command is dictionary
         right_action = self.wrapper_right.action(ur_command['right'])
         left_action = self.wrapper_left.action(ur_command['left'])
         right_ur3_action, right_gripper_action = right_action[:self.wrapper_right.ndof], right_action[self.wrapper_right.ndof:] # ndof, 2*ngripperdof

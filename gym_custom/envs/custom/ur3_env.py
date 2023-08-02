@@ -44,6 +44,7 @@ class UR3PracticeEnv(MujocoEnv, utils.EzPickle):
         v.cam.trackbodyid = 0
         v.cam.distance = self.model.stat.extent
 
+
 class UR3PracticewithGripperEnv(MujocoEnv, utils.EzPickle):
 
     def __init__(self):
@@ -76,6 +77,7 @@ class UR3PracticewithGripperEnv(MujocoEnv, utils.EzPickle):
         v.cam.trackbodyid = 0
         v.cam.distance = self.model.stat.extent
 
+
 class UR3dschoEnv(MujocoEnv, utils.EzPickle): # sanity check
 
     def __init__(self):
@@ -105,3 +107,5 @@ class UR3dschoEnv(MujocoEnv, utils.EzPickle): # sanity check
         v = self.viewer
         v.cam.trackbodyid = 0
         v.cam.distance = self.model.stat.extent
+        
+        

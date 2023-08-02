@@ -47,7 +47,7 @@ def run_dual_ur3():
         action = env.action_space.sample()
         action = np.zeros_like(action)
         obs, _, _, _ = env.step(action)
-        env.render()
+        # env.render()
         print('time: %.2f'%(t*dt))
         print('  joint_pos: %s (rad)'%(env._get_ur3_qpos()*180/np.pi))
         print('  joint_vel: %s (rad/s)'%(env._get_ur3_qvel()*180/np.pi))
@@ -373,8 +373,6 @@ def speedj_and_forceg(env_type='sim', render=False):
         print('%.3f seconds'%(finish-start))
         sys.exit()
 
-
-
 def fidget_in_place(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
     
@@ -415,16 +413,10 @@ def fidget_in_place(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    # q_right_des = curr_right_qpos + np.deg2rad([5, 5, 10, 10, 10, 90])       # JONGHAE
-    # q_left_des = curr_left_qpos + np.deg2rad([5, 5, 10, 10, 10, 90])
-    # gripper_right_des = 1 - curr_right_gripper_pos
-    # gripper_left_des = 1 - curr_left_gripper_pos
-
-    q_right_des = np.deg2rad([5, 5, 10, 10, 10, 90]) + env.get_obs_dict()['right']['qpos']
-    q_left_des =  -np.deg2rad([5, 5, 10, 10, 10, 90]) + env.get_obs_dict()['left']['qpos']
-    gripper_right_des = 1 
-    gripper_left_des = 1 
-
+    q_right_des = curr_right_qpos + np.deg2rad([5, 5, 10, 10, 10, 90])
+    q_left_des = curr_left_qpos + np.deg2rad([5, 5, 10, 10, 10, 90])
+    gripper_right_des = 1 - curr_right_gripper_pos
+    gripper_left_des = 1 - curr_left_gripper_pos
 
     if env_type == list_of_env_types[0]:
         PI_gains = {'speedj': {'P': 0.2, 'I': 10.0}} # was 0.2, 10.0
@@ -451,11 +443,11 @@ def fidget_in_place(env_type='sim', render=False):
         obs, _, _, _ = env.step({
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([1.0])}
             },
             'left': {
                 'speedj': {'qd': q_left_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([1.0])}
             }
         })
         if render: env.render()
@@ -472,9 +464,7 @@ def fidget_in_place(env_type='sim', render=False):
         # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
     finish = time.time()
 
-    print("wowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
-
-    # Stop (see q_vel is np.zeros([]) ) 
+    # Stop
     t = 0
     qvel_err = np.inf
     q_right_des_vel, q_left_des_vel = np.zeros([env.ur3_nqpos]), np.zeros([env.ur3_nqpos])
@@ -501,13 +491,12 @@ def fidget_in_place(env_type='sim', render=False):
         qvel_err = np.linalg.norm(np.concatenate([obs_dict['right']['qvel'], obs_dict['left']['qvel']]) - np.concatenate([q_right_des_vel, q_left_des_vel]))
         t += 1
 
-
     # Check gripper (close/open)
-    # time.sleep(1.0)
-    # env.step({'right': {'close_gripper': {}}, 'left': {'close_gripper': {}}})
-    # time.sleep(3.0)
-    # env.step({'right': {'open_gripper': {}}, 'left': {'open_gripper': {}}})
-    # time.sleep(3.0)
+    time.sleep(1.0)
+    env.step({'right': {'close_gripper': {}}, 'left': {'close_gripper': {}}})
+    time.sleep(3.0)
+    env.step({'right': {'open_gripper': {}}, 'left': {'open_gripper': {}}})
+    time.sleep(3.0)
     
     if env_type == list_of_env_types[0]:
         time.sleep(100)
@@ -515,9 +504,6 @@ def fidget_in_place(env_type='sim', render=False):
         env.close()
         print('%.3f seconds'%(finish-start))
         sys.exit()
-
-
-
 
 def pick_and_place_deprecated():
 
@@ -1087,7 +1073,7 @@ def collide_deprecated():
             %(left_pos_err*180.0/np.pi, left_vel_err*180.0/np.pi, left_actuator_torque, left_bias_torque, left_constraint_torque))
         print('    err_integ: %s'%(env.ur3_err_integ[-env.ur3_nqpos:]))
 
-def collide(env_type='sim', render=False):     # You should activate this function only on simulation
+def collide(env_type='sim', render=False):     # You should activate this function only on simulation!
     list_of_env_types = ['sim']
 
     if env_type == list_of_env_types[0]:
@@ -1233,7 +1219,7 @@ if __name__ == '__main__':
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='real', render=False)
     # speedj_and_forceg(env_type='real', render=False)
-    # pick_and_place(env_type='sim', render=True)
+    # pick_and_place(env_type='real', render=False)
     # collide(env_type='sim', render=True)
     fidget_in_place(env_type='sim', render=True)
 
