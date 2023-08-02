@@ -448,10 +448,12 @@ def fidget_in_place(env_type='sim', render=False):
     q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/duration
     start = time.time()
     for t in range(int(duration/dt)):
+        print('WOWOWOW',q_left_des_vel)
         obs, _, _, _ = env.step({
+
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([5.0])}
             },
             'left': {
                 'speedj': {'qd': q_left_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -480,6 +482,7 @@ def fidget_in_place(env_type='sim', render=False):
     q_right_des_vel, q_left_des_vel = np.zeros([env.ur3_nqpos]), np.zeros([env.ur3_nqpos])
     while qvel_err > np.deg2rad(1e0):
         obs, _, _, _ = env.step({
+
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([-1.0])}
