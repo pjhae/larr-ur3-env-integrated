@@ -374,7 +374,6 @@ def speedj_and_forceg(env_type='sim', render=False):
         sys.exit()
 
 
-
 def fidget_in_place(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
     
@@ -420,12 +419,14 @@ def fidget_in_place(env_type='sim', render=False):
     # gripper_right_des = 1 - curr_right_gripper_pos
     # gripper_left_des = 1 - curr_left_gripper_pos
 
-    q_right_des = np.deg2rad([5, 5, 10, 10, 10, 90]) + env.get_obs_dict()['right']['qpos']
-    q_left_des =  -np.deg2rad([5, 5, 10, 10, 10, 90]) + env.get_obs_dict()['left']['qpos']
+    q_right_des = np.deg2rad([45, 45, 10, 10, 10, 90]) + env.get_obs_dict()['right']['qpos']
+    q_left_des =  -np.deg2rad([45, 45, 10, 10, 10, 90]) + env.get_obs_dict()['left']['qpos']
     gripper_right_des = 1 
     gripper_left_des = 1 
 
-
+# WOWOWOW [-0.15707963 -0.15707963 -0.03490659 -0.03490659 -0.03490659 -0.31415927]
+# [-1.9298886   2.05143787 -3.96180235  0.11525691  0.43695325  3.14160598] [4.98206189 5.01804945]
+# [ 1.84523488 -2.01985366  3.96912976 -0.11978088 -0.44038213 -3.14182489] [ 9.98261008 10.01748027]
     if env_type == list_of_env_types[0]:
         PI_gains = {'speedj': {'P': 0.2, 'I': 10.0}} # was 0.2, 10.0
         ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
@@ -474,7 +475,7 @@ def fidget_in_place(env_type='sim', render=False):
         # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
     finish = time.time()
 
-    print("wowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
+    print("wow")
 
     # Stop (see q_vel is np.zeros([]) ) 
     t = 0
@@ -504,7 +505,6 @@ def fidget_in_place(env_type='sim', render=False):
         qvel_err = np.linalg.norm(np.concatenate([obs_dict['right']['qvel'], obs_dict['left']['qvel']]) - np.concatenate([q_right_des_vel, q_left_des_vel]))
         t += 1
 
-
     # Check gripper (close/open)
     # time.sleep(1.0)
     # env.step({'right': {'close_gripper': {}}, 'left': {'close_gripper': {}}})
@@ -513,7 +513,7 @@ def fidget_in_place(env_type='sim', render=False):
     # time.sleep(3.0)
     
     if env_type == list_of_env_types[0]:
-        time.sleep(100)
+        time.sleep(5)
     else:
         env.close()
         print('%.3f seconds'%(finish-start))
