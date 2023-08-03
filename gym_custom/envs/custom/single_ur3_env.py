@@ -9,7 +9,9 @@ from gym_custom import utils
 from gym_custom.envs.mujoco import MujocoEnv
 
 
-class DualUR3Env(MujocoEnv, utils.EzPickle):
+# For Simulation environment
+
+class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
     # class variables
     mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/single_ur3_base.xml')
@@ -251,7 +253,6 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
                 'gripperpos': self._get_gripper_qpos()[:self.gripper_nqpos],
                 'grippervel': self._get_gripper_qvel()[:self.gripper_nqvel]
             }
-
         }
 
     #
@@ -281,29 +282,18 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
 def test_video_record(env):
     import time
-    from gym_custom.wrappers.monitoring.video_recorder import VideoRecorder
-    rec = VideoRecorder(env, enabled=True)
     stime = time.time()
     env.reset()
-    rec.capture_frame()
-    for i in range(int(2*rec.frames_per_sec)):
+
+    for i in range(10000):
         action = env.action_space.sample()
         env.step(action)
-        rec.capture_frame()
+        # print(action) # action dim == 8
+        env.render()
         print('step: %d'%(i))
     ftime = time.time()
 
-    print('recording %f seconds of video took %f seconds'%(2, ftime-stime))
-    rec.close()
-    
-    assert not rec.empty
-    assert not rec.broken
-    assert os.path.exists(rec.path)
-    with open(rec.path) as f:
-        print('path to file is %s'%(f.name))
-        assert os.fstat(f.fileno()).st_size > 100
-
 
 if __name__ == '__main__':
-    env = gym_custom.make('dual-ur3-larr-v0')
+    env = gym_custom.make('single-ur3-larr-v0')
     test_video_record(env)
