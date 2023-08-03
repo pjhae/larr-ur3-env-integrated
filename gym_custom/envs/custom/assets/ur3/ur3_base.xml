@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <mujoco model="ur3">
-    <camera pos="0 0 3.2" name="topview" /> <!--0 0 3.2-->
+
 
     <!--<geom name="floor" type="plane" pos="0 0 -.9" size="10 10 10"-->
           <!--rgba="0 0 0 1" contype="15" conaffinity="15" />-->
