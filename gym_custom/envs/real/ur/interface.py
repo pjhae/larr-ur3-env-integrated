@@ -175,8 +175,8 @@ class URScriptInterface(object):
     def move_gripper_position(self, g, wait=True):
         self.comm.move_gripper_position(g, wait)
 
-    def move_gripper_velocity(self, gd):
-        # TODO: dscho
+    def move_gripper_velocity(self, gd): # currently, just binary action [open, close]
+        # TODO: dscho   
         warnings.warn(colorize('%s: %s'%('WARNING', 'Use move_gripper_position instead of this move_gripper_velocity'), 'yellow'))
         gd = 0
         if gd < 0: # open
@@ -186,7 +186,7 @@ class URScriptInterface(object):
         else: # do nothing
             return None
 
-    def move_gripper_force(self, gf):
+    def move_gripper_force(self, gf):  # currently, just binary action [open, close]
         # TODO: dscho
         warnings.warn(colorize('%s: %s'%('WARNING', 'Use move_gripper_position instead of this move_gripper_force'), 'yellow'))
         gf = 0
