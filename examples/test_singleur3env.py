@@ -7,7 +7,8 @@ import gym_custom
 
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
 from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3_deprecated as URScriptWrapper_deprecated
-from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3 as URScriptWrapper
+from gym_custom.envs.custom.ur_utils import URScriptWrapper_SingleUR3 as URScriptWrapper
+
 
 from gym_custom.envs.real.utils import ROSRate, prompt_yes_or_no
 
@@ -52,13 +53,13 @@ def run_dual_ur3():
         print('  joint_pos: %s (rad)'%(env._get_ur3_qpos()*180/np.pi))
         print('  joint_vel: %s (rad/s)'%(env._get_ur3_qvel()*180/np.pi))
         print('  joint_bias: %s (Nm)'%(env._get_ur3_bias()*180/np.pi))
-        print('  gripper_pos: %s (m)'%(env._get_gripper_qpos()[[2,7,12,17]]))
-        print('  gripper_vel: %s (m/s)'%(env._get_gripper_qvel()[[2,7,12,17]]))
-        print('  gripper_bias: %s (N)'%(env._get_gripper_bias()[[2,7,12,17]]))
+        print('  gripper_pos: %s (m)'%(env._get_gripper_qpos()[[2,7]]))
+        print('  gripper_vel: %s (m/s)'%(env._get_gripper_qvel()[[2,7]]))
+        print('  gripper_bias: %s (N)'%(env._get_gripper_bias()[[2,7]]))
         time.sleep(dt)
 
-def test_fkine_ikine():
-    env = gym_custom.make('dual-ur3-larr-v0')
+def test_fkine_ikine():  # forward & inverse kinematics
+    env = gym_custom.make('single-ur3-larr-v0')
     obs = env.reset()
     dt = env.dt
 
@@ -66,7 +67,6 @@ def test_fkine_ikine():
     q = env._get_ur3_qpos()[:env.ur3_nqpos] # right
     Rs, ps, Ts = env.forward_kinematics_DH(q, arm='right')
     R_base, p_base, T_base = env.get_body_se3(body_name='right_arm_rotz')
-    # R_hand, p_hand, T_hand = env.get_body_se3(body_name='right_gripper:hand')
     R_hand, p_hand, T_hand = env.get_body_se3(body_name='right_gripper:hand')
     print('base:')
     print('  pos: (DH) %s vs. (MjData) %s'%(ps[0,:], p_base))
@@ -78,13 +78,10 @@ def test_fkine_ikine():
     null_obj_func = UprightConstraint()
 
     ee_pos_right = np.array([0.1, -0.5, 0.9])
-    ee_pos_left = np.array([-0.1, -0.5, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
-    q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
 
     qpos_des = env.init_qpos.copy()
     qpos_des[0:env.ur3_nqpos] = q_right_des
-    qpos_des[env.ur3_nqpos+env.gripper_nqpos:2*env.ur3_nqpos+env.gripper_nqpos] = q_left_des
     env.render()
     time.sleep(3.0)
     while True:
@@ -133,12 +130,11 @@ def servoj_and_forceg(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
     
     if env_type == list_of_env_types[0]:
-        env = gym_custom.make('dual-ur3-larr-v0')
+        env = gym_custom.make('single-ur3-larr-v0')
         servoj_args = {'t': None, 'wait': None}
     elif env_type == list_of_env_types[1]:
-        env = gym_custom.make('dual-ur3-larr-real-v0',
+        env = gym_custom.make('single-ur3-larr-real-v0',
             host_ip_right='192.168.5.102',
-            host_ip_left='192.168.5.101',
             rate=25
         )
         servoj_args = {'t': 2/env.rate._freq, 'wait': False}
@@ -146,8 +142,8 @@ def servoj_and_forceg(env_type='sim', render=False):
         env.set_initial_joint_pos('current')
         env.set_initial_gripper_pos('current')
         # 2. Set inital as default configuration
-        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
-        env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
+        env.set_initial_gripper_pos(np.array([0.0]))
         assert render is False
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
     obs = env.reset()
@@ -155,10 +151,10 @@ def servoj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.9])
-    ee_pos_left = np.array([-0.1, -0.5, 0.9])
+    ee_pos_right = np.array([0.1, -0.5, 1.1])  ## end-effector
+
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
-    q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
+
 
     if env_type == list_of_env_types[0]:
         PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}}
@@ -169,8 +165,8 @@ def servoj_and_forceg(env_type='sim', render=False):
         env.env = env
 
     if env_type == list_of_env_types[1]:
-        if prompt_yes_or_no('current qpos is \r\n right: %s deg\r\n left: %s deg\r\n?'
-            %(np.rad2deg(env.env._init_qpos[:6]), np.rad2deg(env.env._init_qpos[6:]))) is False:
+        if prompt_yes_or_no('current qpos is \r\n right: %s deg?\r\n'
+            %(np.rad2deg(env.env._init_qpos[:6]))) is False:
             print('exiting program!')
             env.close()
             sys.exit()
@@ -182,21 +178,17 @@ def servoj_and_forceg(env_type='sim', render=False):
             'right': {
                 'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
                 'move_gripper_force': {'gf': np.array([1.0])}
-            },
-            'left': {
-                'servoj': {'q': q_left_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
-                'move_gripper_force': {'gf': np.array([1.0])}
             }
         })
         if render: env.render()
         obs_dict = env.env.get_obs_dict()
         right_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        left_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
+
         print('time: %f [s]'%(t*dt))
         print('right arm joint error [deg]: %f'%(np.rad2deg(right_err)))
-        print('left arm joint error [deg]: %f'%(np.rad2deg(left_err)))
-        qpos_err = max(right_err, left_err)
-        qvel = np.linalg.norm(np.concatenate([obs_dict['right']['qvel'], obs_dict['left']['qvel']]))
+
+        qpos_err = right_err
+        qvel = np.linalg.norm(np.concatenate([obs_dict['right']['qvel']]))
         t += 1
     
     if env_type == list_of_env_types[0]:
@@ -267,12 +259,11 @@ def speedj_and_forceg(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
     
     if env_type == list_of_env_types[0]:
-        env = gym_custom.make('dual-ur3-larr-v0')
+        env = gym_custom.make('single-ur3-larr-v0')
         speedj_args = {'a': 5, 't': None, 'wait': None}
     elif env_type == list_of_env_types[1]:
-        env = gym_custom.make('dual-ur3-larr-real-v0',
+        env = gym_custom.make('single-ur3-larr-real-v0',
             host_ip_right='192.168.5.102',
-            host_ip_left='192.168.5.101',
             rate=25
         )
         speedj_args = {'a': 5, 't': 2/env.rate._freq, 'wait': False}
@@ -282,16 +273,16 @@ def speedj_and_forceg(env_type='sim', render=False):
         env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
         env.set_initial_gripper_pos(np.array([0.0, 0.0]))
         assert render is False
+
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
     obs = env.reset()
     dt = env.dt
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.9])
-    ee_pos_left = np.array([-0.1, -0.5, 0.9])
+    ee_pos_right = np.array([0.1, -0.5, 1.1])
+
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
-    q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
 
     if env_type == list_of_env_types[0]:
         PI_gains = {'speedj': {'P': 0.2, 'I': 10.0}} # was 0.2, 10.0
@@ -302,8 +293,8 @@ def speedj_and_forceg(env_type='sim', render=False):
         env.env = env
 
     if env_type == list_of_env_types[1]:
-        if prompt_yes_or_no('current qpos is \r\n right: %s deg\r\n left: %s deg\r\n?'
-            %(np.rad2deg(env.env._init_qpos[:6]), np.rad2deg(env.env._init_qpos[6:]))) is False:
+        if prompt_yes_or_no('current qpos is \r\n right: %s deg?\r\n'
+            %(np.rad2deg(env.env._init_qpos[:6]))) is False:
             print('exiting program!')
             env.close()
             sys.exit()
@@ -312,16 +303,12 @@ def speedj_and_forceg(env_type='sim', render=False):
     duration = 3.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
-    q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/duration
+
     start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([1.0])}
-            },
-            'left': {
-                'speedj': {'qd': q_left_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([1.0])}
             }
         })
@@ -342,32 +329,27 @@ def speedj_and_forceg(env_type='sim', render=False):
     # Stop
     t = 0
     qvel_err = np.inf
-    q_right_des_vel, q_left_des_vel = np.zeros([env.ur3_nqpos]), np.zeros([env.ur3_nqpos])
+    q_right_des_vel = np.zeros([env.ur3_nqpos])
     while qvel_err > np.deg2rad(1e0):
         obs, _, _, _ = env.step({
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([-1.0])}
-            },
-            'left': {
-                'speedj': {'qd': q_left_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([-1.0])}
             }
         })
         if render: env.render()
         obs_dict = env.env.get_obs_dict()
         right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
         right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
-        left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
+
         print('time: %f [s]'%(t*dt))
         print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
-        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
-        qvel_err = np.linalg.norm(np.concatenate([obs_dict['right']['qvel'], obs_dict['left']['qvel']]) - np.concatenate([q_right_des_vel, q_left_des_vel]))
+
+        qvel_err = np.linalg.norm(np.concatenate([obs_dict['right']['qvel']]) - np.concatenate([q_right_des_vel]))
         t += 1
     
     if env_type == list_of_env_types[0]:
-        time.sleep(100)
+        time.sleep(10)
     else:
         env.close()
         print('%.3f seconds'%(finish-start))
@@ -1228,15 +1210,15 @@ def real_env_command_send_rate_test(wait=True):
 if __name__ == '__main__':
     # 1. MuJoCo model verification
     # show_dual_ur3()
-    run_dual_ur3()
+    # run_dual_ur3()
     # test_fkine_ikine()
 
     # 2.1 Updated UR wrapper examples
-    # servoj_and_forceg(env_type='real', render=False)
-    # speedj_and_forceg(env_type='real', render=False)
+    # servoj_and_forceg(env_type='sim', render=True)
+    speedj_and_forceg(env_type='sim', render=True)
     # pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)
-    # fidget_in_place(env_type='sim', render=True)
+    # fidget_in_place(env_type='real', render=True)
 
     # 2.2 Deprecated UR wrapper examples 
     # servoj_and_forceg_deprecated()
@@ -1247,4 +1229,4 @@ if __name__ == '__main__':
     # 3. Misc. tests
     # real_env_get_obs_rate_test(wait=False)
     # real_env_command_send_rate_test(wait=False)
-    # pass
+    # pass 
