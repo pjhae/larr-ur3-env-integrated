@@ -69,7 +69,7 @@ agent = SAC(env.observation_space.shape[0], env.action_space, args)
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
 
-agent.load_checkpoint("checkpoints/sac_checkpoint_{}_{}".format(env_name, num_epi), True )
+agent.load_checkpoint("checkpoints/sac_checkpoint_{}_{}".format(env_name, num_epi), True)
 
 avg_reward = 0.
 avg_step = 0.

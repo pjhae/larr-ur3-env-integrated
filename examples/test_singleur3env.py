@@ -114,7 +114,7 @@ def servoj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 1.1])  ## end-effector
+    ee_pos_right = np.array([0.1, -0.5, 0.9])  ## end-effector
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -185,7 +185,7 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 1.1])
+    ee_pos_right = np.array([0.1, -0.5, 0.9])
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -817,11 +817,11 @@ if __name__ == '__main__':
     # test_fkine_ikine()
 
     # 2.1 Updated UR wrapper examples
-    # servoj_and_forceg(env_type='sim', render=True)
+    servoj_and_forceg(env_type='sim', render=True)
     # speedj_and_forceg(env_type='sim', render=True)
     # pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)
-    fidget_in_place(env_type='sim', render=True)
+    # fidget_in_place(env_type='sim', render=True)
 
     # 2.2 Deprecated UR wrapper examples 
     # servoj_and_forceg_deprecated()

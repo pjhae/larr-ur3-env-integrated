@@ -220,6 +220,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
         return R, p, T
 
+####
     def _get_ur3_qpos(self):
         return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos]]).ravel()
 
@@ -227,9 +228,6 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         return np.concatenate([self.sim.data.qpos[self.ur3_nqpos:self.ur3_nqpos+self.gripper_nqpos]]).ravel()
 
     def _get_ur3_qvel(self):
-        return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel]]).ravel()
-
-    def get_ur3_qvel(self):
         return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel]]).ravel()
 
     def _get_gripper_qvel(self):
@@ -250,6 +248,38 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     def _get_obs(self):
         '''overridable method'''
         return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
+    
+####
+
+    def get_ur3_qpos(self):
+        return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos]]).ravel()
+
+    def get_gripper_qpos(self):
+        return np.concatenate([self.sim.data.qpos[self.ur3_nqpos:self.ur3_nqpos+self.gripper_nqpos]]).ravel()
+
+    def get_ur3_qvel(self):
+        return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel]]).ravel()
+
+    def get_gripper_qvel(self):
+        return np.concatenate([self.sim.data.qvel[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+
+    def get_ur3_bias(self):
+        return np.concatenate([self.sim.data.qfrc_bias[0:self.ur3_nqvel]]).ravel()
+
+    def get_gripper_bias(self):
+        return np.concatenate([self.sim.data.qfrc_bias[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+
+    def get_ur3_constraint(self):
+        return np.concatenate([self.sim.data.qfrc_constraint[0:self.ur3_nqvel]]).ravel()
+
+    def get_ur3_actuator(self):
+        return np.concatenate([self.sim.data.qfrc_actuator[0:self.ur3_nqvel]]).ravel()
+
+    def get_obs(self):
+        '''overridable method'''
+        return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
+
+####
 
     def get_obs_dict(self):
         '''overridable method'''
@@ -266,7 +296,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     def step(self, a):
         '''overridable method'''
 
-        goal_ee_pos = np.array([0.0, -0.4, 0.9])
+        goal_ee_pos = np.array([0.0, -0.4, 1.1])
 
         SO3, x, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         
@@ -279,7 +309,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
         reward = -err
 
-        if err < 0.075:
+        if err < 0.08:
             reward = 100
             print("GOAL##############")
 

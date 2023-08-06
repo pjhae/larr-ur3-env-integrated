@@ -62,7 +62,12 @@ ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0,
 gripper_scale_factor = np.array([1.0])
 env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
 
-# Reproducibility를 위해 모든 랜덤 process에 동일한 seed 부여
+
+# Max episode
+max_episode_steps = 500
+
+
+# For reproducibility
 env.seed(args.seed)
 env.action_space.seed(args.seed)   
 torch.manual_seed(args.seed)
@@ -74,7 +79,7 @@ video = VideoRecorder(dir_name = video_directory)
 
 
 # Agent
-agent = SAC(12, env.action_space, args)
+agent = SAC(6, env.action_space, args)
 
 
 # Tesnorboard
@@ -94,7 +99,7 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
-    state = state[:12]
+    state = state[:6]
     while not done:
         if args.start_steps > total_numsteps:
             action = env.action_space.sample()  # Sample random action
@@ -130,11 +135,11 @@ for i_episode in itertools.count(1):
 
         # Ignore the "done" signal if it comes from hitting the time horizon.
         # max timestep 되었다고 done 해서 next Q = 0 되는 것 방지
-        mask = 1 if episode_steps == env._max_episode_steps else float(not done)
+        mask = 1 if episode_steps == max_episode_steps else float(not done)
 
-        memory.push(state, action, reward, next_state[:12], mask) # Append transition to memory
+        memory.push(state, action, reward, next_state[:6], mask) # Append transition to memory
 
-        state = next_state[:12]
+        state = next_state[:6]
 
     if total_numsteps > args.num_steps:
         break   
@@ -151,7 +156,7 @@ for i_episode in itertools.count(1):
         episodes = 10
         for _  in range(episodes):
             state = env.reset()
-            state = state[:12]
+            state = state[:6]
             episode_steps = 0
             episode_reward = 0
             done = False
@@ -162,7 +167,7 @@ for i_episode in itertools.count(1):
                 episode_reward += reward
                 episode_steps += 1
 
-                state = next_state[:12]
+                state = next_state[:6]
             avg_reward += episode_reward
             avg_step += episode_steps
         avg_reward /= episodes
