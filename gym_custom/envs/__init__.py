@@ -180,6 +180,13 @@ register(
 )
 
 register(
+    id='single-ur3-larr-real-for-train-v0',
+    entry_point='gym_custom.envs.real:SingleUR3RealEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+register(
     id='manipulator-h-real-v0',
     entry_point='gym_custom.envs.real:ManipulatorXRealEnv',
     max_episode_steps=None,

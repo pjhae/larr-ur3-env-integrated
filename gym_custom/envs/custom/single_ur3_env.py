@@ -296,10 +296,10 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     def step(self, a):
         '''overridable method'''
 
-        goal_ee_pos = np.array([0.0, -0.4, 1.1])
+        goal_ee_pos = np.array([0.6, -0.3, 1.0])
 
         SO3, x, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
-        
+
         # print("goal :", goal_ee_pos)
         # print("current :",x)
 
@@ -309,7 +309,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
         reward = -err
 
-        if err < 0.08:
+        if err < 0.1:
             reward = 100
             print("GOAL##############")
 

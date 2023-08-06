@@ -56,7 +56,7 @@ args = parser.parse_args()
 # Environment
 # env = NormalizedActions(gym.make(args.env_name))
 env = gym_custom.make('single-ur3-larr-for-train-v0')
-
+servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
 PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':5.0}}
 ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
 gripper_scale_factor = np.array([1.0])
@@ -119,8 +119,6 @@ for i_episode in itertools.count(1):
                 writer.add_scalar('entropy_temprature/alpha', alpha, updates)
                 updates += 1
 
-
-        servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
         next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -147,9 +145,9 @@ for i_episode in itertools.count(1):
     writer.add_scalar('reward/train', episode_reward, i_episode)
     print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2)))
     if i_episode % 10 == 0:
-        agent.save_checkpoint(args.env_name,"{}".format(i_episode))
+        agent.save_checkpoint('single-ur3-larr-for-train-v0',"{}".format(i_episode))
 
-    if i_episode % 10 == 0 and args.eval is True:
+    if i_episode % 20 == 0 and args.eval is True:
         video.init(enabled=True)
         avg_reward = 0.
         avg_step = 0.
@@ -163,7 +161,12 @@ for i_episode in itertools.count(1):
             while not done:
                 action = agent.select_action(state, evaluate=True)
                 video.record(env.render(mode='rgb_array', camera_id=1))
-                next_state, reward, done, _ = env.step(action)
+                next_state, reward, done, _  = env.step({
+                    'right': {
+                        'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                        'move_gripper_force': {'gf': np.array([action[6]])}
+                    }
+                })
                 episode_reward += reward
                 episode_steps += 1
 

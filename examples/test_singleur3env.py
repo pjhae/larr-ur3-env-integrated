@@ -114,7 +114,7 @@ def servoj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.9])  ## end-effector
+    ee_pos_right = np.array([0.9, -0.2, 1.0])  ## end-effector
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -185,7 +185,8 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.9])
+    # ee_pos_right = np.array([0.1, -0.5, 0.9])  ## end-effector
+    ee_pos_right = np.array([0.6, -0.3, 1.0])  ## end-effector
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -794,8 +795,8 @@ def real_env_command_send_rate_test(wait=True):
             host_ip_right='192.168.5.102',
             rate=100
         )
-    env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
-    env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+    env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
+    env.set_initial_gripper_pos(np.array([0.0]))
     env.reset()
     command = {
         'right': {'speedj': {'qd': np.zeros([6]), 'a': 1.0, 't': 1.0, 'wait': False}}
@@ -817,8 +818,8 @@ if __name__ == '__main__':
     # test_fkine_ikine()
 
     # 2.1 Updated UR wrapper examples
-    servoj_and_forceg(env_type='sim', render=True)
-    # speedj_and_forceg(env_type='sim', render=True)
+    # servoj_and_forceg(env_type='sim', render=True)
+    speedj_and_forceg(env_type='sim', render=True)
     # pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)
     # fidget_in_place(env_type='sim', render=True)
