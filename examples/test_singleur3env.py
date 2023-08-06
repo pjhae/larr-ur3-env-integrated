@@ -175,8 +175,8 @@ def speedj_and_forceg(env_type='sim', render=False):
         env.set_initial_joint_pos('current')
         env.set_initial_gripper_pos('current')
         # 2. Set inital as default configuration
-        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
-        env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
+        env.set_initial_gripper_pos(np.array([0.0]))
         assert render is False
 
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
@@ -267,6 +267,7 @@ def fidget_in_place(env_type='sim', render=False):
     if env_type == list_of_env_types[0]:
         env = gym_custom.make('single-ur3-larr-v0')
         speedj_args = {'a': 5, 't': None, 'wait': None}
+        
     elif env_type == list_of_env_types[1]:
         env = gym_custom.make('single-ur3-larr-real-v0',
             host_ip_right='192.168.5.102',
@@ -300,12 +301,10 @@ def fidget_in_place(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    # q_right_des = curr_right_qpos + np.deg2rad([5, 5, 10, 10, 10, 90])       # JONGHAE
-    # q_left_des = curr_left_qpos + np.deg2rad([5, 5, 10, 10, 10, 90])
-    # gripper_right_des = 1 - curr_right_gripper_pos
-    # gripper_left_des = 1 - curr_left_gripper_pos
+    if env_type == list_of_env_types[0]:
+        curr_right_qpos = env.get_obs_dict()['right']['qpos']
 
-    q_right_des = np.deg2rad([45, 45, 10, 10, 10, 90]) + env.get_obs_dict()['right']['qpos']
+    q_right_des = curr_right_qpos + np.deg2rad([0, 0, 0, 0, 0, 45])
     gripper_right_des = 1 
 
     if env_type == list_of_env_types[0]:
@@ -334,7 +333,7 @@ def fidget_in_place(env_type='sim', render=False):
 
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([5.0])}
+                'move_gripper_force': {'gf': np.array([-5.0])}
             }
         })
 
@@ -361,7 +360,7 @@ def fidget_in_place(env_type='sim', render=False):
 
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([-1.0])}
+                'move_gripper_force': {'gf': np.array([-5.0])}
             }
         })
         if render: env.render()
@@ -409,7 +408,7 @@ def pick_and_place(env_type='sim', render=False):
         env.set_initial_gripper_pos('current')
         # 2. Set inital as default configuration
         env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
-        env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+        env.set_initial_gripper_pos(np.array([0.0]))
         assert render is False
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
     obs = env.reset()
@@ -437,7 +436,7 @@ def pick_and_place(env_type='sim', render=False):
     
     # 1. Move to initial position
     duration = 5.0
-    ee_pos_right = np.array([0.0, -0.4, 0.73])
+    ee_pos_right = np.array([0.0, -0.4, 0.9])
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -453,7 +452,6 @@ def pick_and_place(env_type='sim', render=False):
             }
         })
 
-        print("wow", obs)
 
         if render: env.render()
         # obs_dict = env.env.get_obs_dict()
@@ -821,9 +819,9 @@ if __name__ == '__main__':
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='sim', render=True)
     # speedj_and_forceg(env_type='sim', render=True)
-    pick_and_place(env_type='sim', render=True)
+    # pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)
-    # fidget_in_place(env_type='sim', render=True)
+    fidget_in_place(env_type='sim', render=True)
 
     # 2.2 Deprecated UR wrapper examples 
     # servoj_and_forceg_deprecated()

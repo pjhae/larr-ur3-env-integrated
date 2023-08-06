@@ -103,7 +103,7 @@ class URScriptWrapper(ActionWrapper):
             
         ur3_action = actions.get('ur3', np.zeros([self.ndof]))
         gripper_action = actions.get('gripper', np.zeros([2*self.ngripperdof]))
-        print(ur3_action, gripper_action)
+
         return np.concatenate([ur3_action, gripper_action])
 
     def movej(self, q=None, a=1.4, v =1.05, t =0, r =0, wait=True, pose=None):

@@ -412,18 +412,16 @@ def fidget_in_place(env_type='sim', render=False):
     obs = env.reset()
     dt = env.dt
 
+    if env_type == list_of_env_types[0]:
+        curr_right_qpos = env.get_obs_dict()['right']['qpos']
+        curr_left_qpos = env.get_obs_dict()['left']['qpos']
+
     null_obj_func = UprightConstraint()
 
-    # q_right_des = curr_right_qpos + np.deg2rad([5, 5, 10, 10, 10, 90])       # JONGHAE
-    # q_left_des = curr_left_qpos + np.deg2rad([5, 5, 10, 10, 10, 90])
-    # gripper_right_des = 1 - curr_right_gripper_pos
-    # gripper_left_des = 1 - curr_left_gripper_pos
-
-    q_right_des = np.deg2rad([45, 45, 10, 10, 10, 90]) + env.get_obs_dict()['right']['qpos']
-    q_left_des =  -np.deg2rad([45, 45, 10, 10, 10, 90]) + env.get_obs_dict()['left']['qpos']
+    q_right_des = np.deg2rad([0, 0, 0, 0, 0, 45]) + curr_right_qpos
+    q_left_des =  -np.deg2rad([0, 0, 0, 0, 0, 45]) + curr_left_qpos
     gripper_right_des = 1 
     gripper_left_des = 1 
-
 
     if env_type == list_of_env_types[0]:
         PI_gains = {'speedj': {'P': 0.2, 'I': 10.0}} # was 0.2, 10.0
@@ -447,12 +445,11 @@ def fidget_in_place(env_type='sim', render=False):
     q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/duration
     start = time.time()
     for t in range(int(duration/dt)):
-        print('WOWOWOW',q_left_des_vel)
         obs, _, _, _ = env.step({
 
             'right': {
                 'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([5.0])}
+                'move_gripper_force': {'gf': np.array([10.0])}
             },
             'left': {
                 'speedj': {'qd': q_left_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -473,7 +470,6 @@ def fidget_in_place(env_type='sim', render=False):
         # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
     finish = time.time()
 
-    print("wow")
 
     # Stop (see q_vel is np.zeros([]) ) 
     t = 0

@@ -14,11 +14,11 @@
 
 # Data
 __pycache__/
-#runs/
-#.idea
-#video/
-#checkpoints/
-#sac_practice/video/
+runs/
+.idea
+video/
+checkpoints/
+sac_practice/video/
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
