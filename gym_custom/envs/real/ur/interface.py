@@ -199,7 +199,8 @@ class URScriptInterface(object):
 
     def get_gripper_position(self):
         # TODO: dscho
-        # return np.array([0.0])
+        # return np.array([0.0]) 
+        # From the two functions above, I think it's between 0 and 255 : jhpark
         return np.array([self.comm.get_gripper_position()])
 
     def get_gripper_speed(self):

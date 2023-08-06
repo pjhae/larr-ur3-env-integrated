@@ -6,7 +6,8 @@
 
     <worldbody>
         <camera pos="0 0 3.2" name="topview" /> <!--Remove?-->
-        
+        <camera pos="0 -2 2" name="frontview" xyaxes="1 0 0 0 0.5 1" /> <!--Remove?-->
+
         <geom name="floor" type="plane" pos="0 0 0" size="2.5 2.5 0.1" rgba=".6 .6 .5 1"
             contype="1" conaffinity="1" friction="2 0.1 0.002" material="light_wood_v3"/>
 
@@ -104,7 +105,7 @@
             <geom name="cir:leg4" type="cylinder" fromto="0 -0.2 0.59 0 -0.2 0" size="0.025" material="metal"/>
         </body>
 
-        <body name="cube" pos="0.0 -0.4 1.0" quat="0.92388 0.22094 0.22094 0.22094">
+        <body name="cube" pos="0.0 -0.4 0.73" quat="0.92388 0.22094 0.22094 0.22094">
             <geom name="cube" type="box" size="0.02 0.02 0.02" rgba="0.7 0.7 0 1" />
             <joint name="cube" type="free" damping="0.001" />
         </body>

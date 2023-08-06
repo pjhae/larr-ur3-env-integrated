@@ -16,11 +16,13 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     # class variables
     mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/single_ur3_base.xml')
     mujocoenv_frame_skip = 1
+    # state
     ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
-    ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
     objects_nqpos = [7, 7, 7, 7] # there is 4 objects on the table, each object has qpos = (3trans + 4quat)
     objects_nqvel = [6, 6, 6, 6] # there is 4 objects on the table, each object has qpos = (3trans + 3rota)
+    # action
+    ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
     ENABLE_COLLISION_CHECKER = False
 
     def __init__(self):
@@ -93,6 +95,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
     def forward_kinematics_DH(self, q, arm):
         assert len(q) == self.ur3_nqpos
+        self._define_class_variables()
 
         if arm == 'right':
             T_0_i = self.kinematics_params['T_wb_right']
@@ -226,6 +229,9 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     def _get_ur3_qvel(self):
         return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel]]).ravel()
 
+    def get_ur3_qvel(self):
+        return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel]]).ravel()
+
     def _get_gripper_qvel(self):
         return np.concatenate([self.sim.data.qvel[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel]]).ravel()
 
@@ -255,15 +261,32 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
             }
         }
 
-    #
     # Overrided MujocoEnv methods
 
     def step(self, a):
         '''overridable method'''
-        reward = 1.0
+
+        goal_ee_pos = np.array([0.0, -0.4, 0.9])
+
+        SO3, x, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
+        
+        # print("goal :", goal_ee_pos)
+        # print("current :",x)
+
+        delta_x = goal_ee_pos - x
+
+        err = np.linalg.norm(delta_x)
+
+        reward = -err
+
+        if err < 0.075:
+            reward = 100
+            print("GOAL##############")
+
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()
         done = False
+
         return ob, reward, done, {}
 
     def reset_model(self):

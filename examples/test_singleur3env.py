@@ -337,6 +337,7 @@ def fidget_in_place(env_type='sim', render=False):
                 'move_gripper_force': {'gf': np.array([5.0])}
             }
         })
+
         if render: env.render()
         # TODO: get_obs_dict() takes a long time causing timing issues.
         #   Is it due to Upboard's lackluster performance or some deeper
@@ -436,7 +437,7 @@ def pick_and_place(env_type='sim', render=False):
     
     # 1. Move to initial position
     duration = 5.0
-    ee_pos_right = np.array([0.0, -0.4, 0.9])
+    ee_pos_right = np.array([0.0, -0.4, 0.73])
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -451,6 +452,9 @@ def pick_and_place(env_type='sim', render=False):
                 'move_gripper_force': {'gf': np.array([1.0])}
             }
         })
+
+        print("wow", obs)
+
         if render: env.render()
         # obs_dict = env.env.get_obs_dict()
         # right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
@@ -812,12 +816,12 @@ if __name__ == '__main__':
     # 1. MuJoCo model verification
     # show_dual_ur3()
     # run_dual_ur3()
-    test_fkine_ikine()
+    # test_fkine_ikine()
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='sim', render=True)
     # speedj_and_forceg(env_type='sim', render=True)
-    # pick_and_place(env_type='sim', render=True)
+    pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)
     # fidget_in_place(env_type='sim', render=True)
 

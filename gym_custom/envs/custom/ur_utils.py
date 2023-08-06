@@ -316,7 +316,7 @@ class URScriptWrapper_SingleUR3(ActionWrapper):
         # cf. f = lambda : np.zeros([5])
         wrapper_right_env_getters = {
             'qpos': lambda : env._get_ur3_qpos()[:env.ur3_nqpos],
-            'qvel': lambda : env._get_ur3_qvel()[:env.ur3_nqvel],
+            'qvel': lambda : env.get_ur3_qvel()[:env.ur3_nqvel],
             'qbias': lambda : env._get_ur3_bias()[:env.ur3_nqvel],
             'qconstraint': lambda : env._get_ur3_constraint()[:env.ur3_nqvel],
             'gpos': lambda : np.array([self.env._get_gripper_qpos()[2], self.env._get_gripper_qpos()[7]]),

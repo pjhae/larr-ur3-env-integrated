@@ -140,6 +140,13 @@ register(
     reward_threshold=0.0,
 )
 
+register(
+    id='single-ur3-larr-for-train-v0',
+    entry_point='gym_custom.envs.custom.single_ur3_env:SingleUR3Env',
+    max_episode_steps=500,
+    reward_threshold=0.0,
+)
+
 # Grippers
 #
 register(
