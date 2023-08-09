@@ -21,6 +21,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
     objects_nqpos = [7, 7, 7, 7] # there is 4 objects on the table, each object has qpos = (3trans + 4quat)
     objects_nqvel = [6, 6, 6, 6] # there is 4 objects on the table, each object has qpos = (3trans + 3rota)
+    curr_pos = np.array([0, 0, 0])
     # action
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
     ENABLE_COLLISION_CHECKER = False
@@ -280,7 +281,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
     def get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
+        return np.concatenate([self.goal_pos, self.curr_pos, self.sim.data.qpos, self.sim.data.qvel]).ravel()
 
 ####
 
@@ -300,8 +301,9 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         '''overridable method'''
 
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
+        self.curr_pos = curr_pos
 
-        delta_x = self.goal_pos - curr_pos
+        delta_x = self.goal_pos - self.curr_pos
 
         err = np.linalg.norm(delta_x)
 
@@ -324,10 +326,11 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
     def reset_model(self):
         '''overridable method'''
+        self.goal_pos = np.array([0.1+0.2*np.random.rand(), -0.5, 0.8+0.3*np.random.rand()])
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
         self.set_state(qpos, qvel)
-        print("#############################################################3333")
+
         return self._get_obs()
 
     def viewer_setup(self):
