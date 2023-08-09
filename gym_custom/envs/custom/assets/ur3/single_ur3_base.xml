@@ -87,14 +87,14 @@
 
         </body>
 
-        <body name="asri_table(rectangle)" pos="0 -0.5 0" >
+        <!-- <body name="asri_table(rectangle)" pos="0 -0.5 0" >
             <geom name="rec:tabletop" type="box" pos="0 0 0.72" size="0.5 0.3 0.01" rgba=".6 .6 .5 1"
                 contype="1" conaffinity="1" friction="2 0.1 0.002" material="light_wood_v2"/>
             <geom name="rec:leg1" type="cylinder" fromto="-0.45 -0.25 0.72 -0.45 -0.25 0" size="0.025" material="metal"/>
             <geom name="rec:leg2" type="cylinder" fromto="-0.45 0.25 0.72 -0.45 0.25 0" size="0.025" material="metal"/>
             <geom name="rec:leg3" type="cylinder" fromto="0.45 -0.25 0.72 0.45 -0.25 0" size="0.025" material="metal"/>
             <geom name="rec:leg4" type="cylinder" fromto="0.45 0.25 0.72 0.45 0.25 0" size="0.025" material="metal"/>
-        </body>
+        </body> -->
 
         <body name="asri_table(circle)" pos="1 1 0" >
             <geom name="cir:tabletop" type="cylinder" pos="0 0 0.59" size="0.25 0.01" rgba=".6 .6 .5 1"
@@ -104,21 +104,21 @@
             <geom name="cir:leg3" type="cylinder" fromto="-0.2 0 0.59 -0.2 0 0" size="0.025" material="metal"/>
             <geom name="cir:leg4" type="cylinder" fromto="0 -0.2 0.59 0 -0.2 0" size="0.025" material="metal"/>
         </body>
-
-        <body name="cube" pos="0.0 -0.4 0.73" quat="0.92388 0.22094 0.22094 0.22094">
+        <!--pos="0.0 -0.4 0.73"-->
+        <body name="cube" pos="0.0 -0.4 0.1" quat="0.92388 0.22094 0.22094 0.22094">
             <geom name="cube" type="box" size="0.02 0.02 0.02" rgba="0.7 0.7 0 1" />
             <joint name="cube" type="free" damping="0.001" />
         </body>
-
-        <body name="mug" pos="0 -0.6 0.73" >
+        <!--pos="0 -0.6 0.73"-->
+        <body name="mug" pos="0 -0.6 0.1" >
             <inertial pos="0 0 0.04" mass="0.2" diaginertia="0.001 0.001 0.001" />
             <geom name="mug" type="mesh" pos="0 0 0.01" mesh="mug" material="light_wood" 
                 contype="1" conaffinity="1" friction="1 0.1 0.002" condim="4"
             />
             <joint name="mug" type="free" limited="false" damping="0.001" />
         </body>
-
-        <body name="asri_box:bottom" pos="0.3 -0.6 0.779" > <!-- 0.73 + 0.049 = 0.779 -->
+        <!--pos="0.3 -0.6 0.779"-->
+        <body name="asri_box:bottom" pos="0.3 -0.6 0.1" > <!-- 0.73 + 0.049 = 0.779 -->
             <geom name="asri_box:floor" pos="0 0 -0.0465" quat="1 0 0 0" rgba="0.2 0.2 0.2 0.75" size="0.038 0.038 0.0025" type="box" condim="1" density="900" />
             <geom name="asri_box:side1" pos="0.0355 0 0" quat="0.707 0 0.707 0" rgba="0.8 0.8 0.8 0.75" size="0.0465 0.038 0.0025" type="box" condim="1" density="900" />
             <geom name="asri_box:side2" pos="-0.0355 0 0" quat="0.707 0 0.707 0" rgba="0.8 0.8 0.8 0.75" size="0.0465 0.038 0.0025" type="box" condim="1" density="900" />

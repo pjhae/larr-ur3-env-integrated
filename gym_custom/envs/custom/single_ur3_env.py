@@ -314,9 +314,9 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
         reward = -err
 
-        if err < 0.1:
+        if err < 0.05:
             reward = 100
-            # print("GOAL##############")
+            print("##############GOAL##############")
 
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()
