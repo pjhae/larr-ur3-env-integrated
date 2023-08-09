@@ -24,6 +24,8 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     # action
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
     ENABLE_COLLISION_CHECKER = False
+    # goal
+    goal_pos = np.array([-0.3, -0.6, 0.75])
 
     def __init__(self):
         if self.ENABLE_COLLISION_CHECKER:
@@ -51,7 +53,8 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-            np.array([-90.0, -90.0, -90.0, -90.0, -135.0, 90.0])*np.pi/180.0 # right arm
+            np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
+            # np.array([-90.0, -90.0, -90.0, -90.0, -135.0, 90.0])*np.pi/180.0 # right arm
         
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
@@ -296,22 +299,22 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     def step(self, a):
         '''overridable method'''
 
-        goal_ee_pos = np.array([0.6, -0.3, 1.0])
+        SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
 
-        SO3, x, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
-
-        # print("goal :", goal_ee_pos)
-        # print("current :",x)
-
-        delta_x = goal_ee_pos - x
+        delta_x = self.goal_pos - curr_pos
 
         err = np.linalg.norm(delta_x)
+
+        qpos = self.sim.data.qpos
+        qvel = self.sim.data.qvel
+        qpos[-7:-4] = self.goal_pos 
+        self.set_state(qpos, qvel)
 
         reward = -err
 
         if err < 0.1:
             reward = 100
-            print("GOAL##############")
+            # print("GOAL##############")
 
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()
@@ -324,6 +327,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
         self.set_state(qpos, qvel)
+        print("#############################################################3333")
         return self._get_obs()
 
     def viewer_setup(self):

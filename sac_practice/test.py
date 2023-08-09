@@ -61,7 +61,6 @@ parser.add_argument('--env_type', default="sim",
 args = parser.parse_args()
 
 
-
 # Episode to test
 num_epi = 20
 

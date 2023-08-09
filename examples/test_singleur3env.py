@@ -185,8 +185,9 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    # ee_pos_right = np.array([0.1, -0.5, 0.9])  ## end-effector
-    ee_pos_right = np.array([0.6, -0.3, 1.0])  ## end-effector
+    ee_pos_right = np.array([0.1, -0.5, 0.9])  ## end-effector
+    # ee_pos_right = np.array([0.6, -0.3, 1.0])  ## end-effector
+
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -255,7 +256,110 @@ def speedj_and_forceg(env_type='sim', render=False):
         t += 1
     
     if env_type == list_of_env_types[0]:
-        time.sleep(10)
+        time.sleep(1)
+    else:
+        env.close()
+        print('%.3f seconds'%(finish-start))
+        sys.exit()
+
+def speedj_test_jhpark(env_type='sim', goal_pos = np.array([-0.3, -0.6, 0.75]), render=False):
+    list_of_env_types = ['sim', 'real']
+    
+    if env_type == list_of_env_types[0]:
+        env = gym_custom.make('single-ur3-larr-v0')
+        speedj_args = {'a': 5, 't': None, 'wait': None}
+    elif env_type == list_of_env_types[1]:
+        env = gym_custom.make('single-ur3-larr-real-v0',
+            host_ip_right='192.168.5.102',
+            rate=25
+        )
+        speedj_args = {'a': 5, 't': 2/env.rate._freq, 'wait': False}
+        env.set_initial_joint_pos('current')
+        env.set_initial_gripper_pos('current')
+        # 2. Set inital as default configuration
+        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
+        env.set_initial_gripper_pos(np.array([0.0]))
+        assert render is False
+
+    else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
+    
+    obs = env.reset()
+    dt = env.dt
+
+    null_obj_func = UprightConstraint()
+
+    ee_pos_right = goal_pos ## end-effector
+    env.goal_pos = goal_pos
+
+    q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
+
+    if env_type == list_of_env_types[0]:
+        PI_gains = {'speedj': {'P': 0.2, 'I': 10.0}} # was 0.2, 10.0
+        ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
+        gripper_scale_factor = np.array([1.0])
+        env = URScriptWrapper(env, PI_gains, ur3_scale_factor, gripper_scale_factor)
+    elif env_type == list_of_env_types[1]:
+        env.env = env
+
+    if env_type == list_of_env_types[1]:
+        if prompt_yes_or_no('current qpos is \r\n right: %s deg?\r\n'
+            %(np.rad2deg(env.env._init_qpos[:6]))) is False:
+            print('exiting program!')
+            env.close()
+            sys.exit()
+
+    # Move to goal
+    duration = 3.0 # in seconds
+    obs_dict_current = env.env.get_obs_dict()
+    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
+
+    start = time.time()
+    for t in range(int(duration/dt)):
+        obs, _, _, _ = env.step({
+            'right': {
+                'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'move_gripper_force': {'gf': np.array([1.0])}
+            }
+        })
+        if render: env.render()
+        # TODO: get_obs_dict() takes a long time causing timing issues.
+        #   Is it due to Upboard's lackluster performance or some deeper
+        #   issues within UR Script wrppaer?
+        # obs_dict = env.env.get_obs_dict()
+        # right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
+        # left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
+        # right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
+        # left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
+        # print('time: %f [s]'%(t*dt))
+        # print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
+        # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+    finish = time.time()
+
+    # Stop
+    t = 0
+    qvel_err = np.inf
+    q_right_des_vel = np.zeros([env.ur3_nqpos])
+    while qvel_err > np.deg2rad(1e0):
+        obs, _, _, _ = env.step({
+            'right': {
+                'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'move_gripper_force': {'gf': np.array([-1.0])}
+            }
+        })
+        if render: env.render()
+        obs_dict = env.env.get_obs_dict()
+        right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
+        right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
+
+        # print('time: %f [s]'%(t*dt))
+        print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
+
+        qvel_err = np.linalg.norm(np.concatenate([obs_dict['right']['qvel']]) - np.concatenate([q_right_des_vel]))
+        t += 1
+    
+    if env_type == list_of_env_types[0]:
+        time.sleep(1)
+      
     else:
         env.close()
         print('%.3f seconds'%(finish-start))
@@ -819,7 +923,13 @@ if __name__ == '__main__':
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='sim', render=True)
-    speedj_and_forceg(env_type='sim', render=True)
+    # speedj_and_forceg(env_type='sim', render=True)
+
+    while True:
+        _goal_pos = np.array([0.1+0.2*np.random.rand(), -0.5, 0.8+0.3*np.random.rand()])
+        speedj_test_jhpark(env_type='sim', goal_pos=_goal_pos, render=True)
+
+
     # pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)
     # fidget_in_place(env_type='sim', render=True)
