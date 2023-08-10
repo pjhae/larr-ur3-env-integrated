@@ -81,8 +81,8 @@ class HERMemory:
         # Change to HER transition
         for i in range(len(self.buffer)):
             state, action, reward, next_state, done = batch[i]
-            state[:3] = terminal_state[:3]
-            next_state[:3] = terminal_state[:3]
+            state[:3] = terminal_state[3:6]
+            next_state[:3] = terminal_state[3:6]
             if np.linalg.norm(state[:3] - state[3:6]) < 0.03:
                 reward = 1
             else:

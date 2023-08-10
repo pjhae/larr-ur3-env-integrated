@@ -62,7 +62,7 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 170
+num_epi = 480
 
 # Rendering (if env_type is real, render should be FALSE)
 render = True
@@ -149,7 +149,6 @@ while True:
     
     avg_reward = episode_reward/500
     print('episode_reward :', episode_reward)
-
 
 
     # If env_type is real, evaluate just for 1 episode

@@ -83,7 +83,7 @@ agent = SAC(12, env.action_space, args)
 
 
 # Tesnorboard
-writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), args.env_name,
+writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'single-ur3-larr-for-train-v0',
                                                              args.policy, "autotune" if args.automatic_entropy_tuning else ""))
 
 # Memory
