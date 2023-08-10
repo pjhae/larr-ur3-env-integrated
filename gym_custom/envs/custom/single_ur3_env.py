@@ -304,7 +304,6 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         self.curr_pos = curr_pos
 
         delta_x = self.goal_pos - self.curr_pos
-
         err = np.linalg.norm(delta_x)
 
         qpos = self.sim.data.qpos
@@ -312,11 +311,12 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         qpos[-7:-4] = self.goal_pos 
         self.set_state(qpos, qvel)
 
-        reward = -err
+        reward = self.goal_conditioned_reward(self.goal_pos, self.curr_pos)
 
-        if err < 0.05:
-            reward = 100
-            print("##############GOAL##############")
+        # reward = -err
+        # if err < 0.05:
+        #     reward = 100
+        #     print("##############GOAL##############")
 
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()
@@ -324,9 +324,21 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
         return ob, reward, done, {}
 
+    def goal_conditioned_reward(self, goal_pos, curr_pos):
+        # compute error
+        err = np.linalg.norm(curr_pos - goal_pos)
+        # get GCRL reward
+        if err < 0.03:
+            reward = 1
+        else: 
+            reward = 0
+        
+        return reward
+    
+
     def reset_model(self):
         '''overridable method'''
-        self.goal_pos = np.array([0.1+0.2*np.random.rand(), -0.5, 0.8+0.3*np.random.rand()])
+        self.goal_pos = np.array([0.0+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
         self.set_state(qpos, qvel)

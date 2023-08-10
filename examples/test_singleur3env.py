@@ -925,10 +925,15 @@ if __name__ == '__main__':
     # servoj_and_forceg(env_type='sim', render=True)
     # speedj_and_forceg(env_type='sim', render=True)
 
-    while True:
-        _goal_pos = np.array([0.1+0.2*np.random.rand(), -0.5, 0.8+0.3*np.random.rand()])
+    while True:# 0.0-0.2  -0.5   1.0-1.2   *np.random.rand()
+        _goal_pos = np.array([0.0, -0.4, 0.9])
         speedj_test_jhpark(env_type='sim', goal_pos=_goal_pos, render=True)
-
+        _goal_pos = np.array([0.0, -0.4, 1.2])
+        speedj_test_jhpark(env_type='sim', goal_pos=_goal_pos, render=True)
+        _goal_pos = np.array([0.3, -0.4, 0.9])
+        speedj_test_jhpark(env_type='sim', goal_pos=_goal_pos, render=True)
+        _goal_pos = np.array([0.3, -0.4, 1.2])
+        speedj_test_jhpark(env_type='sim', goal_pos=_goal_pos, render=True)
 
     # pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)

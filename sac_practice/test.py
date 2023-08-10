@@ -62,7 +62,7 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 20
+num_epi = 170
 
 # Rendering (if env_type is real, render should be FALSE)
 render = True
@@ -115,7 +115,7 @@ torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
 # Agent
-agent = SAC(6, env.action_space, args)
+agent = SAC(12, env.action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
@@ -129,7 +129,7 @@ avg_step = 0.
 episodes = 10
 while True:
     state = env.reset()
-    state = state[:6]
+    state = state[:12]
     episode_reward = 0
     step = 0
     done = False
@@ -143,13 +143,14 @@ while True:
         })
         if render == True :
             env.render()
-        episode_reward += reward
+        episode_reward += -np.linalg.norm(state[:3]-state[3:6])
         step += 1
-        state = next_state[:6]
-    print('episode_reward :' ,reward)
-    print('episode_step :' ,step)
-    avg_reward += episode_reward
-    avg_step += step
+        state = next_state[:12]
+    
+    avg_reward = episode_reward/500
+    print('episode_reward :', episode_reward)
+
+
 
     # If env_type is real, evaluate just for 1 episode
     if args.env_type == "real":

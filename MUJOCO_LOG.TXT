@@ -13,3 +13,6 @@ ERROR: GLEW initalization error: Missing GL version
 Wed Aug  9 14:59:34 2023
 ERROR: GLEW initalization error: Missing GL version
 
+Thu Aug 10 10:21:36 2023
+ERROR: GLEW initalization error: Missing GL version
+
