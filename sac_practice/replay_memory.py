@@ -62,34 +62,37 @@ class HERMemory:
         self.buffer[self.position] = (state, action, reward, next_state, done)
         self.position = (self.position + 1) % self.capacity
 
-    # def sample(self, terminal_state):
-    #     batch = random.sample(self.buffer,len(self.buffer))
-    #     state, action, reward, next_state, done = map(np.stack, zip(*batch))
-    #     # Change to HER transition
-    #     for i in range(len(self.buffer)):
-    #         state[i][:3] = terminal_state[:3]
-    #         next_state[i][:3] = terminal_state[:3]
-    #         if np.linalg.norm(state[i][:3] - state[i][3:6]) < 0.03:
-    #             reward[i] = 1
-    #         else:
-    #             reward[i] = 0
-     
-    #     return state, action, reward, next_state, done 
-    
     def sample(self, terminal_state):
-        batch = self.buffer
+        batch = random.sample(self.buffer,len(self.buffer))
+        state, action, reward, next_state, done = map(np.stack, zip(*batch))
         # Change to HER transition
         for i in range(len(self.buffer)):
-            state, action, reward, next_state, done = batch[i]
-            state[:3] = terminal_state[3:6]
-            next_state[:3] = terminal_state[3:6]
-            if np.linalg.norm(state[:3] - state[3:6]) < 0.03:
-                reward = 1
+            state[i][:3] = terminal_state[3:6]
+            next_state[i][:3] = terminal_state[3:6]
+            if np.linalg.norm(state[i][:3] - state[i][3:6]) < 0.075:
+                reward[i] = 1
             else:
-                reward = 0
-            batch[i] = state, action, reward, next_state, done 
+                reward[i] = 0
+     
+        return state, action, reward, next_state, done 
     
-        return batch
+    # def sample(self, terminal_state):
+    #     batch = random.sample(self.buffer,len(self.buffer))
+    #     # Change to HER transition
+    #     for i in range(len(batch)):
+    #         state, action, reward, next_state, done = batch[i]
+    #         print(reward)
+    #         print(terminal_state[:6],"terminal")
+    #         # print(state[:6],"before")
+    #         state[:3] = terminal_state[3:6]
+    #         next_state[:3] = terminal_state[3:6]
+    #         if np.linalg.norm(state[:3] - state[3:6]) < 0.075:
+    #             reward = 1
+    #         else:
+    #             reward = 0
+    #         batch[i] = state, action, reward, next_state, done 
+    #         # print(state[:6],"after")
+    #     return batch
 
     def clear(self):
         self.buffer = []

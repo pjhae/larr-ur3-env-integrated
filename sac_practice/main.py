@@ -12,7 +12,6 @@ from torch.utils.tensorboard import SummaryWriter
 from replay_memory import ReplayMemory, HERMemory
 from utils import VideoRecorder
 
-
 ## parser 와 train, test 및 파라미터 자동저장
 
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
@@ -88,7 +87,7 @@ writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().str
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
-HER_memory = HERMemory(args.replay_size, args.seed)
+# (HER) HER_memory = HERMemory(args.replay_size, args.seed)
 
 # Training Loop
 total_numsteps = 0
@@ -136,19 +135,26 @@ for i_episode in itertools.count(1):
         mask = 1 if episode_steps == max_episode_steps else float(not done)
 
         memory.push(state, action, reward, next_state[:12], mask) # Append transition to memory
-        HER_memory.push(state, action, reward, next_state[:12], mask) # Append transition to HER memory
+        # (HER) HER_memory.push(state, action, reward, next_state[:12], mask) # Append transition to HER memory 
 
         state = next_state[:12]
-
+        
     if total_numsteps > args.num_steps:
         break   
     
-    HER_batch = HER_memory.sample(state)
-    HER_batch_length = len(HER_batch)
-    HER_memory.clear()
+    # ## 1
+    # HER_batch = HER_memory.sample(state)
+    # HER_batch_length = len(HER_batch)
+    # HER_memory.clear()
+    # memory.push_batch(HER_batch, HER_batch_length)
 
-    memory.push_batch(HER_batch, HER_batch_length)
-    
+    ## 2
+    # print("T :",state[3:6])
+    # (HER) state, action, reward, next_state, done  = HER_memory.sample(state)
+    # (HER) for i in range(len(state)):
+    # (HER)     memory.push(state[i], action[i], reward[i], next_state[i], done[i])
+
+
     writer.add_scalar('reward/train', episode_reward, i_episode)
     print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2)))
     if i_episode % 10 == 0:
@@ -158,7 +164,7 @@ for i_episode in itertools.count(1):
         video.init(enabled=True)
         avg_reward = 0.
         avg_step = 0.
-        episodes = 10
+        episodes = 5
         for _  in range(episodes):
             state = env.reset()
             state = state[:12]
