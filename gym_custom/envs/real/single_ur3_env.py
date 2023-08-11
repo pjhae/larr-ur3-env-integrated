@@ -461,6 +461,8 @@ def servoj_speedj_example(host_ip_right, rate):
             }
         })
         print('action %d sent!'%(n))
+        # SO3, curr_pos, _ = real_env.forward_kinematics_ee(real_env._get_obs()[:real_env.ur3_nqpos], 'right')
+
 
     real_env.step({'right': {'stopj': {'a': 5}}})
     finish = time.time()

@@ -62,7 +62,7 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 960
+num_epi = 2800
 
 # Rendering (if env_type is real, render should be FALSE)
 render = True
