@@ -62,10 +62,10 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 2800
+num_epi = 2360
 
 # Rendering (if env_type is real, render should be FALSE)
-render = True
+render = False
 
 # Environment
 if args.env_type == "sim":
@@ -77,7 +77,7 @@ elif args.env_type == "real":
         host_ip_right='192.168.5.102',
         rate=25
     )
-    servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 5, 't': 2/env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 0.01, 't': 2/env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     env.set_initial_joint_pos('current')
     env.set_initial_gripper_pos('current')
@@ -114,8 +114,11 @@ env.action_space.seed(args.seed)
 torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
+# for debugging jonghae
+env_for_action_space = gym_custom.make('single-ur3-larr-for-train-v0')
+
 # Agent
-agent = SAC(12, env.action_space, args)
+agent = SAC(12, env_for_action_space.action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)

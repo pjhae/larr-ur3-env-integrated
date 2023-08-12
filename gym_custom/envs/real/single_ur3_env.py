@@ -29,6 +29,7 @@ class SingleUR3RealEnv(gym_custom.Env):
         self.interface_right = URScriptInterface(host_ip_right, alias='right')
         self.rate = ROSRate(rate)
         self.dt = 1/rate
+        self.goal_pos = np.array([0, 0, 0])
 
         self._define_class_variables()
         
@@ -271,6 +272,7 @@ class SingleUR3RealEnv(gym_custom.Env):
         # self.interface_right.log('rate.sleep()') ## TEMP TIMESTAMPING
         ob = self._get_obs(wait=wait)
         # self.interface_right.log('_get_obs() for s\'') ## TEMP TIMESTAMPING
+
         reward = 1.0
         done = False
         if lag_occurred:
@@ -291,6 +293,9 @@ class SingleUR3RealEnv(gym_custom.Env):
         controller_error = lambda stats: np.any([(stat.safety.StoppedDueToSafety) or (not stat.robot.PowerOn) for stat in stats])
         if controller_error([self.interface_right.get_controller_status()]):
             self._recover_from_controller_error()
+
+        self.goal_pos = np.array([0.2, -0.4, 1.1])
+        
         ob = self.reset_model()
         self.rate.reset()
         return ob
@@ -375,7 +380,10 @@ class SingleUR3RealEnv(gym_custom.Env):
         return self._get_obs()
 
     def get_obs_dict(self, wait=False):
+        _, curr_pos, _ = self.forward_kinematics_ee(self.interface_right.get_joint_positions(wait=wait), 'right')
         return {'right': {
+                'goal_pos': self.goal_pos,
+                'curr_pos': curr_pos,
                 'qpos': self.interface_right.get_joint_positions(wait=wait),
                 'qvel': self.interface_right.get_joint_speeds(wait=wait),
                 'gripperpos': self.interface_right.get_gripper_position(),
@@ -386,19 +394,33 @@ class SingleUR3RealEnv(gym_custom.Env):
     def _get_obs(self, wait=False):
         return self._dict_to_nparray(self.get_obs_dict(wait=wait))
 
+
     @staticmethod
     def _dict_to_nparray(obs_dict):
         right = obs_dict['right']
-        return np.concatenate([right['qpos'], right['gripperpos'],
+        return np.concatenate([right['goal_pos'], right['curr_pos'], right['qpos'], right['gripperpos'],
             right['qvel'], right['grippervel']]).ravel()
 
     @staticmethod
-    def _nparray_to_dict(obs_nparray):
+    # # Default setting
+    # def _nparray_to_dict(obs_nparray):   
+    #     return {'right': {
+    #             'qpos': obs_nparray[0:6],
+    #             'qvel': obs_nparray[7:13],
+    #             'gripperpos': obs_nparray[6:7],
+    #             'grippervel': obs_nparray[13:14]
+    #         }
+    #     }
+
+    # 
+    def _nparray_to_dict(obs_nparray):   # ee-Goal-conditioned setting (jonghae)
         return {'right': {
-                'qpos': obs_nparray[0:6],
-                'qvel': obs_nparray[14:20],
-                'gripperpos': obs_nparray[6:7],
-                'grippervel': obs_nparray[20:21]
+                'goal_pos': obs_nparray[0:3],
+                'curr_pos': obs_nparray[3:6],
+                'qpos': obs_nparray[6:12],
+                'qvel': obs_nparray[13:19],
+                'gripperpos': obs_nparray[12:13],
+                'grippervel': obs_nparray[19:20]
             }
         }
 
