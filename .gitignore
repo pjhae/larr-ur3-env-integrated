@@ -18,6 +18,14 @@ runs/
 .idea
 video/
 checkpoints/
+checkpoints_v1/
+checkpoints_v2/
+checkpoints_v3/
+checkpoints_v4/
+checkpoints_v5/
+checkpoints_v6/
+checkpoints_v7/
+
 sac_practice/video/
 
 # Python egg metadata, regenerated from source files by setuptools.
@@ -55,3 +63,15 @@ Ur*.log
 
 # OpenVPN profiles
 *.ovpn
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_10
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_20
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_30
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_40
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_50
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_60
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_70
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_80
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_90
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_100
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_110
+checkpoints_v1/sac_checkpoint_single-ur3-larr-for-train-v0_120

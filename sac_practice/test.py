@@ -93,7 +93,7 @@ obs = env.reset()
 dt = env.dt
 
 if args.env_type == "sim":
-    PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':5.0}}
+    PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':10.0}}
     ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
     gripper_scale_factor = np.array([1.0])
     env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
@@ -118,7 +118,7 @@ np.random.seed(args.seed)
 env_for_action_space = gym_custom.make('single-ur3-larr-for-train-v0')
 
 # Agent
-agent = SAC(12, env_for_action_space.action_space, args)
+agent = SAC(18, env_for_action_space.action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
@@ -132,7 +132,7 @@ avg_step = 0.
 episodes = 10
 while True:
     state = env.reset()
-    state = state[:12]
+    state = state[:18]
     episode_reward = 0
     step = 0
     done = False
@@ -148,7 +148,7 @@ while True:
             env.render()
         episode_reward += -np.linalg.norm(state[:3]-state[3:6])
         step += 1
-        state = next_state[:12]
+        state = next_state[:18]
     
     avg_reward = episode_reward/500
     print('episode_reward :', episode_reward)

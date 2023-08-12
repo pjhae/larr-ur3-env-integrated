@@ -251,7 +251,8 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos, self.curr_pos, self.sim.data.qpos, self.sim.data.qvel]).ravel()
+        return np.concatenate([self.goal_pos, self.curr_pos, self._get_ur3_qpos(), self._get_ur3_qvel(), 
+                               self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
     
 ####
 
@@ -281,7 +282,8 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
     def get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos, self.curr_pos, self.sim.data.qpos, self.sim.data.qvel]).ravel()
+        return np.concatenate([self.goal_pos, self.curr_pos, self._get_ur3_qpos(), self._get_ur3_qvel(), 
+                               self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
 
 ####
 
@@ -294,6 +296,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
                 'grippervel': self._get_gripper_qvel()[:self.gripper_nqvel]
             }
         }
+
 
     # Overrided MujocoEnv methods
 
@@ -318,11 +321,14 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
             reward = 10
             print("GOAL")
 
+        reward -= 0.1*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
+
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()
         done = False
 
         return ob, reward, done, {}
+
 
     def goal_conditioned_reward(self, goal_pos, curr_pos):
         # compute error
@@ -339,8 +345,8 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     def reset_model(self):
         '''overridable method'''
 
-        # self.goal_pos = np.array([0.0+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
-        self.goal_pos = np.array([0.0, -0.4, 1.2])
+        self.goal_pos = np.array([0.0+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
+        # self.goal_pos = np.array([0.0, -0.4, 1.2])
         # print("G :" ,self.goal_pos)
 
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
