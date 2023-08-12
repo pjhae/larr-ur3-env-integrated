@@ -321,7 +321,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
             reward = 10
             print("GOAL")
 
-        reward -= 0.1*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
+        reward -= 0.05*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
 
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()

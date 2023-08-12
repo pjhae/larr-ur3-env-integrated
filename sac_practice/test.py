@@ -114,11 +114,13 @@ env.action_space.seed(args.seed)
 torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
-# for debugging jonghae
-env_for_action_space = gym_custom.make('single-ur3-larr-for-train-v0')
-
 # Agent
-agent = SAC(18, env_for_action_space.action_space, args)
+if args.env_type == "sim":
+    action_space = env.action_space
+elif args.env_type == "real":
+    action_space = env.action_space['speedj']   # check gym_custom/envs/real/ur/interface.py
+
+agent = SAC(18, action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
