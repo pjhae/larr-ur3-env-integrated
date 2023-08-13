@@ -10,10 +10,11 @@ from replay_memory import ReplayMemory
 import time
 import sys
 import gym_custom
+from gym_custom import spaces
 from gym_custom.envs.custom.ur_utils import URScriptWrapper_SingleUR3 as URScriptWrapper
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
 from gym_custom.envs.real.utils import ROSRate, prompt_yes_or_no
-
+from collections import OrderedDict
 import os
 import os.path as osp
 

@@ -1,9 +1,10 @@
 import argparse
 import datetime
 import gym_custom
+from gym_custom import spaces
 from gym_custom.envs.custom.ur_utils import URScriptWrapper_SingleUR3 as URScriptWrapper
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
-
+from collections import OrderedDict
 import numpy as np
 import itertools
 import torch
@@ -65,7 +66,6 @@ env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
 # Max episode
 max_episode_steps = 500
 
-
 # For reproducibility
 env.seed(args.seed)
 env.action_space.seed(args.seed)   
@@ -77,8 +77,37 @@ video_directory = '/home/jonghae/larr-ur3-env/sac_practice/video/{}'.format(date
 video = VideoRecorder(dir_name = video_directory)
 
 
+COMMAND_LIMITS = {
+    'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
+        np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
+    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1]),
+        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])], # [rad/s]
+    'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
+}
+
+def convert_action_to_space(action_limits):
+    if isinstance(action_limits, dict):
+        space = spaces.Dict(OrderedDict([
+            (key, convert_action_to_space(value))
+            for key, value in COMMAND_LIMITS.items()
+        ]))
+    elif isinstance(action_limits, list):
+        low = action_limits[0]
+        high = action_limits[1]
+        space = gym_custom.spaces.Box(low, high, dtype=action_limits[0].dtype)
+    else:
+        raise NotImplementedError(type(action_limits), action_limits)
+
+    return space
+
+def _set_action_space():
+    return convert_action_to_space({'right': COMMAND_LIMITS})
+
+action_space = _set_action_space()['speedj']
+
+
 # Agent
-agent = SAC(18, env.action_space, args)
+agent = SAC(18, action_space, args)
 
 
 # Tesnorboard
@@ -102,7 +131,7 @@ for i_episode in itertools.count(1):
     state = state[:18]
     while not done:
         if args.start_steps > total_numsteps:
-            action = env.action_space.sample()  # Sample random action
+            action = action_space.sample()  # Sample random action
         else:
             action = agent.select_action(state)  # Sample action from policy
 
@@ -199,4 +228,5 @@ for i_episode in itertools.count(1):
         print("----------------------------------------")
 
 env.close()
+
 
