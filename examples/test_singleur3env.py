@@ -192,7 +192,7 @@ def speedj_and_forceg(env_type='sim', render=False):
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
     if env_type == list_of_env_types[0]:
-        PI_gains = {'speedj': {'P': 0.2, 'I': 10.0}} # was 0.2, 10.0
+        PI_gains = {'speedj': {'P': 0.2, 'I': 10}} # was 0.2, 10.0
         ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
         gripper_scale_factor = np.array([1.0])
         env = URScriptWrapper(env, PI_gains, ur3_scale_factor, gripper_scale_factor)

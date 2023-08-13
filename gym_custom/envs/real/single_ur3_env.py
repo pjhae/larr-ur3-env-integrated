@@ -398,8 +398,8 @@ class SingleUR3RealEnv(gym_custom.Env):
     @staticmethod
     def _dict_to_nparray(obs_dict):
         right = obs_dict['right']
-        return np.concatenate([right['goal_pos'], right['curr_pos'], right['qpos'], right['gripperpos'],
-            right['qvel'], right['grippervel']]).ravel()
+        return np.concatenate([right['goal_pos'], right['curr_pos'], right['qpos'], right['qvel'], right['gripperpos'],
+             right['grippervel']]).ravel()
 
     @staticmethod
     # # Default setting
