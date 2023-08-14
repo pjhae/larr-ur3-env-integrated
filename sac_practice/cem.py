@@ -18,6 +18,7 @@ from collections import OrderedDict
 from utils import save_data, load_data
 import os
 import os.path as osp
+import matplotlib.pyplot as plt
 
 # choose the env
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
@@ -83,19 +84,23 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 10
+    n_seq = 20
     n_horrizon = 2500
     n_dim = 3
-    n_iter = 10
-    n_elit = 3
+    n_iter = 100
+    n_elit = 5
+    alpha = 0.9
 
-    # a, P, I params
+    # a, P, I params # res if [5, 0.2, 10]
     lim_high = np.array([10, 1, 20])
     lim_low  = np.array([0, 0, 0])
-
+    
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
     real_data = load_data("sac_practice/data/real_data.npy")
+
+    # logging
+    logging = []
 
     # CEM
     for k in range(n_iter):
@@ -122,7 +127,7 @@ else:
                     'move_gripper_force': {'gf': np.array([action_seq[j][6]])}
                     }
                 })
-                env.render()
+                # env.render()
 
 
         mse_results = np.zeros(n_seq)
@@ -130,17 +135,35 @@ else:
             mse = np.mean((sim_data[i] - real_data) ** 2)
             mse_results[i] = mse
 
-        print("MSE 결과 배열:", mse_results)
+        # print("MSE 결과 배열:", mse_results)
         smallest_indices = np.argpartition(mse_results, n_elit)[:n_elit]
 
-        print("가장 작은 MSE 값들의 인덱스:", smallest_indices)
+        # print("가장 작은 MSE 값들의 인덱스:", smallest_indices)
+        elite_params = candidate_parameters[smallest_indices]
+
+        # Update the elite mean and variance
+        prams_mean = alpha * np.mean(elite_params, axis=0) + (1 - alpha) * prams_mean
+        prams_std = alpha * np.std(elite_params, axis=0) + (1 - alpha) * prams_mean
+        logging.append(prams_mean)
+
+        # Plot
+        plt.clf()  
+        history_array = np.array(logging).T  
+        plt.plot(history_array[0], label='a', marker='o')
+        plt.plot(history_array[1], label='P', marker='o')
+        plt.plot(history_array[2], label='I', marker='o')
+        plt.axhline(y=5, color='r', linestyle='--', label='a')
+        plt.axhline(y=0.2, color='b', linestyle='--', label='P')
+        plt.axhline(y=10, color='g', linestyle='--', label='I')
+
+        plt.title("Value History")
+        plt.xlabel("Iteration")
+        plt.ylabel("Value")
+        plt.legend()
+        plt.pause(0.1)  
 
 
-
-
-
-
-
+    plt.show() 
 
 
 
