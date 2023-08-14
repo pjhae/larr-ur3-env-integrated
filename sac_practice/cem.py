@@ -62,15 +62,19 @@ COMMAND_LIMITS = {
 action_seq = np.array([[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*600+[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*400+\
                       [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*200+[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*100+\
                       [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*50 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*30 +\
+                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
+                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
+                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
+                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
+                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
                       [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20)
-
 
 # Run simulation
 # if real, get the data
 if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
-    for i in range(1400):
+    for i in range(1600):
         next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -87,7 +91,7 @@ if args.exp_type == 'real':
 # if sim, RUN CEM
 else:
     n_seq = 100
-    n_horrizon = 1400
+    n_horrizon = 1600
     n_dim = 3
     n_iter = 100
     n_elit = 5
@@ -132,7 +136,7 @@ else:
                 })
                 # env.render()
 
-
+        
         mse_results = np.zeros(n_seq)
         for i in range(n_seq):
             mse = np.mean((sim_data[i] - real_data) ** 2)
@@ -168,13 +172,27 @@ else:
         plt.ylabel("parameter")
         plt.legend()
 
-        ax2 = plt.subplot(2, 1, 2, sharex=ax1)    # nrows=2, ncols=1, index=2
+        ax2 = plt.subplot(2, 1, 2, sharex=ax1)    # nrows=3, ncols=1, index=2
         plt.plot(history_array_err, color='k', label='err', marker=".")
         plt.xlabel("Iteration")
         plt.ylabel("err")
         plt.legend()
         plt.pause(0.1)  
 
+        # for traj visualization
+        # state = env.reset()
+        # env.wrapper_right.speedj_gains['P'] = prams_mean[1]
+        # env.wrapper_right.speedj_gains['I'] = prams_mean[2]
+        # for j in range(n_horrizon):
+        #     curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
+        #     sim_data[0][j][:] = curr_pos
+        #     next_state, reward, done, _  = env.step({
+        #     'right': {
+        #         'speedj': {'qd':  action_seq[j][:6], 'a': prams_mean[0], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+        #         'move_gripper_force': {'gf': np.array([action_seq[j][6]])}
+        #         }
+        #     })
+        
     plt.show() 
 
 
