@@ -52,31 +52,33 @@ if args.exp_type == 'real':
     time.sleep(1.0)
 
 
-# Action limits 참고용
+# (참고용) Action limits 
 COMMAND_LIMITS = {
     'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.25,
         np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.25], # [rad/s]
 }
 
 # Pre-defined action sequence
-action_seq = np.array([[-0.5,-0.5,-1,-1,-1,-1.2,-1,-1]]*500+[[0.5,0.5,1,1,1,1.2,1,1]]*500+\
-                      [[-0.5,-0.5,-1,-1,-1,-1.2,-1,-1]]*500+[[0.5,0.5,1,1,1,1.2,1,1]]*500+[[-0.5,-0.5,-1,-1,-1,-1.2,-1,-1]]*500)
+action_seq = np.array([[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*600+[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*400+\
+                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*200+[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*100+\
+                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*50 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*30 +\
+                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20)
 
 
 # Run simulation
-
 # if real, get the data
 if args.exp_type == 'real':
     real_data = []
-    state = env.reset()
-    for i in range(2500):
-        next_state, reward, done, _  = env.step({
+    state = real_env.reset()
+    for i in range(1400):
+        next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([action_seq[i][6]])}}
         })
         curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env
         real_data.append(curr_pos)
+        # env.render()
     # Save real data
     real_data = np.array(real_data)
     save_data(real_data, "real_data.npy")
@@ -84,12 +86,12 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 20
-    n_horrizon = 2500
+    n_seq = 100
+    n_horrizon = 1400
     n_dim = 3
     n_iter = 100
     n_elit = 5
-    alpha = 0.9
+    alpha = 0.95
 
     # a, P, I params # res if [5, 0.2, 10]
     lim_high = np.array([10, 1, 20])
@@ -101,6 +103,7 @@ else:
 
     # logging
     logging = []
+    logging_err = []
 
     # CEM
     for k in range(n_iter):
@@ -140,28 +143,37 @@ else:
 
         # print("가장 작은 MSE 값들의 인덱스:", smallest_indices)
         elite_params = candidate_parameters[smallest_indices]
+        elite_err = sum(mse_results[smallest_indices])/n_elit
 
         # Update the elite mean and variance
         prams_mean = alpha * np.mean(elite_params, axis=0) + (1 - alpha) * prams_mean
         prams_std = alpha * np.std(elite_params, axis=0) + (1 - alpha) * prams_mean
         logging.append(prams_mean)
+        logging_err.append(elite_err)
 
         # Plot
         plt.clf()  
         history_array = np.array(logging).T  
+        history_array_err = np.array(logging_err).T  
+
+        ax1 = plt.subplot(2, 1, 1)   
         plt.plot(history_array[0], label='a', marker='o')
         plt.plot(history_array[1], label='P', marker='o')
         plt.plot(history_array[2], label='I', marker='o')
-        plt.axhline(y=5, color='r', linestyle='--', label='a')
-        plt.axhline(y=0.2, color='b', linestyle='--', label='P')
+        
+        plt.axhline(y=5, color='b', linestyle='--', label='a')
+        plt.axhline(y=0.2, color='r', linestyle='--', label='P')
         plt.axhline(y=10, color='g', linestyle='--', label='I')
+        plt.title("Parameter/Error History")
+        plt.ylabel("parameter")
+        plt.legend()
 
-        plt.title("Value History")
+        ax2 = plt.subplot(2, 1, 2, sharex=ax1)    # nrows=2, ncols=1, index=2
+        plt.plot(history_array_err, color='k', label='err', marker=".")
         plt.xlabel("Iteration")
-        plt.ylabel("Value")
+        plt.ylabel("err")
         plt.legend()
         plt.pause(0.1)  
-
 
     plt.show() 
 
