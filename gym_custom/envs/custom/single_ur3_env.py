@@ -346,7 +346,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         '''overridable method'''
 
         self.goal_pos = np.array([0.0+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
-        # self.goal_pos = np.array([0.0, -0.4, 1.2])
+        #self.goal_pos = np.array([0.2, -0.4, 1.0])
         # print("G :" ,self.goal_pos)
 
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)

@@ -63,7 +63,7 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 2360
+num_epi = 2250
 
 # Rendering (if env_type is real, render should be FALSE)
 render = False
@@ -115,11 +115,41 @@ env.action_space.seed(args.seed)
 torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
-# Agent
-if args.env_type == "sim":
-    action_space = env.action_space
-elif args.env_type == "real":
-    action_space = env.action_space['speedj']   # check gym_custom/envs/real/ur/interface.py
+
+COMMAND_LIMITS = {
+    'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
+        np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
+    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.5,
+        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.5], # [rad/s]
+    'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
+}
+
+def convert_action_to_space(action_limits):
+    if isinstance(action_limits, dict):
+        space = spaces.Dict(OrderedDict([
+            (key, convert_action_to_space(value))
+            for key, value in COMMAND_LIMITS.items()
+        ]))
+    elif isinstance(action_limits, list):
+        low = action_limits[0]
+        high = action_limits[1]
+        space = gym_custom.spaces.Box(low, high, dtype=action_limits[0].dtype)
+    else:
+        raise NotImplementedError(type(action_limits), action_limits)
+
+    return space
+
+def _set_action_space():
+    return convert_action_to_space({'right': COMMAND_LIMITS})
+
+action_space = _set_action_space()['speedj']
+
+
+# # Agent
+# if args.env_type == "sim":
+#     action_space = env.action_space
+# elif args.env_type == "real":
+#     action_space = env.action_space['speedj']   # check gym_custom/envs/real/ur/interface.py
 
 agent = SAC(18, action_space, args)
 
@@ -129,6 +159,22 @@ memory = ReplayMemory(args.replay_size, args.seed)
 # Load the parameter
 agent.load_checkpoint("checkpoints/sac_checkpoint_{}_{}".format('single-ur3-larr-for-train-v0', num_epi), True)
 
+
+def get_numpy_array():
+    while True:
+        try:
+            user_input = input("길이가 3인 숫자를 입력하세요 (공백으로 구분): ")
+            elements = user_input.split()
+            
+            if len(elements) != 3:
+                raise ValueError("길이가 3이 아닙니다. 다시 입력해주세요.")
+            
+            num_array = np.array([float(element) for element in elements])
+            return num_array
+        except ValueError as e:
+            print(e)
+
+
 # Start evaluation
 avg_reward = 0.
 avg_step = 0.
@@ -136,11 +182,13 @@ episodes = 10
 while True:
     state = env.reset()
     state = state[:18]
+    print(env.goal_pos)
     episode_reward = 0
     step = 0
     done = False
     while not done:
         action = agent.select_action(state, evaluate=True)
+        print(action)
         next_state, reward, done, _  = env.step({
         'right': {
             'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -152,11 +200,14 @@ while True:
         episode_reward += -np.linalg.norm(state[:3]-state[3:6])
         step += 1
         state = next_state[:18]
+
+         # If env_type is real, evaluate just for 500 step
+        if args.env_type == "real" and step == 500:
+            break   
     
     avg_reward = episode_reward/500
     print('episode_reward :', episode_reward)
 
 
-    # If env_type is real, evaluate just for 1 episode
-    if args.env_type == "real":
-        break
+
+
