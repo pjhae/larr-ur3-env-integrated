@@ -143,7 +143,7 @@ register(
 register(
     id='single-ur3-larr-for-train-v0',
     entry_point='gym_custom.envs.custom.single_ur3_env:SingleUR3Env',
-    max_episode_steps=500,
+    max_episode_steps=1000,
     reward_threshold=0.0,
 )
 

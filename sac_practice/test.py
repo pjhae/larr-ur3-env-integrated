@@ -63,10 +63,10 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 2250
+num_epi = 240
 
 # Rendering (if env_type is real, render should be FALSE)
-render = False
+render = True
 
 # Environment
 if args.env_type == "sim":
@@ -119,8 +119,8 @@ np.random.seed(args.seed)
 COMMAND_LIMITS = {
     'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
         np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
-    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.5,
-        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.5], # [rad/s]
+    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.25,
+        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.25], # [rad/s]
     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
 }
 
@@ -202,7 +202,7 @@ while True:
         state = next_state[:18]
 
          # If env_type is real, evaluate just for 500 step
-        if args.env_type == "real" and step == 500:
+        if args.env_type == "real" and step == 1000:
             break   
     
     avg_reward = episode_reward/500
