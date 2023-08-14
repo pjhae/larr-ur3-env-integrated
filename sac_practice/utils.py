@@ -72,3 +72,19 @@ class VideoRecorder(object):
         if self.enabled:
             path = os.path.join(self.dir_name, file_name)
             imageio.mimsave(path, self.frames, fps=self.fps)
+
+
+
+
+################ CEM related ####################
+
+def save_data(data, file_name, data_dir = "sac_practice/data"):
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+    file_path = os.path.join(data_dir, file_name)
+    np.save(file_path, data)
+    print("SAVE!")
+
+def load_data(file_path):
+    loaded_data = np.load(file_path)
+    return loaded_data

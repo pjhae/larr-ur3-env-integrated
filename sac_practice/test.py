@@ -119,8 +119,8 @@ np.random.seed(args.seed)
 COMMAND_LIMITS = {
     'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
         np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
-    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.25,
-        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.25], # [rad/s]
+    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.10,
+        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.10], # [rad/s]
     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
 }
 
@@ -151,7 +151,7 @@ action_space = _set_action_space()['speedj']
 # elif args.env_type == "real":
 #     action_space = env.action_space['speedj']   # check gym_custom/envs/real/ur/interface.py
 
-agent = SAC(18, action_space, args)
+agent = SAC(12, action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
@@ -181,7 +181,7 @@ avg_step = 0.
 episodes = 10
 while True:
     state = env.reset()
-    state = state[:18]
+    state = state[:12]
     print(env.goal_pos)
     episode_reward = 0
     step = 0
@@ -199,7 +199,7 @@ while True:
             env.render()
         episode_reward += -np.linalg.norm(state[:3]-state[3:6])
         step += 1
-        state = next_state[:18]
+        state = next_state[:12]
 
          # If env_type is real, evaluate just for 500 step
         if args.env_type == "real" and step == 1000:
