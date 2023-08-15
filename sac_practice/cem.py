@@ -154,7 +154,7 @@ else:
 
         # Update the elite mean and variance
         prams_mean = alpha * np.mean(elite_params, axis=0) + (1 - alpha) * prams_mean
-        prams_std = alpha * np.std(elite_params, axis=0) + (1 - alpha) * prams_mean
+        prams_std = alpha * np.std(elite_params, axis=0) + (1 - alpha) * prams_std
         logging.append(prams_mean)
         logging_err.append(elite_err)
 

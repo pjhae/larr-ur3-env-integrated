@@ -352,12 +352,12 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         #self.goal_pos = np.array([0.2, -0.4, 1.0])
         # print("G :" ,self.goal_pos)
 
-        # qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
-        # qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
         # # For CEM, don't randommize when initialize
-        qpos = self.init_qpos 
-        qvel = self.init_qvel
+        # qpos = self.init_qpos 
+        # qvel = self.init_qvel
         self.set_state(qpos, qvel)
 
         return self._get_obs()
