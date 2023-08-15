@@ -91,12 +91,12 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 40
+    n_seq = 100
     n_horrizon = 1600
     n_dim = 3
-    n_iter = 15
-    n_elit = 4
-    alpha = 0.99
+    n_iter = 1000
+    n_elit = 10
+    alpha = 0.95
 
     # a, P, I params # res if [5, 0.2, 10]
     lim_high = np.array([100, 100, 50, 50, 50, 50])
@@ -211,8 +211,8 @@ else:
         ax3 = plt.subplot(3, 1, 3)  
         plt.plot(history_array_traj[1], label='sim', marker=',')
         plt.plot(real_array_traj[1], label='real', linestyle='--')
-        plt.xlabel("Iteration")
-        plt.ylabel("error")
+        plt.xlabel("timestep")
+        plt.ylabel("position")
         plt.legend()
         plt.pause(0.1)
 
