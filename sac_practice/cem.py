@@ -74,6 +74,7 @@ action_seq = np.array([[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*600+[[0.5,1.5,1,1.5,
 if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
+    # env.wrapper_right.ur3_scale_factor[:6] = [60, 50, 40, 30, 20, 10]
     for i in range(1600):
         next_state, reward, done, _  = real_env.step({
             'right': {
@@ -90,16 +91,16 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 100
+    n_seq = 2
     n_horrizon = 1600
     n_dim = 3
-    n_iter = 100
-    n_elit = 10
+    n_iter = 15
+    n_elit = 1
     alpha = 0.99
 
     # a, P, I params # res if [5, 0.2, 10]
-    lim_high = np.array([10, 1, 20])
-    lim_low  = np.array([0, 0, 0])
+    lim_high = np.array([100, 100, 50, 50, 50, 50])
+    lim_low  = np.array([0, 0, 0, 0, 0, 0])
     
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
@@ -123,17 +124,19 @@ else:
         # evaluate params
         for i in range(n_seq):
             state = env.reset()
-            env.wrapper_right.speedj_gains['P'] = candidate_parameters[i][1]
-            env.wrapper_right.speedj_gains['I'] = candidate_parameters[i][2]
+            # ur3_scale_factor
+            env.wrapper_right.ur3_scale_factor[:6]= candidate_parameters[i][:6]
+            # print(env.wrapper_right.ur3_scale_factor)
             for j in range(n_horrizon):
                 curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
                 sim_data[i][j][:] = curr_pos
                 next_state, reward, done, _  = env.step({
                 'right': {
-                    'speedj': {'qd':  action_seq[j][:6], 'a': candidate_parameters[i][0], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                    'speedj': {'qd':  action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                     'move_gripper_force': {'gf': np.array([action_seq[j][6]])}
                     }
                 })
+
                 # env.render()
 
         
@@ -160,39 +163,59 @@ else:
         history_array = np.array(logging).T  
         history_array_err = np.array(logging_err).T  
 
-        ax1 = plt.subplot(2, 1, 1)   
-        plt.plot(history_array[0], label='a', marker='o')
-        plt.plot(history_array[1], label='P', marker='o')
-        plt.plot(history_array[2], label='I', marker='o')
-        
-        plt.axhline(y=5, color='b', linestyle='--', label='a')
-        plt.axhline(y=0.2, color='r', linestyle='--', label='P')
-        plt.axhline(y=10, color='g', linestyle='--', label='I')
+        ax1 = plt.subplot(3, 1, 1)   
+        plt.plot(history_array[0], label='p1', marker='o')
+        plt.plot(history_array[1], label='p2', marker='o')
+        plt.plot(history_array[2], label='p3', marker='o')
+        plt.plot(history_array[3], label='p4', marker='o')
+        plt.plot(history_array[4], label='p5', marker='o')
+        plt.plot(history_array[5], label='p6', marker='o')
+
+        plt.axhline(y=60, color='k', linestyle='--', label='p1')
+        plt.axhline(y=50, color='k', linestyle='--', label='p2')
+        plt.axhline(y=40, color='k', linestyle='--', label='p3')
+        plt.axhline(y=30, color='k', linestyle='--', label='p4')
+        plt.axhline(y=20, color='k', linestyle='--', label='p5')
+        plt.axhline(y=10, color='k', linestyle='--', label='p6')
+
         plt.title("Parameter/Error History")
         plt.ylabel("parameter")
         plt.legend()
 
-        ax2 = plt.subplot(2, 1, 2, sharex=ax1)  
+        ax2 = plt.subplot(3, 1, 2, sharex=ax1)  
         plt.plot(history_array_err, color='k', label='err', marker=".")
         plt.xlabel("Iteration")
-        plt.ylabel("err")
+        plt.ylabel("error")
         plt.legend()
-        plt.pause(0.1)  
+   
 
         # for traj visualization, real vs sim
-        # state = env.reset()
-        # env.wrapper_right.speedj_gains['P'] = prams_mean[1]
-        # env.wrapper_right.speedj_gains['I'] = prams_mean[2]
-        # for j in range(n_horrizon):
-        #     curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
-        #     sim_data[0][j][:] = curr_pos
-        #     next_state, reward, done, _  = env.step({
-        #     'right': {
-        #         'speedj': {'qd':  action_seq[j][:6], 'a': prams_mean[0], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-        #         'move_gripper_force': {'gf': np.array([action_seq[j][6]])}
-        #         }
-        #     })
-        
+        logging_traj = []
+        state = env.reset()
+        env.wrapper_right.ur3_scale_factor[:6] = prams_mean[:6]
+        for j in range(n_horrizon):
+            curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
+            sim_data[0][j][:] = curr_pos
+            next_state, reward, done, _  = env.step({
+            'right': {
+                'speedj': {'qd':  action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'move_gripper_force': {'gf': np.array([action_seq[j][6]])}
+                }
+            })
+
+            logging_traj.append(curr_pos)
+
+        # Plot
+        history_array_traj = np.array(logging_traj).T 
+        real_array_traj = np.array(real_data).T
+        ax3 = plt.subplot(3, 1, 3)  
+        plt.plot(history_array_traj[1], label='sim', marker=',')
+        plt.plot(real_array_traj[1], label='real', linestyle='--')
+        plt.xlabel("Iteration")
+        plt.ylabel("error")
+        plt.legend()
+        plt.pause(0.1)
+
     plt.show() 
 
 
