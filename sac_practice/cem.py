@@ -40,7 +40,7 @@ if args.exp_type == 'real':
         host_ip_right='192.168.5.102',
         rate=25
     )
-    servoj_args, speedj_args = {'t': 2/real_env.rate._freq, 'wait': False}, {'a': 0.01, 't': 2/real_env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 2/real_env.rate._freq, 'wait': False}, {'a': 5, 't': 4/real_env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
@@ -59,15 +59,15 @@ COMMAND_LIMITS = {
 }
 
 # Pre-defined action sequence
-action_seq = np.array([[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*600+[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*400+\
-                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*200+[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*100+\
-                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*50 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*30 +\
-                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
-                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
-                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
-                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
-                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20 +[[0.5,1.5,1,1.5,1,1.5,1.5,1]]*20+\
-                      [[-0.5,-1.5,-1,-1.5,-1,-1.5,-1.5,-1]]*20)
+action_seq = np.array([[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*100+[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*100+\
+                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*100+[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*100+\
+                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*50 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*30 +\
+                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
+                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
+                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
+                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
+                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
+                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20)
 
 # Run simulation
 # if real, get the data
@@ -75,7 +75,7 @@ if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
     # env.wrapper_right.ur3_scale_factor[:6] = [60, 50, 40, 30, 20, 10]
-    for i in range(1600):
+    for i in range(700):
         next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -92,14 +92,14 @@ if args.exp_type == 'real':
 # if sim, RUN CEM
 else:
     n_seq = 100
-    n_horrizon = 1600
+    n_horrizon = 700
     n_dim = 3
     n_iter = 1000
-    n_elit = 10
+    n_elit = 5
     alpha = 0.95
 
     # a, P, I params # res if [5, 0.2, 10]
-    lim_high = np.array([100, 100, 50, 50, 50, 50])
+    lim_high = np.array([10, 10, 5, 5, 5, 5])
     lim_low  = np.array([0, 0, 0, 0, 0, 0])
     
     # load data
@@ -157,7 +157,8 @@ else:
         prams_std = alpha * np.std(elite_params, axis=0) + (1 - alpha) * prams_std
         logging.append(prams_mean)
         logging_err.append(elite_err)
-
+        print(prams_mean)
+        
         # Plot
         plt.clf()  
         history_array = np.array(logging).T  
@@ -171,11 +172,11 @@ else:
         plt.plot(history_array[4], label='p5', marker='o')
         # plt.plot(history_array[5], label='p6', marker='o')
 
-        plt.axhline(y=60, color='k', linestyle='--', label='p1')
-        plt.axhline(y=50, color='k', linestyle='--', label='p2')
-        plt.axhline(y=40, color='k', linestyle='--', label='p3')
-        plt.axhline(y=30, color='k', linestyle='--', label='p4')
-        plt.axhline(y=20, color='k', linestyle='--', label='p5')
+        # plt.axhline(y=60, color='k', linestyle='--', label='p1')
+        # plt.axhline(y=50, color='k', linestyle='--', label='p2')
+        # plt.axhline(y=40, color='k', linestyle='--', label='p3')
+        # plt.axhline(y=30, color='k', linestyle='--', label='p4')
+        # plt.axhline(y=20, color='k', linestyle='--', label='p5')
         # plt.axhline(y=10, color='k', linestyle='--', label='p6')
 
         plt.title("Parameter/Error History")
@@ -187,7 +188,7 @@ else:
         plt.xlabel("Iteration")
         plt.ylabel("error")
         plt.legend()
-   
+    
 
         # for traj visualization, real vs sim
         logging_traj = []
