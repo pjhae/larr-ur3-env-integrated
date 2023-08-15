@@ -91,11 +91,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 2
+    n_seq = 40
     n_horrizon = 1600
     n_dim = 3
     n_iter = 15
-    n_elit = 1
+    n_elit = 4
     alpha = 0.99
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -169,14 +169,14 @@ else:
         plt.plot(history_array[2], label='p3', marker='o')
         plt.plot(history_array[3], label='p4', marker='o')
         plt.plot(history_array[4], label='p5', marker='o')
-        plt.plot(history_array[5], label='p6', marker='o')
+        # plt.plot(history_array[5], label='p6', marker='o')
 
         plt.axhline(y=60, color='k', linestyle='--', label='p1')
         plt.axhline(y=50, color='k', linestyle='--', label='p2')
         plt.axhline(y=40, color='k', linestyle='--', label='p3')
         plt.axhline(y=30, color='k', linestyle='--', label='p4')
         plt.axhline(y=20, color='k', linestyle='--', label='p5')
-        plt.axhline(y=10, color='k', linestyle='--', label='p6')
+        # plt.axhline(y=10, color='k', linestyle='--', label='p6')
 
         plt.title("Parameter/Error History")
         plt.ylabel("parameter")
