@@ -94,8 +94,8 @@ else:
     n_horrizon = 1600
     n_dim = 3
     n_iter = 100
-    n_elit = 5
-    alpha = 0.95
+    n_elit = 10
+    alpha = 0.99
 
     # a, P, I params # res if [5, 0.2, 10]
     lim_high = np.array([10, 1, 20])
@@ -172,14 +172,14 @@ else:
         plt.ylabel("parameter")
         plt.legend()
 
-        ax2 = plt.subplot(2, 1, 2, sharex=ax1)    # nrows=3, ncols=1, index=2
+        ax2 = plt.subplot(2, 1, 2, sharex=ax1)  
         plt.plot(history_array_err, color='k', label='err', marker=".")
         plt.xlabel("Iteration")
         plt.ylabel("err")
         plt.legend()
         plt.pause(0.1)  
 
-        # for traj visualization
+        # for traj visualization, real vs sim
         # state = env.reset()
         # env.wrapper_right.speedj_gains['P'] = prams_mean[1]
         # env.wrapper_right.speedj_gains['I'] = prams_mean[2]
