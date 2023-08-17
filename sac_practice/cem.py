@@ -66,6 +66,7 @@ COMMAND_LIMITS = {
 action_seq = np.array([[-0.3,0,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0,0]]*200+\
                       [[-0.3,0,0,0,0,0,0,0]]*200+[[0.3,0,0,0,0,0,0,0]]*200+\
                       [[-0.3,0,0,0,0,0,0,0]]*200)
+
 # Run simulation
 # if real, get the data
 if args.exp_type == 'real':
@@ -84,7 +85,7 @@ if args.exp_type == 'real':
         # env.render()
     # Save real data
     real_data = np.array(real_data)
-    save_data(real_data, "real_data_0817.npy")
+    save_data(real_data, "real_data.npy")
 
 
 # if sim, RUN CEM
