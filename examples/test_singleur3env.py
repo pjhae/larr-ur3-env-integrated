@@ -6,7 +6,6 @@ import sys
 import gym_custom
 
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
-from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3_deprecated as URScriptWrapper_deprecated
 from gym_custom.envs.custom.ur_utils import URScriptWrapper_SingleUR3 as URScriptWrapper
 
 

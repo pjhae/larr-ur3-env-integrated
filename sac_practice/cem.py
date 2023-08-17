@@ -40,7 +40,7 @@ if args.exp_type == 'real':
         host_ip_right='192.168.5.102',
         rate=25
     )
-    servoj_args, speedj_args = {'t': 2/real_env.rate._freq, 'wait': False}, {'a': 5, 't': 4/real_env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 2/real_env.rate._freq, 'wait': False}, {'a': 0.01, 't': 4/real_env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
@@ -59,52 +59,52 @@ COMMAND_LIMITS = {
 }
 
 # Pre-defined action sequence
-action_seq = np.array([[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*100+[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*100+\
-                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*100+[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*100+\
-                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*50 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*30 +\
-                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
-                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
-                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
-                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
-                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20 +[[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]]*20+\
-                      [[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*20)
+# action_seq = np.array([[-0.3,-0.3,-0.3,0.6,0.6,0.6,0.6,-0.5]]*100+[[0.3,0.3,0.3,-0.6,-0.6,-0.6,-0.6,0.5]]*200+\
+#                       [[-0.3,-0.3,-0.3,0.6,0.6,0.6,0.6,-0.5]]*200+[[0.3,0.3,0.3,-0.6,-0.6,-0.6,-0.6,0.5]]*200+\
+#                       [[-0.3,-0.3,-0.3,0.6,0.6,0.6,0.6,-0.5]]*200)
 
+action_seq = np.array([[-0.3,0,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0,0]]*200+\
+                      [[-0.3,0,0,0,0,0,0,0]]*200+[[0.3,0,0,0,0,0,0,0]]*200+\
+                      [[-0.3,0,0,0,0,0,0,0]]*200)
 # Run simulation
 # if real, get the data
 if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
-    env.wrapper_right.ur3_scale_factor[:6] = [32.03479956 , 18.90524521 ,12.96518157 ,17.20301685 ,10.63080031 ,1.0297765 ]
-    for i in range(700):
+    # env.wrapper_right.ur3_scale_factor[:6] = [32.03479956 , 18.90524521 ,12.96518157 ,17.20301685 ,10.63080031 ,1.0297765 ]
+    for i in range(900):
         next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([action_seq[i][6]])}}
         })
+        print((i//100)%2)
         curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env
         real_data.append(curr_pos)
         # env.render()
     # Save real data
     real_data = np.array(real_data)
-    save_data(real_data, "real_data.npy")
+    save_data(real_data, "real_data_0817.npy")
 
 
 # if sim, RUN CEM
 else:
-    n_seq = 10
-    n_horrizon = 700
+    n_seq = 2
+    n_horrizon = 900
     n_dim = 3
     n_iter = 1000
-    n_elit = 2
-    alpha = 0.95
+    n_elit = 1
+    alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
-    lim_high = np.array([50, 50, 25, 25, 25, 25])
-    lim_low  = np.array([0, 0, 0, 0, 0, 0])
-    
+    # lim_high = np.array([200, 200, 100, 100, 100, 100])
+    # lim_low  = np.array([0, 0, 0, 0, 0, 0])
+    lim_high = np.array([50])
+    lim_low  = np.array([0])
+
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_practice/data/0815.npy")
+    real_data = load_data("sac_practice/data/real_data_0817.npy")
 
     # logging
     logging = []
@@ -121,11 +121,17 @@ else:
         else:
             candidate_parameters = np.random.normal(prams_mean, prams_std, (n_seq, len(lim_high)))
 
+
+        # for joint_id in range(1):
+        #     env.sim.model.dof_damping[joint_id] = 1.12
+        # print(env.sim.model.dof_damping)
+
         # evaluate params
         for i in range(n_seq):
             state = env.reset()
             # ur3_scale_factor
-            env.wrapper_right.ur3_scale_factor[:6]= candidate_parameters[i][:6]
+            # env.wrapper_right.ur3_scale_factor[:6]= candidate_parameters[i][:6]
+            env.wrapper_right.ur3_scale_factor[0]= candidate_parameters[i][:]
             # print(env.wrapper_right.ur3_scale_factor)
             for j in range(n_horrizon):
                 curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
@@ -166,10 +172,10 @@ else:
 
         ax1 = plt.subplot(3, 1, 1)   
         plt.plot(history_array[0], label='p1', marker='o')
-        plt.plot(history_array[1], label='p2', marker='o')
-        plt.plot(history_array[2], label='p3', marker='o')
-        plt.plot(history_array[3], label='p4', marker='o')
-        plt.plot(history_array[4], label='p5', marker='o')
+        # plt.plot(history_array[1], label='p2', marker='o')
+        # plt.plot(history_array[2], label='p3', marker='o')
+        # plt.plot(history_array[3], label='p4', marker='o')
+        # plt.plot(history_array[4], label='p5', marker='o')
         # plt.plot(history_array[5], label='p6', marker='o')
 
         # plt.axhline(y=60, color='k', linestyle='--', label='p1')
@@ -209,9 +215,11 @@ else:
         # Plot
         history_array_traj = np.array(logging_traj).T 
         real_array_traj = np.array(real_data).T
+
         ax3 = plt.subplot(3, 1, 3)  
         plt.plot(history_array_traj[0], label='sim', marker=',')
         plt.plot(real_array_traj[0], label='real', linestyle='--')
+
         plt.xlabel("timestep")
         plt.ylabel("position")
         plt.legend()

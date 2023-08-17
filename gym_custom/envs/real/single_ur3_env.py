@@ -389,8 +389,8 @@ class SingleUR3RealEnv(gym_custom.Env):
                 'curr_pos': curr_pos,
                 "qpos_sine"  : np.sin(self.interface_right.get_joint_positions(wait=wait)),
                 "qpos_cosine": np.cos(self.interface_right.get_joint_positions(wait=wait)),
-                # 'qpos': self.interface_right.get_joint_positions(wait=wait),
-                # 'qvel': self.interface_right.get_joint_speeds(wait=wait),
+                'qpos': self.interface_right.get_joint_positions(wait=wait),
+                'qvel': self.interface_right.get_joint_speeds(wait=wait),
                 'gripperpos': self.interface_right.get_gripper_position(),
                 'grippervel': self.interface_right.get_gripper_speed()
             }
@@ -403,8 +403,8 @@ class SingleUR3RealEnv(gym_custom.Env):
     @staticmethod
     def _dict_to_nparray(obs_dict):
         right = obs_dict['right']
-        return np.concatenate([right['goal_pos'], right['curr_pos'], right["qpos_sine"], right["qpos_cosine"], right['gripperpos'],
-             right['grippervel']]).ravel()
+        return np.concatenate([right['goal_pos'], right['curr_pos'], right["qpos_sine"], right["qpos_cosine"], 
+                               right["qpos"], right['gripperpos'], right['grippervel']]).ravel()
 
     @staticmethod
     # # Default setting
@@ -417,15 +417,16 @@ class SingleUR3RealEnv(gym_custom.Env):
     #         }
     #     }
 
-    # 
+
     def _nparray_to_dict(obs_nparray):   # ee-Goal-conditioned setting (jonghae) + sine, cosine
         return {'right': {
                 'goal_pos': obs_nparray[0:3],
                 'curr_pos': obs_nparray[3:6],
                 "qpos_sine": obs_nparray[6:12],
                 "qpos_cosine": obs_nparray[12:18],
-                'gripperpos': obs_nparray[18:19],
-                'grippervel': obs_nparray[19:20]
+                "qpos" : obs_nparray[18:24],
+                'gripperpos': obs_nparray[24:25],
+                'grippervel': obs_nparray[25:26]
             }
         }
 
