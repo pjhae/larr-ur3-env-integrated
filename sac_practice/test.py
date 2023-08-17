@@ -144,13 +144,6 @@ def _set_action_space():
 
 action_space = _set_action_space()['speedj']
 
-
-# # Agent
-# if args.env_type == "sim":
-#     action_space = env.action_space
-# elif args.env_type == "real":
-#     action_space = env.action_space['speedj']   # check gym_custom/envs/real/ur/interface.py
-
 agent = SAC(12, action_space, args)
 
 # Memory

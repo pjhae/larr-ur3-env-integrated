@@ -79,8 +79,8 @@ video = VideoRecorder(dir_name = video_directory)
 COMMAND_LIMITS = {
     'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
         np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
-    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -1])*0.03,
-        np.array([np.pi, np.pi, np.pi, np.pi, np.pi, np.pi, 1])*0.03], # [rad/s]
+    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.1,
+        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.1], # [rad/s]
     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
 }
 
@@ -109,8 +109,7 @@ action_space = _set_action_space()['speedj']
 # print(env.wrapper_right.ur3_scale_factor[:6])
 
 # Agent
-agent = SAC(12, action_space, args)
-
+agent = SAC(18, action_space, args)
 
 # Tesnorboard
 writer = SummaryWriter('runs/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'single-ur3-larr-for-train-v0',
@@ -130,7 +129,7 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
-    state = state[:12]
+    state = state[:18]
     while not done:
         if args.start_steps > total_numsteps:
             action = action_space.sample()  # Sample random action
@@ -165,10 +164,10 @@ for i_episode in itertools.count(1):
         # Ignore the "done" signal if it comes from hitting the time horizon. (max timestep 되었다고 done 해서 next Q = 0 되는 것 방지)
         mask = 1 if episode_steps == max_episode_steps else float(not done)
 
-        memory.push(state, action, reward, next_state[:12], mask) # Append transition to memory
+        memory.push(state, action, reward, next_state[:18], mask) # Append transition to memory
         # (HER) HER_memory.push(state, action, reward, next_state[:18], mask) # Append transition to HER memory 
 
-        state = next_state[:12]
+        state = next_state[:18]
         
     if total_numsteps > args.num_steps:
         break   
@@ -198,7 +197,7 @@ for i_episode in itertools.count(1):
         episodes = 5
         for _  in range(episodes):
             state = env.reset()
-            state = state[:12]
+            state = state[:18]
             episode_steps = 0
             episode_reward = 0
             done = False
@@ -214,7 +213,7 @@ for i_episode in itertools.count(1):
                 episode_reward += -np.linalg.norm(state[:3]-state[3:6])
                 episode_steps += 1
 
-                state = next_state[:12]
+                state = next_state[:18]
             avg_reward += episode_reward
             avg_step += episode_steps
         avg_reward /= episodes

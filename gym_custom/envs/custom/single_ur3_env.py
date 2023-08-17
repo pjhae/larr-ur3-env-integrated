@@ -251,7 +251,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos, self.curr_pos, self._get_ur3_qpos(), self._get_ur3_qvel(), 
+        return np.concatenate([self.goal_pos, self.curr_pos, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
                                self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
     
 ####
@@ -282,21 +282,23 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
     def get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos, self.curr_pos, self._get_ur3_qpos(), self._get_ur3_qvel(), 
+        return np.concatenate([self.goal_pos, self.curr_pos, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
                                self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
 
 ####
 
     def get_obs_dict(self):
         '''overridable method'''
-        _, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
+        _, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos(), 'right')
         return {'right': {
                 'goal_pos': self.goal_pos,
                 'curr_pos': curr_pos,
-                'qpos': self._get_ur3_qpos()[:self.ur3_nqpos],
-                'qvel': self._get_ur3_qvel()[:self.ur3_nqvel],
-                'gripperpos': self._get_gripper_qpos()[:self.gripper_nqpos],
-                'grippervel': self._get_gripper_qvel()[:self.gripper_nqvel]
+                "qpos_sine"  : np.sin(self._get_ur3_qpos()),
+                "qpos_cosine": np.cos(self._get_ur3_qpos()),
+                'qpos': self._get_ur3_qpos(),
+                'qvel': self._get_ur3_qvel(),
+                'gripperpos': self._get_gripper_qpos(),
+                'grippervel': self._get_gripper_qvel()
             }
         }
 

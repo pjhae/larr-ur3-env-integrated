@@ -91,11 +91,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 3
+    n_seq = 10
     n_horrizon = 700
     n_dim = 3
     n_iter = 1000
-    n_elit = 5
+    n_elit = 2
     alpha = 0.95
 
     # a, P, I params # res if [5, 0.2, 10]
