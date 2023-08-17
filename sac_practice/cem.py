@@ -40,7 +40,7 @@ if args.exp_type == 'real':
         host_ip_right='192.168.5.102',
         rate=25
     )
-    servoj_args, speedj_args = {'t': 2/real_env.rate._freq, 'wait': False}, {'a': 0.01, 't': 4/real_env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 2/real_env.rate._freq, 'wait': False}, {'a': 1, 't': 4/real_env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
@@ -72,7 +72,7 @@ action_seq = np.array([[-0.3,0,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0,0]]*200+\
 if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
-    # env.wrapper_right.ur3_scale_factor[:6] = [32.03479956 , 18.90524521 ,12.96518157 ,17.20301685 ,10.63080031 ,1.0297765 ]
+    # env.wrapper_right.ur3_scale_factor[:6] = [1,2,3,4,5,6]
     for i in range(900):
         next_state, reward, done, _  = real_env.step({
             'right': {
@@ -90,22 +90,22 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 2
+    n_seq = 10
     n_horrizon = 900
     n_dim = 3
     n_iter = 1000
-    n_elit = 1
+    n_elit = 3
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
     # lim_high = np.array([200, 200, 100, 100, 100, 100])
     # lim_low  = np.array([0, 0, 0, 0, 0, 0])
-    lim_high = np.array([50])
+    lim_high = np.array([100])
     lim_low  = np.array([0])
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_practice/data/real_data_0817.npy")
+    real_data = load_data("sac_practice/data/real_data.npy")
 
     # logging
     logging = []
@@ -122,18 +122,13 @@ else:
         else:
             candidate_parameters = np.random.normal(prams_mean, prams_std, (n_seq, len(lim_high)))
 
-
-        # for joint_id in range(1):
-        #     env.sim.model.dof_damping[joint_id] = 1.12
-        # print(env.sim.model.dof_damping)
-
         # evaluate params
         for i in range(n_seq):
             state = env.reset()
             # ur3_scale_factor
             # env.wrapper_right.ur3_scale_factor[:6]= candidate_parameters[i][:6]
-            env.wrapper_right.ur3_scale_factor[0]= candidate_parameters[i][:]
-            # print(env.wrapper_right.ur3_scale_factor)
+            env.wrapper_right.ur3_scale_factor[0]= candidate_parameters[i][0]
+
             for j in range(n_horrizon):
                 curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
                 sim_data[i][j][:] = curr_pos
@@ -196,11 +191,11 @@ else:
         plt.ylabel("error")
         plt.legend()
     
-
         # for traj visualization, real vs sim
         logging_traj = []
         state = env.reset()
-        env.wrapper_right.ur3_scale_factor[:6] = prams_mean[:6]
+        env.wrapper_right.ur3_scale_factor[0]= prams_mean[0]
+
         for j in range(n_horrizon):
             curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
             sim_data[0][j][:] = curr_pos

@@ -28,6 +28,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     # goal
     goal_pos = np.array([-0.3, -0.6, 0.75])
 
+
     def __init__(self):
         if self.ENABLE_COLLISION_CHECKER:
             self._define_collision_checker_variables()
@@ -328,9 +329,9 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
         reward -= 0.001*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
 
-        for i in range(20):
+        for i in range(12):
             self.do_simulation(a, self.frame_skip)
-            
+
         ob = self._get_obs()
         done = False
 
