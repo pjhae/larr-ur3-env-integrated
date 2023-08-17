@@ -62,7 +62,6 @@ ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0,
 gripper_scale_factor = np.array([1.0])
 env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
 
-
 # Max episode
 max_episode_steps = 500
 
@@ -80,8 +79,8 @@ video = VideoRecorder(dir_name = video_directory)
 COMMAND_LIMITS = {
     'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
         np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
-    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.30,
-        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.30], # [rad/s]
+    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -1])*0.03,
+        np.array([np.pi, np.pi, np.pi, np.pi, np.pi, np.pi, 1])*0.03], # [rad/s]
     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
 }
 
@@ -105,6 +104,9 @@ def _set_action_space():
 
 action_space = _set_action_space()['speedj']
 
+# # Set motor gain scale
+# env.wrapper_right.ur3_scale_factor[:6] = [16.27947576 , 47.42940718 ,  4.77628502 , 17.67232115  , 4.32618635 , 3.86791181] 
+# print(env.wrapper_right.ur3_scale_factor[:6])
 
 # Agent
 agent = SAC(12, action_space, args)

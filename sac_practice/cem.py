@@ -74,7 +74,7 @@ action_seq = np.array([[-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1]]*100+[[0.1,0.1,
 if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
-    # env.wrapper_right.ur3_scale_factor[:6] = [60, 50, 40, 30, 20, 10]
+    env.wrapper_right.ur3_scale_factor[:6] = [32.03479956 , 18.90524521 ,12.96518157 ,17.20301685 ,10.63080031 ,1.0297765 ]
     for i in range(700):
         next_state, reward, done, _  = real_env.step({
             'right': {
@@ -91,7 +91,7 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 100
+    n_seq = 3
     n_horrizon = 700
     n_dim = 3
     n_iter = 1000
@@ -99,12 +99,12 @@ else:
     alpha = 0.95
 
     # a, P, I params # res if [5, 0.2, 10]
-    lim_high = np.array([10, 10, 5, 5, 5, 5])
+    lim_high = np.array([50, 50, 25, 25, 25, 25])
     lim_low  = np.array([0, 0, 0, 0, 0, 0])
     
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_practice/data/real_data.npy")
+    real_data = load_data("sac_practice/data/0815.npy")
 
     # logging
     logging = []
@@ -210,8 +210,8 @@ else:
         history_array_traj = np.array(logging_traj).T 
         real_array_traj = np.array(real_data).T
         ax3 = plt.subplot(3, 1, 3)  
-        plt.plot(history_array_traj[1], label='sim', marker=',')
-        plt.plot(real_array_traj[1], label='real', linestyle='--')
+        plt.plot(history_array_traj[0], label='sim', marker=',')
+        plt.plot(real_array_traj[0], label='real', linestyle='--')
         plt.xlabel("timestep")
         plt.ylabel("position")
         plt.legend()

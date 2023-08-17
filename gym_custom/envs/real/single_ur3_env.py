@@ -272,11 +272,12 @@ class SingleUR3RealEnv(gym_custom.Env):
         # self.interface_right.log('rate.sleep()') ## TEMP TIMESTAMPING
         ob = self._get_obs(wait=wait)
         # self.interface_right.log('_get_obs() for s\'') ## TEMP TIMESTAMPING
-
+        
         reward = 1.0
         done = False
         if lag_occurred:
-            warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(self.rate._actual_cycle_time) ))
+            # warnings.warn('Desired rate of %dHz is not satisfied! (current rate: %dHz)'%(self.rate._freq, 1/(self.rate._actual_cycle_time) ))
+            warnings.warn(f"Desired rate of {self.rate._freq}Hz is not satisfied! (current rate: {1 / self.rate._actual_cycle_time}Hz)")
         controller_error = lambda stats: np.any([(stat.safety.StoppedDueToSafety) or (not stat.robot.PowerOn) for stat in stats])
 
         if controller_error([self.interface_right.get_controller_status()]):
