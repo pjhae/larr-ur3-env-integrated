@@ -295,8 +295,8 @@ class SingleUR3RealEnv(gym_custom.Env):
         if controller_error([self.interface_right.get_controller_status()]):
             self._recover_from_controller_error()
 
-        self.goal_pos = np.array([0.2, -0.4, 1.0])
-        # self.goal_pos = np.array([0.1+0.2*np.random.rand(), -0.4, 0.9+0.2*np.random.rand()])
+        # self.goal_pos = np.array([0.2, -0.4, 1.0])
+        self.goal_pos = np.array([0.1+0.2*np.random.rand(), -0.4, 0.9+0.2*np.random.rand()])
 
 
         ob = self.reset_model()

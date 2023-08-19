@@ -63,10 +63,10 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 240
+num_epi = 1480
 
 # Rendering (if env_type is real, render should be FALSE)
-render = True
+render = False
 
 # Environment
 if args.env_type == "sim":
@@ -78,7 +78,7 @@ elif args.env_type == "real":
         host_ip_right='192.168.5.102',
         rate=25
     )
-    servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 0.01, 't': 2/env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 1, 't': 4/env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     env.set_initial_joint_pos('current')
     env.set_initial_gripper_pos('current')
@@ -119,8 +119,8 @@ np.random.seed(args.seed)
 COMMAND_LIMITS = {
     'movej': [np.array([-2*np.pi, -2*np.pi, -np.pi, -2*np.pi, -2*np.pi, -np.inf]),
         np.array([2*np.pi, 2*np.pi, np.pi, 2*np.pi, 2*np.pi, np.inf])], # [rad]
-    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -1])*0.03,
-        np.array([np.pi, np.pi, np.pi, np.pi, np.pi, np.pi, 1])*0.03], # [rad/s]
+    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -1])*0.1,
+        np.array([np.pi, np.pi, np.pi, np.pi, np.pi, np.pi, 1])*0.1], # [rad/s]
     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
 }
 
@@ -144,7 +144,9 @@ def _set_action_space():
 
 action_space = _set_action_space()['speedj']
 
-agent = SAC(12, action_space, args)
+# env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+
+agent = SAC(18, action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
@@ -172,16 +174,30 @@ def get_numpy_array():
 avg_reward = 0.
 avg_step = 0.
 episodes = 10
+
 while True:
     state = env.reset()
-    state = state[:12]
-    print(env.goal_pos)
+    state = state[:18]
+    
     episode_reward = 0
     step = 0
     done = False
+
+    # 크기가 3인 넘파이 벡터를 유저로부터 입력 받습니다.
+    user_input = input("크기가 3인 넘파이 벡터를 입력하세요 (공백으로 구분): ")
+    elements = user_input.split()
+
+    # 입력된 값이 3개가 아니라면 에러 메시지 출력 후 프로그램 종료
+    if len(elements) != 3:
+        print("3개의 값을 입력해야 합니다.")
+    else:
+    # 입력된 값을 실수형으로 변환하고 넘파이 배열로 생성합니다.
+        env.goal_pos = np.array([float(element) for element in elements])
+
     while not done:
+        print(env.goal_pos)
         action = agent.select_action(state, evaluate=True)
-        print(action)
+
         next_state, reward, done, _  = env.step({
         'right': {
             'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -192,10 +208,10 @@ while True:
             env.render()
         episode_reward += -np.linalg.norm(state[:3]-state[3:6])
         step += 1
-        state = next_state[:12]
+        state = next_state[:18]
 
          # If env_type is real, evaluate just for 500 step
-        if args.env_type == "real" and step == 1000:
+        if args.env_type == "real" and step == 200:
             break   
     
     avg_reward = episode_reward/500

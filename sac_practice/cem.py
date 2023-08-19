@@ -80,7 +80,7 @@ if args.exp_type == 'real':
         next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([action_seq[i][6]])}}
+                'move_gripper_position': {'gf': np.array([action_seq[i][6]*100])}}
         })
         print((i//100)%2)
         curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env
@@ -93,7 +93,7 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 10
+    n_seq = 100
     n_horrizon =1100
     n_dim = 3
     n_iter = 1000
@@ -195,7 +195,7 @@ else:
         # for traj visualization, real vs sim
         logging_traj = []
         state = env.reset()
-        env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+        env.wrapper_right.ur3_scale_factor[:6] = prams_mean[:6]
 
         for j in range(n_horrizon):
             curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env

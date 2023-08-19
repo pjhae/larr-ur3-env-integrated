@@ -315,10 +315,7 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         delta_x = self.goal_pos - self.curr_pos
         err = np.linalg.norm(delta_x)
 
-        qpos = self.sim.data.qpos
-        qvel = self.sim.data.qvel
-        qpos[-7:-4] = self.goal_pos 
-        self.set_state(qpos, qvel)
+
 
         # (HER) reward = self.goal_conditioned_reward(self.goal_pos, self.curr_pos)
 
@@ -330,6 +327,10 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
         reward -= 0.001*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
 
         for i in range(12):
+            qpos = self.sim.data.qpos
+            qvel = self.sim.data.qvel
+            qpos[-7:-4] = self.goal_pos 
+            self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
 
         ob = self._get_obs()
