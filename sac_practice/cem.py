@@ -63,9 +63,12 @@ COMMAND_LIMITS = {
 #                       [[-0.3,-0.3,-0.3,0.6,0.6,0.6,0.6,-0.5]]*200+[[0.3,0.3,0.3,-0.6,-0.6,-0.6,-0.6,0.5]]*200+\
 #                       [[-0.3,-0.3,-0.3,0.6,0.6,0.6,0.6,-0.5]]*200)
 
-action_seq = np.array([[-0.3,0,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0,0]]*200+\
-                      [[-0.3,0,0,0,0,0,0,0]]*200+[[0.3,0,0,0,0,0,0,0]]*200+\
-                      [[-0.3,0,0,0,0,0,0,0]]*200)
+action_seq = np.array([[-0.3,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0]]*100+\
+                      [[0,-0.3,0,0,0,0,0]]*100+[[0,0.3,0,0,0,0,0]]*100+\
+                      [[0,0,-0.3,0,0,0,0]]*100+[[0,0,0.3,0,0,0,0]]*100+\
+                      [[0,0,0,-0.6,0,0,0]]*50+[[0,0,0,0.6,0,0,0]]*50+\
+                      [[0,0,0,0,-0.6,0,0]]*100+[[0,0,0,0,0.6,0,0]]*100+\
+                      [[0,0,0,0,0,-0.6,0]]*100+[[0,0,0,0,0,0.6,0]]*100)
 
 # Run simulation
 # if real, get the data
@@ -73,7 +76,7 @@ if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
     # env.wrapper_right.ur3_scale_factor[:6] = [1,2,3,4,5,6]
-    for i in range(900):
+    for i in range(1100):
         next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -91,21 +94,19 @@ if args.exp_type == 'real':
 # if sim, RUN CEM
 else:
     n_seq = 10
-    n_horrizon = 900
+    n_horrizon =1100
     n_dim = 3
     n_iter = 1000
-    n_elit = 3
+    n_elit = 5
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
-    # lim_high = np.array([200, 200, 100, 100, 100, 100])
-    # lim_low  = np.array([0, 0, 0, 0, 0, 0])
-    lim_high = np.array([100])
-    lim_low  = np.array([0])
+    lim_high = np.array([50, 50, 50, 50, 50, 50])
+    lim_low  = np.array([0, 0, 0, 0, 0, 0])
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_practice/data/real_data.npy")
+    real_data = load_data("sac_practice/data/real_data_indep.npy")
 
     # logging
     logging = []
@@ -126,8 +127,8 @@ else:
         for i in range(n_seq):
             state = env.reset()
             # ur3_scale_factor
-            # env.wrapper_right.ur3_scale_factor[:6]= candidate_parameters[i][:6]
-            env.wrapper_right.ur3_scale_factor[0]= candidate_parameters[i][0]
+            env.wrapper_right.ur3_scale_factor[:6]= candidate_parameters[i][:6]
+            # env.wrapper_right.ur3_scale_factor[0]= candidate_parameters[i][0]
 
             for j in range(n_horrizon):
                 curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
@@ -168,11 +169,11 @@ else:
 
         ax1 = plt.subplot(3, 1, 1)   
         plt.plot(history_array[0], label='p1', marker='o')
-        # plt.plot(history_array[1], label='p2', marker='o')
-        # plt.plot(history_array[2], label='p3', marker='o')
-        # plt.plot(history_array[3], label='p4', marker='o')
-        # plt.plot(history_array[4], label='p5', marker='o')
-        # plt.plot(history_array[5], label='p6', marker='o')
+        plt.plot(history_array[1], label='p2', marker='o')
+        plt.plot(history_array[2], label='p3', marker='o')
+        plt.plot(history_array[3], label='p4', marker='o')
+        plt.plot(history_array[4], label='p5', marker='o')
+        plt.plot(history_array[5], label='p6', marker='o')
 
         # plt.axhline(y=60, color='k', linestyle='--', label='p1')
         # plt.axhline(y=50, color='k', linestyle='--', label='p2')
@@ -194,7 +195,7 @@ else:
         # for traj visualization, real vs sim
         logging_traj = []
         state = env.reset()
-        env.wrapper_right.ur3_scale_factor[0]= prams_mean[0]
+        env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
 
         for j in range(n_horrizon):
             curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
@@ -213,8 +214,8 @@ else:
         real_array_traj = np.array(real_data).T
 
         ax3 = plt.subplot(3, 1, 3)  
-        plt.plot(history_array_traj[0], label='sim', marker=',')
-        plt.plot(real_array_traj[0], label='real', linestyle='--')
+        plt.plot(history_array_traj[2], label='sim', marker=',')
+        plt.plot(real_array_traj[2], label='real', linestyle='--')
 
         plt.xlabel("timestep")
         plt.ylabel("position")

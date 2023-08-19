@@ -105,7 +105,7 @@ def _set_action_space():
 action_space = _set_action_space()['speedj']
 
 # # Set motor gain scale
-# env.wrapper_right.ur3_scale_factor[:6] = [16.27947576 , 47.42940718 ,  4.77628502 , 17.67232115  , 4.32618635 , 3.86791181] 
+env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
 # print(env.wrapper_right.ur3_scale_factor[:6])
 
 # Agent

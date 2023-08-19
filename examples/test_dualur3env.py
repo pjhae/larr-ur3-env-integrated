@@ -6,7 +6,7 @@ import sys
 import gym_custom
 
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
-from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3_deprecated as URScriptWrapper_deprecated
+# from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3_deprecated as URScriptWrapper_deprecated
 from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3 as URScriptWrapper
 
 from gym_custom.envs.real.utils import ROSRate, prompt_yes_or_no
@@ -1229,10 +1229,10 @@ if __name__ == '__main__':
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='real', render=False)
-    # speedj_and_forceg(env_type='real', render=False)
+    speedj_and_forceg(env_type='real', render=False)
     # pick_and_place(env_type='sim', render=True)
     # collide(env_type='sim', render=True)
-    fidget_in_place(env_type='sim', render=True)
+    # fidget_in_place(env_type='sim', render=True)
 
     # 2.2 Deprecated UR wrapper examples 
     # servoj_and_forceg_deprecated()
