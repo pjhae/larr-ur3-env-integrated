@@ -80,7 +80,7 @@ if args.exp_type == 'real':
         next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_position': {'gf': np.array([action_seq[i][6]*100])}}
+                'move_gripper_force': {'gf': np.array([action_seq[i][6]])}}
         })
         print((i//100)%2)
         curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env

@@ -57,23 +57,23 @@ parser.add_argument('--replay_size', type=int, default=1000000, metavar='N',
 parser.add_argument('--cuda', action="store_false",
                     help='run on CUDA (default: True)')
 # choose the env
-parser.add_argument('--env_type', default="sim",
+parser.add_argument('--exp_type', default="sim",
                     help='choose sim or real')
 args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 1480
+num_epi = 2790
 
-# Rendering (if env_type is real, render should be FALSE)
+# Rendering (if exp_type is real, render should be FALSE)
 render = False
 
 # Environment
-if args.env_type == "sim":
+if args.exp_type == "sim":
     env = gym_custom.make('single-ur3-larr-for-train-v0')
     servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
 
-elif args.env_type == "real":
+elif args.exp_type == "real":
     env = gym_custom.make('single-ur3-larr-real-for-train-v0',
         host_ip_right='192.168.5.102',
         rate=25
@@ -93,15 +93,15 @@ else:
 obs = env.reset()
 dt = env.dt
 
-if args.env_type == "sim":
+if args.exp_type == "sim":
     PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':10.0}}
     ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
     gripper_scale_factor = np.array([1.0])
     env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
-elif args.env_type == "real":
+elif args.exp_type == "real":
         env.env = env
 
-if args.env_type == "real":
+if args.exp_type == "real":
     if prompt_yes_or_no('current qpos is \r\n right: %s deg?\r\n'
         %(np.rad2deg(env.env._init_qpos[:6]))) is False:
         print('exiting program!')
@@ -210,8 +210,8 @@ while True:
         step += 1
         state = next_state[:18]
 
-         # If env_type is real, evaluate just for 500 step
-        if args.env_type == "real" and step == 200:
+         # If exp_type is real, evaluate just for 500 step
+        if args.exp_type == "real" and step == 200:
             break   
     
     avg_reward = episode_reward/500

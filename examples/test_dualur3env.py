@@ -288,8 +288,8 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.9])
-    ee_pos_left = np.array([-0.1, -0.5, 0.9])
+    ee_pos_right = np.array([0.1, -0.4, 1.0])
+    ee_pos_left = np.array([-0.1, -0.4, 1.0])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
 
@@ -1229,8 +1229,8 @@ if __name__ == '__main__':
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='real', render=False)
-    speedj_and_forceg(env_type='real', render=False)
-    # pick_and_place(env_type='sim', render=True)
+    # speedj_and_forceg(env_type='real', render=False)
+    pick_and_place(env_type='real', render=False)
     # collide(env_type='sim', render=True)
     # fidget_in_place(env_type='sim', render=True)
 
