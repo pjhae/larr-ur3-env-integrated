@@ -356,14 +356,9 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
         reward = -err_right - err_left
 
-        if (err_right < 0.03) or (err_left < 0.03):
-            if (err_right < 0.03) and (err_left < 0.03):
-                reward = 100
-                print("GOAL_dual")
-            else:
-                reward = 10
-                print("Goal_single")
-
+        if (err_right < 0.03) and (err_left < 0.03):
+            reward = 100
+            print("GOAL_dual")
 
         reward -= 0.003*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
 
