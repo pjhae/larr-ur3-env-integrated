@@ -70,17 +70,17 @@ action_seq = np.array([[-0.3,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0]]*100+\
 if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
-    # env.wrapper_right.ur3_scale_factor[:6] = [1,2,3,4,5,6]
+    # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     for i in range(1100):
         next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([action_seq[i][6]])}}
         })
-        print((i//100)%2)
+        # print((i//100)%2)
         curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env
         real_data.append(curr_pos)
-        # env.render()
+        env.render()
     # Save real data
     real_data = np.array(real_data)
     save_data(real_data, "real_data.npy")
@@ -88,11 +88,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 100
+    n_seq = 3
     n_horrizon =1100
     n_dim = 3
     n_iter = 1000
-    n_elit = 5
+    n_elit = 1
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]

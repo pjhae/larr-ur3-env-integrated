@@ -91,7 +91,7 @@
 
         </body>
 
-        <body name="asri_table(rectangle)" pos="0 -0.5 0" >
+        <body name="asri_table(rectangle)" pos="0 -0.6 0" >
             <geom name="rec:tabletop" type="box" pos="0 0 0.72" size="0.5 0.3 0.01" rgba=".6 .6 .5 1"
                 contype="1" conaffinity="1" friction="2 0.1 0.002" material="light_wood_v2"/>
             <geom name="rec:leg1" type="cylinder" fromto="-0.45 -0.25 0.72 -0.45 -0.25 0" size="0.025" material="metal"/>

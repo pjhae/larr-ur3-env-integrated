@@ -11,7 +11,7 @@ import time
 import sys
 import gym_custom
 from gym_custom import spaces
-from gym_custom.envs.custom.ur_utils import URScriptWrapper_SingleUR3 as URScriptWrapper
+from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3 as URScriptWrapper
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
 from gym_custom.envs.real.utils import ROSRate, prompt_yes_or_no
 from collections import OrderedDict
@@ -59,22 +59,22 @@ COMMAND_LIMITS = {
 }
 
 # Pre-defined action sequence
-action_seq = np.array([[0,0,0,0,0,0,-0.3,0,0,0,0,0]]*100+[[0,0,0,0,0,0,0.3,0,0,0,0,0]]*100+\
-                      [[0,0,0,0,0,0,0,-0.3,0,0,0,0]]*100+[[0,0,0,0,0,0,0,0.3,0,0,0,0]]*100+\
-                      [[0,0,0,0,0,0,0,0,-0.3,0,0,0]]*100+[[0,0,0,0,0,0,0,0,0.3,0,0,0]]*100+\
-                      [[0,0,0,0,0,0,0,0,0,-0.6,0,0]]*50 +[[0,0,0,0,0,0,0,0,0,0.6,0,0]]*50+\
-                      [[0,0,0,0,0,0,0,0,0,0,-0.6,0]]*100+[[0,0,0,0,0,0,0,0,0,0,0.6,0]]*100+\
-                      [[0,0,0,0,0,0,0,0,0,0,0,-0.6]]*100+[[0,0,0,0,0,0,0,0,0,0,0,0.6]]*100)
+action_seq = np.array([[0,0,0,0,0,0,0.3,0,0,0,0,0]]*100+[[0,0,0,0,0,0,-0.3,0,0,0,0,0]]*100+\
+                      [[0,0,0,0,0,0,0,0.3,0,0,0,0]]*100+[[0,0,0,0,0,0,0,-0.3,0,0,0,0]]*100+\
+                      [[0,0,0,0,0,0,0,0,0.3,0,0,0]]*100+[[0,0,0,0,0,0,0,0,-0.3,0,0,0]]*100+\
+                      [[0,0,0,0,0,0,0,0,0,0.6,0,0]]*50 +[[0,0,0,0,0,0,0,0,0,-0.6,0,0]]*50+\
+                      [[0,0,0,0,0,0,0,0,0,0,0.6,0]]*100+[[0,0,0,0,0,0,0,0,0,0,-0.6,0]]*100+\
+                      [[0,0,0,0,0,0,0,0,0,0,0,0.6]]*100+[[0,0,0,0,0,0,0,0,0,0,0,-0.6]]*100)
 
 # Run simulation
 # if real, get the data
-if args.exp_type == 'sim':
+if args.exp_type == 'real':
     real_data = []
-    state = env.reset()
-    # env.wrapper_right.ur3_scale_factor[:6] = [1,2,3,4,5,6]
+    state = real_env.reset()
+    # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     for i in range(1100):
-
-        next_state, reward, done, _  = env.step({
+        next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
@@ -85,7 +85,7 @@ if args.exp_type == 'sim':
             }
         })
 
-        curr_pos = env.get_obs_dict()['left']['curr_pos']      # from real env
+        curr_pos = real_env.get_obs_dict()['left']['curr_pos']      # from real env
         real_data.append(curr_pos)
         env.render()
     # Save real data
