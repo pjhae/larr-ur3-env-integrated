@@ -407,17 +407,6 @@ class SingleUR3RealEnv(gym_custom.Env):
                                right["qpos"], right['gripperpos'], right['grippervel']]).ravel()
 
     @staticmethod
-    # # Default setting
-    # def _nparray_to_dict(obs_nparray):   
-    #     return {'right': {
-    #             'qpos': obs_nparray[0:6],
-    #             'qvel': obs_nparray[7:13],
-    #             'gripperpos': obs_nparray[6:7],
-    #             'grippervel': obs_nparray[13:14]
-    #         }
-    #     }
-
-
     def _nparray_to_dict(obs_nparray):   # ee-Goal-conditioned setting (jonghae) + sine, cosine
         return {'right': {
                 'goal_pos': obs_nparray[0:3],

@@ -21,11 +21,11 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
     objects_nqpos = [7, 7, 7, 7] # there is 4 objects on the table, each object has qpos = (3trans + 4quat)
     objects_nqvel = [6, 6, 6, 6] # there is 4 objects on the table, each object has qpos = (3trans + 3rota)
-    curr_pos = np.array([0, 0, 0])
     # action
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
     ENABLE_COLLISION_CHECKER = False
-    # goal
+    # ee position
+    curr_pos = np.array([0, 0, 0])
     goal_pos = np.array([-0.3, -0.6, 0.75])
 
 
@@ -314,8 +314,6 @@ class SingleUR3Env(MujocoEnv, utils.EzPickle):
 
         delta_x = self.goal_pos - self.curr_pos
         err = np.linalg.norm(delta_x)
-
-
 
         # (HER) reward = self.goal_conditioned_reward(self.goal_pos, self.curr_pos)
 

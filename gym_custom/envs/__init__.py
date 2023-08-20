@@ -141,6 +141,13 @@ register(
 )
 
 register(
+    id='dual-ur3-larr-for-train-v0',
+    entry_point='gym_custom.envs.custom.dual_ur3_env:DualUR3Env',
+    max_episode_steps=1000,
+    reward_threshold=0.0,
+)
+
+register(
     id='single-ur3-larr-for-train-v0',
     entry_point='gym_custom.envs.custom.single_ur3_env:SingleUR3Env',
     max_episode_steps=1000,
@@ -175,6 +182,13 @@ register(
 register(
     id='single-ur3-larr-real-v0',
     entry_point='gym_custom.envs.real:SingleUR3RealEnv',
+    max_episode_steps=None,
+    reward_threshold=0.0,
+)
+
+register(
+    id='dual-ur3-larr-real-for-train-v0',
+    entry_point='gym_custom.envs.real:DualUR3RealEnv',
     max_episode_steps=None,
     reward_threshold=0.0,
 )

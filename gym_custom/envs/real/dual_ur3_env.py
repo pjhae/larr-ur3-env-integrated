@@ -29,6 +29,7 @@ class DualUR3RealEnv(gym_custom.Env):
         self.interface_left = URScriptInterface(host_ip_left, alias='left')
         self.rate = ROSRate(rate)
         self.dt = 1/rate
+        self.goal_pos = np.array([0, 0, 0, 0, 0, 0])
 
         self._define_class_variables()
         
@@ -307,6 +308,10 @@ class DualUR3RealEnv(gym_custom.Env):
         else:
             if controller_error([self.interface_right.get_controller_status()]):
                 self._recover_from_controller_error()
+
+        self.goal_pos = np.array([0.1+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand(), -0.1-0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
+        # self.goal_pos = np.array([0.2, -0.4, 1.0, -0.2, -0.4, 1.0])
+
         ob = self.reset_model()
         self.rate.reset()
         return ob
@@ -406,13 +411,23 @@ class DualUR3RealEnv(gym_custom.Env):
         return self._get_obs()
 
     def get_obs_dict(self, wait=False):
+        _, curr_right_pos, _ = self.forward_kinematics_ee(self.interface_right.get_joint_positions(wait=wait), 'right')
+        _, curr_left_pos, _ = self.forward_kinematics_ee(self.interface_left.get_joint_positions(wait=wait), 'left')
         return {'right': {
+                'goal_pos' : self.goal_pos[:3],
+                'curr_pos' : curr_right_pos,
+                "qpos_sine" : np.sin(self.interface_right.get_joint_positions(wait=wait)),
+                "qpos_cosine" : np.cos(self.interface_right.get_joint_positions(wait=wait)),
                 'qpos': self.interface_right.get_joint_positions(wait=wait),
                 'qvel': self.interface_right.get_joint_speeds(wait=wait),
                 'gripperpos': self.interface_right.get_gripper_position(),
                 'grippervel': self.interface_right.get_gripper_speed()
             },
             'left': {
+                'goal_pos' : self.goal_pos[3:],
+                'curr_pos' : curr_left_pos,
+                "qpos_sine" : np.sin(self.interface_left.get_joint_positions(wait=wait)),
+                "qpos_cosine" : np.cos(self.interface_left.get_joint_positions(wait=wait)),
                 'qpos': self.interface_left.get_joint_positions(wait=wait),
                 'qvel': self.interface_left.get_joint_speeds(wait=wait),
                 'gripperpos': self.interface_left.get_gripper_position(),
@@ -427,8 +442,14 @@ class DualUR3RealEnv(gym_custom.Env):
     def _dict_to_nparray(obs_dict):
         right = obs_dict['right']
         left = obs_dict['left']
-        return np.concatenate([right['qpos'], right['gripperpos'], left['qpos'], left['gripperpos'],
-            right['qvel'], right['grippervel'], left['qvel'], left['grippervel']]).ravel()
+        return np.concatenate([right['goal_pos'], left['goal_pos'], 
+                               right['curr_pos'], left['curr_pos'], 
+                               right['qpos_sine'], right['qpos_cosine'],
+                               left['qpos_sine'] , left['qpos_cosine'],
+                               right['qpos'], left['qpos'],
+                               right['gripperpos'], left['gripperpos'],
+                               right['grippervel'], left['grippervel']]).ravel()
+
 
     @staticmethod
     def _nparray_to_dict(obs_nparray):
@@ -518,7 +539,7 @@ def servoj_speedj_example(host_ip_right, host_ip_left, rate):
     real_env.step({'right': {'movej': {'q': waypoints_qpos_right[0,:]}}, 'left': {'movej': {'q': waypoints_qpos_left[0,:]}}})
     print('done!')
 
-    if prompt_yes_or_no('speedj to \r\n right: %s deg\r\n left: %s deg\r\n?'
+    if prompt_yes_or_no('speedj to \r\n right: %s deg\r\n left: %s deg?\r\n'
         %(np.rad2deg(goal_qpos_right), np.rad2deg(goal_qpos_left))) is False:
         print('exiting program!')
         sys.exit()

@@ -17,9 +17,13 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
     ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
-    objects_nqpos = [7, 7, 7, 7]
-    objects_nqvel = [6, 6, 6, 6]
+    objects_nqpos = [7, 7, 7]
+    objects_nqvel = [6, 6, 6]
     ENABLE_COLLISION_CHECKER = False
+    # ee position
+    curr_pos = np.array([0, 0, 0, 0, 0, 0])
+    goal_pos = np.array([-0.3, -0.6, 0.75, 0.3, -0.6, 0.75])
+
 
     def __init__(self):
         if self.ENABLE_COLLISION_CHECKER:
@@ -47,9 +51,9 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-            np.array([-90.0, -90.0, -90.0, -90.0, -135.0, 90.0])*np.pi/180.0 # right arm
+            np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         self.init_qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos] = \
-            np.array([90.0, -90.0, 90.0, -90.0, 135.0, -90.0])*np.pi/180.0 # left arm
+            np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
         
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
@@ -97,6 +101,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
     def forward_kinematics_DH(self, q, arm):
         assert len(q) == self.ur3_nqpos
+        self._define_class_variables()
 
         if arm == 'right':
             T_0_i = self.kinematics_params['T_wb_right']
@@ -221,6 +226,8 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
         return R, p, T
 
+####
+
     def _get_ur3_qpos(self):
         return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos], 
             self.sim.data.qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos]]).ravel()
@@ -255,17 +262,74 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.sim.data.qpos, self.sim.data.qvel]).ravel()
+        return np.concatenate([self.goal_pos, self.curr_pos,
+                               np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]), np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
+                               np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]), np.cos(self._get_ur3_qpos()[self.ur3_nqpos:])
+                               ]).ravel()
+
+####
+
+    def get_ur3_qpos(self):
+        return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos], 
+            self.sim.data.qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos]]).ravel()
+
+    def get_gripper_qpos(self):
+        return np.concatenate([self.sim.data.qpos[self.ur3_nqpos:self.ur3_nqpos+self.gripper_nqpos], 
+            self.sim.data.qpos[2*self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+2*self.gripper_nqpos]]).ravel()
+
+    def get_ur3_qvel(self):
+        return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel], 
+            self.sim.data.qvel[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+
+    def get_gripper_qvel(self):
+        return np.concatenate([self.sim.data.qvel[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel], 
+            self.sim.data.qvel[2*self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+2*self.gripper_nqvel]]).ravel()
+
+    def get_ur3_bias(self):
+        return np.concatenate([self.sim.data.qfrc_bias[0:self.ur3_nqvel], 
+            self.sim.data.qfrc_bias[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+
+    def get_gripper_bias(self):
+        return np.concatenate([self.sim.data.qfrc_bias[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel], 
+            self.sim.data.qfrc_bias[2*self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+2*self.gripper_nqvel]]).ravel()
+
+    def get_ur3_constraint(self):
+        return np.concatenate([self.sim.data.qfrc_constraint[0:self.ur3_nqvel], 
+            self.sim.data.qfrc_constraint[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+
+    def get_ur3_actuator(self):
+        return np.concatenate([self.sim.data.qfrc_actuator[0:self.ur3_nqvel], 
+            self.sim.data.qfrc_actuator[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+
+    def get_obs(self):
+        '''overridable method'''
+        return np.concatenate([self.goal_pos, self.curr_pos,
+                               np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]), np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
+                               np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]), np.cos(self._get_ur3_qpos()[self.ur3_nqpos:])
+                               ]).ravel()
+
+####
 
     def get_obs_dict(self):
         '''overridable method'''
-        return {'right': {
+        _, curr_right_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
+        _, curr_left_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[self.ur3_nqpos:], 'left')
+        return {
+            'right': {
+                'goal_pos' : self.goal_pos[:3],
+                'curr_pos' : curr_right_pos,
+                "qpos_sine"  : np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]),
+                "qpos_cosine": np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
                 'qpos': self._get_ur3_qpos()[:self.ur3_nqpos],
                 'qvel': self._get_ur3_qvel()[:self.ur3_nqvel],
                 'gripperpos': self._get_gripper_qpos()[:self.gripper_nqpos],
                 'grippervel': self._get_gripper_qvel()[:self.gripper_nqvel]
             },
             'left': {
+                'goal_pos' : self.goal_pos[3:],
+                'curr_pos' : curr_left_pos,
+                "qpos_sine"  : np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]),
+                "qpos_cosine": np.cos(self._get_ur3_qpos()[self.ur3_nqpos:]),
                 'qpos': self._get_ur3_qpos()[self.ur3_nqpos:],
                 'qvel': self._get_ur3_qvel()[self.ur3_nqvel:],
                 'gripperpos': self._get_gripper_qpos()[self.gripper_nqpos:],
@@ -278,17 +342,49 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
     def step(self, a):
         '''overridable method'''
-        reward = 1.0
-        self.do_simulation(a, self.frame_skip)
+
+        _, curr_right_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
+        _, curr_left_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[self.ur3_nqpos:], 'left')
+
+        self.curr_pos = np.concatenate([curr_right_pos, curr_left_pos])
+
+        delta_x = self.goal_pos - self.curr_pos
+        err = np.linalg.norm(delta_x)
+
+        reward = -err
+        if err < 0.05:
+            reward = 10
+            print("GOAL")
+
+        reward -= 0.001*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
+
+        for i in range(1):  # TODO :change it to 12
+            qpos = self.sim.data.qpos
+            qvel = self.sim.data.qvel
+            qpos[-14:-11] = self.goal_pos[:3]
+            qpos[-7:-4] = self.goal_pos[3:] 
+            self.set_state(qpos, qvel)
+            self.do_simulation(a, self.frame_skip)
+
         ob = self._get_obs()
         done = False
         return ob, reward, done, {}
 
     def reset_model(self):
         '''overridable method'''
+
+        self.goal_pos = np.array([0.1+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand(), -0.1-0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
+        # self.goal_pos = np.array([0.2, -0.4, 1.0, -0.2, -0.4, 1.0])
+
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+
+        # # For CEM, don't randommize when initialize
+        # qpos = self.init_qpos 
+        # qvel = self.init_qvel
+
         self.set_state(qpos, qvel)
+        
         return self._get_obs()
 
     def viewer_setup(self):
@@ -300,27 +396,15 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
 def test_video_record(env):
     import time
-    from gym_custom.wrappers.monitoring.video_recorder import VideoRecorder
-    rec = VideoRecorder(env, enabled=True)
     stime = time.time()
     env.reset()
-    rec.capture_frame()
-    for i in range(int(2*rec.frames_per_sec)):
+
+    for i in range(10000):
         action = env.action_space.sample()
         env.step(action)
-        rec.capture_frame()
+        env.render()
         print('step: %d'%(i))
     ftime = time.time()
-
-    print('recording %f seconds of video took %f seconds'%(2, ftime-stime))
-    rec.close()
-    
-    assert not rec.empty
-    assert not rec.broken
-    assert os.path.exists(rec.path)
-    with open(rec.path) as f:
-        print('path to file is %s'%(f.name))
-        assert os.fstat(f.fileno()).st_size > 100
 
 
 if __name__ == '__main__':
