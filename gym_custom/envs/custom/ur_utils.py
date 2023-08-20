@@ -269,23 +269,23 @@ class URScriptWrapper_DualUR3(ActionWrapper):
 
         # cf. f = lambda : np.zeros([5])
         wrapper_right_env_getters = {
-            'qpos': lambda : env._get_ur3_qpos()[:env.ur3_nqpos],
-            'qvel': lambda : env._get_ur3_qvel()[:env.ur3_nqvel],
-            'qbias': lambda : env._get_ur3_bias()[:env.ur3_nqvel],
-            'qconstraint': lambda : env._get_ur3_constraint()[:env.ur3_nqvel],
-            'gpos': lambda : np.array([self.env._get_gripper_qpos()[2], self.env._get_gripper_qpos()[7]]),
-            'gvel': lambda : np.array([self.env._get_gripper_qvel()[2], self.env._get_gripper_qvel()[7]]),
-            'gbias': lambda : np.array([self.env._get_gripper_bias()[2], self.env._get_gripper_bias()[7]]),
+            'qpos': lambda : env.get_ur3_qpos()[:env.ur3_nqpos],
+            'qvel': lambda : env.get_ur3_qvel()[:env.ur3_nqvel],
+            'qbias': lambda : env.get_ur3_bias()[:env.ur3_nqvel],
+            'qconstraint': lambda : env.get_ur3_constraint()[:env.ur3_nqvel],
+            'gpos': lambda : np.array([self.env.get_gripper_qpos()[2], self.env.get_gripper_qpos()[7]]),
+            'gvel': lambda : np.array([self.env.get_gripper_qvel()[2], self.env.get_gripper_qvel()[7]]),
+            'gbias': lambda : np.array([self.env.get_gripper_bias()[2], self.env.get_gripper_bias()[7]]),
             'dt': env.dt
         }
         wrapper_left_env_getters = {
-            'qpos': lambda : env._get_ur3_qpos()[env.ur3_nqpos:],
-            'qvel': lambda : env._get_ur3_qvel()[env.ur3_nqvel:],
-            'qbias': lambda : env._get_ur3_bias()[env.ur3_nqvel:],
-            'qconstraint': lambda : env._get_ur3_constraint()[env.ur3_nqvel:],
-            'gpos': lambda : np.array([self.env._get_gripper_qpos()[12], self.env._get_gripper_qpos()[17]]),
-            'gvel': lambda : np.array([self.env._get_gripper_qvel()[12], self.env._get_gripper_qvel()[17]]),
-            'gbias': lambda : np.array([self.env._get_gripper_bias()[12], self.env._get_gripper_bias()[17]]),
+            'qpos': lambda : env.get_ur3_qpos()[env.ur3_nqpos:],
+            'qvel': lambda : env.get_ur3_qvel()[env.ur3_nqvel:],
+            'qbias': lambda : env.get_ur3_bias()[env.ur3_nqvel:],
+            'qconstraint': lambda : env.get_ur3_constraint()[env.ur3_nqvel:],
+            'gpos': lambda : np.array([self.env.get_gripper_qpos()[12], self.env.get_gripper_qpos()[17]]),
+            'gvel': lambda : np.array([self.env.get_gripper_qvel()[12], self.env.get_gripper_qvel()[17]]),
+            'gbias': lambda : np.array([self.env.get_gripper_bias()[12], self.env.get_gripper_bias()[17]]),
             'dt': env.dt
         }
         self.wrapper_right = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor, _env_getters=wrapper_right_env_getters)

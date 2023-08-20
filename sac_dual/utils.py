@@ -78,7 +78,7 @@ class VideoRecorder(object):
 
 ################ CEM related ####################
 
-def save_data(data, file_name, data_dir = "sac_practice/data"):
+def save_data(data, file_name, data_dir = "sac_dual/data"):
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     file_path = os.path.join(data_dir, file_name)

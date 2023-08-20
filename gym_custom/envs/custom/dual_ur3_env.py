@@ -348,17 +348,26 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
         self.curr_pos = np.concatenate([curr_right_pos, curr_left_pos])
 
-        delta_x = self.goal_pos - self.curr_pos
-        err = np.linalg.norm(delta_x)
+        delta_right = self.goal_pos[:3] - self.curr_pos[:3]
+        err_right = np.linalg.norm(delta_right)
 
-        reward = -err
-        if err < 0.05:
-            reward = 10
-            print("GOAL")
+        delta_left = self.goal_pos[3:] - self.curr_pos[3:]
+        err_left = np.linalg.norm(delta_left)
 
-        reward -= 0.001*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
+        reward = -err_right - err_left
 
-        for i in range(1):  # TODO :change it to 12
+        if (err_right < 0.03) or (err_left < 0.03):
+            if (err_right < 0.03) and (err_left < 0.03):
+                reward = 100
+                print("GOAL_dual")
+            else:
+                reward = 10
+                print("Goal_single")
+
+
+        reward -= 0.003*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
+
+        for i in range(12):  # TODO :change it to 12
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
             qpos[-14:-11] = self.goal_pos[:3]

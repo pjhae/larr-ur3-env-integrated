@@ -14,19 +14,15 @@
 
 # Data
 __pycache__/
-runs/
+runs_dual/
+runs_single/
 .idea
 video/
-checkpoints/
-checkpoints_v1/
-checkpoints_v2/
-checkpoints_v3/
-checkpoints_v4/
-checkpoints_v5/
-checkpoints_v6/
-checkpoints_v7/
+checkpoints_dual/
+checkpoints_single/
 
-sac_practice/video/
+sac_single/video/
+sac_dual/video/
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info

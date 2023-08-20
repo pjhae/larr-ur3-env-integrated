@@ -6,6 +6,7 @@
 
     <worldbody>
         <camera pos="0 0 3.2" name="topview" /> <!--Remove?-->
+        <camera pos="0 -2 2" name="frontview" xyaxes="1 0 0 0 0.5 1" /> <!--Remove?-->
         
         <geom name="floor" type="plane" pos="0 0 0" size="2.5 2.5 0.1" rgba=".6 .6 .5 1"
             contype="1" conaffinity="1" friction="2 0.1 0.002" material="light_wood_v3"/>

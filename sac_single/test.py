@@ -152,7 +152,7 @@ agent = SAC(18, action_space, args)
 memory = ReplayMemory(args.replay_size, args.seed)
 
 # Load the parameter
-agent.load_checkpoint("checkpoints/sac_checkpoint_{}_{}".format('single-ur3-larr-for-train-v0', num_epi), True)
+agent.load_checkpoint("checkpoints_single/sac_checkpoint_{}_{}".format('single-ur3-larr-for-train-v0', num_epi), True)
 
 
 def get_numpy_array():
