@@ -3,7 +3,7 @@
 <mujoco>
     <!--Simulator Options-->
     <compiler inertiafromgeom="auto" angle="radian" coordinate="local" eulerseq="XYZ" meshdir="../meshes" texturedir="../textures"/>
-    <option timestep='0.002' iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="elliptic" noslip_iterations="10"
+    <option timestep='0.004' iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="elliptic" noslip_iterations="10"
         gravity="0 0 -9.81" />
 
     <!--Defaults-->
