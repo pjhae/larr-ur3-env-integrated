@@ -189,7 +189,7 @@ for i_episode in itertools.count(1):
     writer.add_scalar('reward/train', episode_reward, i_episode)
     print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2)))
     if i_episode % 10 == 0:
-        agent.save_checkpoint('single-ur3-larr-for-train-v0',"{}".format(i_episode))
+        agent.save_checkpoint('dual-ur3-larr-for-train-v0',"{}".format(i_episode))
 
     if i_episode % 20 == 0 and args.eval is True:
         video.init(enabled=True)

@@ -63,10 +63,10 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 2790
+num_epi = 960
 
 # Rendering (if exp_type is real, render should be FALSE)
-render = False
+render = True
 
 # Environment
 if args.exp_type == "sim":
@@ -171,21 +171,20 @@ while True:
     step = 0
     done = False
 
-    # 크기가 3인 넘파이 벡터를 유저로부터 입력 받습니다.
-    user_input = input("크기가 3인 넘파이 벡터를 입력하세요 (공백으로 구분): ")
-    elements = user_input.split()
+    # # 크기가 3인 넘파이 벡터를 유저로부터 입력 받습니다.
+    # user_input = input("크기가 3인 넘파이 벡터를 입력하세요 (공백으로 구분): ")
+    # elements = user_input.split()
 
-    # 입력된 값이 3개가 아니라면 에러 메시지 출력 후 프로그램 종료
-    if len(elements) != 3:
-        print("3개의 값을 입력해야 합니다.")
-    else:
-    # 입력된 값을 실수형으로 변환하고 넘파이 배열로 생성합니다.
-        env.goal_pos = np.array([float(element) for element in elements])
+    # # 입력된 값이 3개가 아니라면 에러 메시지 출력 후 프로그램 종료
+    # if len(elements) != 3:
+    #     print("3개의 값을 입력해야 합니다.")
+    # else:
+    # # 입력된 값을 실수형으로 변환하고 넘파이 배열로 생성합니다.
+    #     env.goal_pos = np.array([float(element) for element in elements])
 
     while not done:
-        print(env.goal_pos)
+        # print(env.goal_pos)
         action = agent.select_action(state, evaluate=True)
-
         next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
