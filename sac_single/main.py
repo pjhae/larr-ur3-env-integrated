@@ -72,7 +72,7 @@ torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
 # For video
-video_directory = '/home/jonghae/larr-ur3-env/sac_single/video/{}'.format(datetime.datetime.now().strftime("%H:%M:%S %p"))
+video_directory = '/home/jonghae/larr-ur3-env-integrated/sac_single/video/{}'.format(datetime.datetime.now().strftime("%H:%M:%S %p"))
 video = VideoRecorder(dir_name = video_directory)
 
 

@@ -72,7 +72,7 @@ torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
 # For video
-video_directory = '/home/jonghae/larr-ur3-env/sac_dual/video/{}'.format(datetime.datetime.now().strftime("%H:%M:%S %p"))
+video_directory = '/home/jonghae/larr-ur3-env-integrated/sac_dual/video/{}'.format(datetime.datetime.now().strftime("%H:%M:%S %p"))
 video = VideoRecorder(dir_name = video_directory)
 
 
@@ -218,7 +218,7 @@ for i_episode in itertools.count(1):
                         'move_gripper_force': {'gf': np.array([10.0])}
                     }
                 })
-                episode_reward += -np.linalg.norm(state[:6]-state[6:12])
+                episode_reward += -np.linalg.norm(state[:3]-state[3:6])
                 episode_steps += 1
 
                 state = next_state[:36]

@@ -202,7 +202,7 @@ while True:
 
         if render == True :
             env.render()
-        episode_reward += -np.linalg.norm(state[:6]-state[6:12])
+        episode_reward += -np.linalg.norm(state[:3]-state[3:6])
         step += 1
         state = next_state[:36]
 
