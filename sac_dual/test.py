@@ -63,7 +63,7 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 960
+num_epi = 4190
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True
@@ -180,19 +180,36 @@ while True:
     #     print("3개의 값을 입력해야 합니다.")
     # else:
     # # 입력된 값을 실수형으로 변환하고 넘파이 배열로 생성합니다.
-    #     env.goal_pos = np.array([float(element) for element in elements])
+    #     env.env.goal_pos = np.array([float(element) for element in elements])
+    #     env.env.goal_pos = np.concatenate([env.env.goal_pos, env.env.goal_pos])
+    #     env.env.goal_pos[3] = -env.env.goal_pos[3]
 
     while not done:
-        # print(env.goal_pos)
+        print(env.env.goal_pos)
+        # if step < 250:
+        #     env.goal_pos = np.array([0.1, -0.4, 0.9 , -0.2, -0.4, 0.9])
+
+        # elif step >= 250 and step < 500:
+        #     env.goal_pos = np.array([0.2, -0.4, 0.9 , -0.2, -0.4, 0.9])
+
+        # elif step >= 500 and step < 750:
+        #     env.goal_pos = np.array([0.2, -0.4, 1.0 , -0.2, -0.4, 0.9])
+        
+        # elif step >= 750 and step < 850:
+        #     env.goal_pos = np.array([0.1, -0.4, 1.0 , -0.2, -0.4, 0.9])
+
+        # else:
+        #     
+        env.env.goal_pos = np.array([0.1+ step*0.01, -0.4, 0.9 , -0.2, -0.4, 0.9])
         action = agent.select_action(state, evaluate=True)
         next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([-10.0])}
             },
             'left': {
                 'speedj': {'qd': action[6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([-10.0])}
             }
         })
 
@@ -203,7 +220,7 @@ while True:
         state = next_state[:36]
 
          # If exp_type is real, evaluate just for 500 step
-        if args.exp_type == "real" and step == 200:
+        if args.exp_type == "real" and step == 300:
             break   
     
     avg_reward = episode_reward/500
