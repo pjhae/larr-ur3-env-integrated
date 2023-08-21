@@ -32,6 +32,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         self._mujocoenv_init()
         self._check_model_parameter_dimensions()
         self._define_class_variables()
+       
 
     def _ezpickle_init(self):
         '''overridable method'''
@@ -347,6 +348,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         _, curr_left_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[self.ur3_nqpos:], 'left')
 
         self.curr_pos = np.concatenate([curr_right_pos, curr_left_pos])
+        # self.goal_pos = np.array([0.1+0.3*np.random.rand(),-0.4,1,-0.1-0.3*np.random.rand(),-0.4,1])
 
         delta_right = self.goal_pos[:3] - self.curr_pos[:3]
         err_right = np.linalg.norm(delta_right)
@@ -362,14 +364,14 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
         reward -= 0.003*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
 
-        for i in range(12):  # TODO :change it to 12
+        for i in range(12):  # TODO : need tuning!
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
             qpos[-14:-11] = self.goal_pos[:3]
             qpos[-7:-4] = self.goal_pos[3:] 
             self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
-
+            
         ob = self._get_obs()
         done = False
         return ob, reward, done, {}

@@ -97,6 +97,9 @@ if args.exp_type == "sim":
     ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
     gripper_scale_factor = np.array([1.0])
     env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
+    # scale factor
+    env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+
 elif args.exp_type == "real":
         env.env = env
 
@@ -143,8 +146,6 @@ def _set_action_space():
 
 action_space = _set_action_space()['speedj']
 
-# env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-
 agent = SAC(18, action_space, args)
 
 # Memory
@@ -152,21 +153,6 @@ memory = ReplayMemory(args.replay_size, args.seed)
 
 # Load the parameter
 agent.load_checkpoint("checkpoints_single/sac_checkpoint_{}_{}".format('single-ur3-larr-for-train-v0', num_epi), True)
-
-
-def get_numpy_array():
-    while True:
-        try:
-            user_input = input("길이가 3인 숫자를 입력하세요 (공백으로 구분): ")
-            elements = user_input.split()
-            
-            if len(elements) != 3:
-                raise ValueError("길이가 3이 아닙니다. 다시 입력해주세요.")
-            
-            num_array = np.array([float(element) for element in elements])
-            return num_array
-        except ValueError as e:
-            print(e)
 
 
 # Start evaluation
@@ -182,16 +168,16 @@ while True:
     step = 0
     done = False
 
-    # 크기가 3인 넘파이 벡터를 유저로부터 입력 받습니다.
-    user_input = input("크기가 3인 넘파이 벡터를 입력하세요 (공백으로 구분): ")
-    elements = user_input.split()
+    # # Receive a NumPy vector of size 3 from the user
+    # user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
+    # elements = user_input.split()
 
-    # 입력된 값이 3개가 아니라면 에러 메시지 출력 후 프로그램 종료
-    if len(elements) != 3:
-        print("3개의 값을 입력해야 합니다.")
-    else:
-    # 입력된 값을 실수형으로 변환하고 넘파이 배열로 생성합니다.
-        env.goal_pos = np.array([float(element) for element in elements])
+    # # If the entered values are not exactly 3, exit the program.
+    # if len(elements) != 3:
+    #     print("You must input 3 values.")
+    # else:
+    # # Convert the entered values to floating-point numbers and create a NumPy array.
+    #     env.goal_pos = np.array([float(element) for element in elements])
 
     while not done:
         print(env.goal_pos)

@@ -143,10 +143,10 @@ else:
             mse = np.mean((sim_data[i] - real_data) ** 2)
             mse_results[i] = mse
 
-        # print("MSE 결과 배열:", mse_results)
+        # smallest MSE
         smallest_indices = np.argpartition(mse_results, n_elit)[:n_elit]
 
-        # print("가장 작은 MSE 값들의 인덱스:", smallest_indices)
+        # pick elites
         elite_params = candidate_parameters[smallest_indices]
         elite_err = sum(mse_results[smallest_indices])/n_elit
 
@@ -177,7 +177,7 @@ else:
         # plt.axhline(y=20, color='k', linestyle='--', label='p5')
         # plt.axhline(y=10, color='k', linestyle='--', label='p6')
 
-        plt.title("Parameter/Error History")
+        plt.title("History of Parameter/Error")
         plt.ylabel("parameter")
         plt.legend()
 

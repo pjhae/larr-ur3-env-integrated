@@ -63,7 +63,7 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 4190
+num_epi = 5150
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True
@@ -171,36 +171,23 @@ while True:
     step = 0
     done = False
 
-    # # 크기가 3인 넘파이 벡터를 유저로부터 입력 받습니다.
-    # user_input = input("크기가 3인 넘파이 벡터를 입력하세요 (공백으로 구분): ")
-    # elements = user_input.split()
+    # Receive a NumPy vector of size 3 from the user
+    user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
+    elements = user_input.split()
 
-    # # 입력된 값이 3개가 아니라면 에러 메시지 출력 후 프로그램 종료
-    # if len(elements) != 3:
-    #     print("3개의 값을 입력해야 합니다.")
-    # else:
-    # # 입력된 값을 실수형으로 변환하고 넘파이 배열로 생성합니다.
-    #     env.env.goal_pos = np.array([float(element) for element in elements])
-    #     env.env.goal_pos = np.concatenate([env.env.goal_pos, env.env.goal_pos])
-    #     env.env.goal_pos[3] = -env.env.goal_pos[3]
+    # If the entered values are not exactly 3, exit the program.
+    if len(elements) != 3:
+        print("You must input 3 values.")
+    else:
+    # Convert the entered values to floating-point numbers and create a NumPy array.
+        env.env.goal_pos = np.array([float(element) for element in elements])
+        env.env.goal_pos = np.concatenate([env.env.goal_pos, env.env.goal_pos])
+        env.env.goal_pos[3] = -env.env.goal_pos[3]
 
     while not done:
-        print(env.env.goal_pos)
-        # if step < 250:
-        #     env.goal_pos = np.array([0.1, -0.4, 0.9 , -0.2, -0.4, 0.9])
+        # env.goal_pos = np.array([1,2,3,4,5,6])
+        # state[:3] = np.array([1,2,3])
 
-        # elif step >= 250 and step < 500:
-        #     env.goal_pos = np.array([0.2, -0.4, 0.9 , -0.2, -0.4, 0.9])
-
-        # elif step >= 500 and step < 750:
-        #     env.goal_pos = np.array([0.2, -0.4, 1.0 , -0.2, -0.4, 0.9])
-        
-        # elif step >= 750 and step < 850:
-        #     env.goal_pos = np.array([0.1, -0.4, 1.0 , -0.2, -0.4, 0.9])
-
-        # else:
-        #     
-        env.env.goal_pos = np.array([0.1+ step*0.01, -0.4, 0.9 , -0.2, -0.4, 0.9])
         action = agent.select_action(state, evaluate=True)
         next_state, reward, done, _  = env.step({
             'right': {

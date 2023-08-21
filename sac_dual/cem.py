@@ -95,11 +95,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 2
+    n_seq = 100
     n_horrizon =1100
     n_dim = 3
     n_iter = 1000
-    n_elit = 1
+    n_elit = 5
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -146,17 +146,16 @@ else:
                 })
 
                 # env.render()
-
         
         mse_results = np.zeros(n_seq)
         for i in range(n_seq):
             mse = np.mean((sim_data[i] - real_data) ** 2)
             mse_results[i] = mse
 
-        # print("MSE 결과 배열:", mse_results)
+        # smallest MSE
         smallest_indices = np.argpartition(mse_results, n_elit)[:n_elit]
 
-        # print("가장 작은 MSE 값들의 인덱스:", smallest_indices)
+        # pick elites
         elite_params = candidate_parameters[smallest_indices]
         elite_err = sum(mse_results[smallest_indices])/n_elit
 
@@ -187,7 +186,7 @@ else:
         # plt.axhline(y=20, color='k', linestyle='--', label='p5')
         # plt.axhline(y=10, color='k', linestyle='--', label='p6')
 
-        plt.title("Parameter/Error History")
+        plt.title("History of Parameter/Error")
         plt.ylabel("parameter")
         plt.legend()
 
@@ -201,7 +200,7 @@ else:
         logging_traj = []
         state = env.reset()
         env.wrapper_left.ur3_scale_factor[:6] = prams_mean[:6]
-        env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+        # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
         for j in range(n_horrizon):
             curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
             sim_data[0][j][:] = curr_pos
