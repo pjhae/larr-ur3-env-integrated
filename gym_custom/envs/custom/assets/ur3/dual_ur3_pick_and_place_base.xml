@@ -134,22 +134,23 @@
             <joint name="asri_box" type="free" limited="false" damping="0.001" />
         </body>-->
 
-        <body name="cube" pos="0.0 -0.4 0.76" quat="0.9961946981 0.0871557427 0 0">
-            <geom name="cube" type="box" size="0.01 0.01 0.01" rgba="0.7 0.7 0 1" />
+        <body name="cube" pos="0.0 -0.3 0.76" quat="0.9961946981 0.0871557427 0 0">
+            <geom name="cube" type="box" size="0.08 0.08 0.08" rgba="0.7 0.7 0 1" />
             <joint name="cube" type="free" damping="0.001" />
         </body>
 
-        <body name="asri_ball_1" pos="-0.3 -0.6 0.75" quat="0.9961946981 0.0871557427 0 0" >
+        
+        <body name="asri_ball_1" pos="0.0 -0.6 0.75" quat="0.9961946981 0.0871557427 0 0" >
             <geom name="asri_stickball:ball1" pos="0 0 0" size="0.025" type="sphere" conaffinity="0" contype="0" rgba="1 0 0 1"/>
-            <!-- <geom name="asri_stickball:stick" type="capsule" fromto="0 0 0 0 0 0.15" size="0.0025" condim="1" material="light_wood" density="700" /> -->
             <joint name="stickball_box1" type="free" damping="0.001" />
         </body>
 
+        <!--
         <body name="asri_ball_2" pos="0.3 -0.6 0.75" quat="0.9961946981 0.0871557427 0 0" >
             <geom name="asri_stickball:ball2" pos="0 0 0" size="0.025" type="sphere" conaffinity="0" contype="0" rgba="1 0 0 1"/>
-            <!-- <geom name="asri_stickball:stick" type="capsule" fromto="0 0 0 0 0 0.15" size="0.0025" condim="1" material="light_wood" density="700" /> -->
+            <<geom name="asri_stickball:stick" type="capsule" fromto="0 0 0 0 0 0.15" size="0.0025" condim="1" material="light_wood" density="700" />
             <joint name="stickball_box2" type="free" damping="0.001" />
-        </body>
+        </body>-->
 
     </worldbody>
 

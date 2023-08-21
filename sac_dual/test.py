@@ -63,7 +63,7 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 5150
+num_epi = 4200
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True

@@ -55,7 +55,7 @@ args = parser.parse_args()
 
 # Environment
 # env = NormalizedActions(gym.make(args.env_name))
-env = gym_custom.make('dual-ur3-larr-for-train-v0')
+env = gym_custom.make('dual-ur3-pick-and-place-larr-for-train-v0')
 servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
 PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':10.0}}
 ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
@@ -63,7 +63,7 @@ gripper_scale_factor = np.array([1.0])
 env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
 
 # Max episode
-max_episode_steps = 500
+max_episode_steps = 1000
 
 # For reproducibility
 env.seed(args.seed)
@@ -103,14 +103,14 @@ def _set_action_space():
 action_space = _set_action_space()['speedj']
 
 # # Set motor gain scale
-env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+env.wrapper_right.ur3_scale_factor[:6] = [24.52907494, 24.02851783, 25.56517597, 14.51868608, 23.78797503, 21.61325463]
+env.wrapper_left.ur3_scale_factor[:6] =  [23.03403947, 23.80201627, 30.65127641, 14.93660589, 23.06927071, 21.52280244]
 
 # Agent
 agent = SAC(36, action_space, args)
 
 # Tesnorboard
-writer = SummaryWriter('runs_dual/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'dual-ur3-larr-for-train-v0',
+writer = SummaryWriter('runs_dual/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'dual-ur3-pick-and-place-larr-for-train-v0',
                                                              args.policy, "autotune" if args.automatic_entropy_tuning else ""))
 
 # Memory
@@ -150,11 +150,11 @@ for i_episode in itertools.count(1):
         next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([-10.0])}
             },
             'left': {
                 'speedj': {'qd': action[6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([-10.0])}
             }
         })
         
@@ -162,7 +162,7 @@ for i_episode in itertools.count(1):
         episode_steps += 1
         total_numsteps += 1
         episode_reward += reward
-
+        env.render()
         # Ignore the "done" signal if it comes from hitting the time horizon. (max timestep 되었다고 done 해서 next Q = 0 되는 것 방지)
         mask = 1 if episode_steps == max_episode_steps else float(not done)
 
@@ -189,7 +189,7 @@ for i_episode in itertools.count(1):
     writer.add_scalar('reward/train', episode_reward, i_episode)
     print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2)))
     if i_episode % 10 == 0:
-        agent.save_checkpoint('dual-ur3-larr-for-train-v0',"{}".format(i_episode))
+        agent.save_checkpoint('dual-ur3-pick-and-place-larr-for-train-v0',"{}".format(i_episode))
 
     if i_episode % 20 == 0 and args.eval is True:
         video.init(enabled=True)

@@ -9,20 +9,23 @@ from gym_custom import utils
 from gym_custom.envs.mujoco import MujocoEnv
 
 
-class DualUR3Env(MujocoEnv, utils.EzPickle):
+class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
 
     # class variables
-    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/dual_ur3_base.xml')
+    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/dual_ur3_pick_and_place_base.xml')
     mujocoenv_frame_skip = 1
     ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
-    objects_nqpos = [7, 7, 7]
-    objects_nqvel = [6, 6, 6]
+    objects_nqpos = [7, 7]
+    objects_nqvel = [6, 6]
     ENABLE_COLLISION_CHECKER = False
-    # ee position
-    curr_pos = np.array([0, 0, 0, 0, 0, 0])
-    goal_pos = np.array([-0.3, -0.6, 0.75, 0.3, -0.6, 0.75])
+    # ee pos
+    curr_pos_arm = np.array([0, 0, 0, 0, 0, 0])
+
+    # block pos
+    curr_pos_block = np.array([0, 0, 0])
+    goal_pos_block = np.array([0, 0, 1])
 
 
     def __init__(self):
@@ -262,7 +265,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos, self.curr_pos,
+        return np.concatenate([self.goal_pos_block, self.curr_pos_block, self.curr_pos_arm,
                                np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]), np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
                                np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]), np.cos(self._get_ur3_qpos()[self.ur3_nqpos:])
                                ]).ravel()
@@ -303,7 +306,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
     def get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos, self.curr_pos,
+        return np.concatenate([self.goal_pos_block, self.curr_pos_block, self.curr_pos_arm,
                                np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]), np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
                                np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]), np.cos(self._get_ur3_qpos()[self.ur3_nqpos:])
                                ]).ravel()
@@ -316,7 +319,6 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         _, curr_left_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[self.ur3_nqpos:], 'left')
         return {
             'right': {
-                'goal_pos' : self.goal_pos[:3],
                 'curr_pos' : curr_right_pos,
                 "qpos_sine"  : np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]),
                 "qpos_cosine": np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
@@ -326,7 +328,6 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
                 'grippervel': self._get_gripper_qvel()[:self.gripper_nqvel]
             },
             'left': {
-                'goal_pos' : self.goal_pos[3:],
                 'curr_pos' : curr_left_pos,
                 "qpos_sine"  : np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]),
                 "qpos_cosine": np.cos(self._get_ur3_qpos()[self.ur3_nqpos:]),
@@ -346,27 +347,24 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         _, curr_right_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         _, curr_left_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[self.ur3_nqpos:], 'left')
 
-        self.curr_pos = np.concatenate([curr_right_pos, curr_left_pos])
+        self.curr_pos_arm = np.concatenate([curr_right_pos, curr_left_pos])
+        self.curr_pos_block = self.sim.data.qpos[-14:-11]
 
-        delta_right = self.goal_pos[:3] - self.curr_pos[:3]
-        err_right = np.linalg.norm(delta_right)
+        delta = self.goal_pos_block - self.curr_pos_block
+        err = np.linalg.norm(delta)
 
-        delta_left = self.goal_pos[3:] - self.curr_pos[3:]
-        err_left = np.linalg.norm(delta_left)
+        reward = -err
 
-        reward = -err_right - err_left
-
-        if (err_right < 0.03) and (err_left < 0.03):
+        if (err < 0.075):
             reward = 100
-            print("GOAL_dual")
+            print("GOAL")
 
         reward -= 0.003*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
 
         for i in range(12):  # TODO :change it to 12
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
-            qpos[-14:-11] = self.goal_pos[:3]
-            qpos[-7:-4] = self.goal_pos[3:] 
+            qpos[-7:-4] = self.goal_pos_block
             self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
 
@@ -377,8 +375,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
     def reset_model(self):
         '''overridable method'''
 
-        self.goal_pos = np.array([0.1+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand(), -0.1-0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
-        # self.goal_pos = np.array([0.2, -0.4, 1.0, -0.2, -0.4, 1.0])
+        self.goal_pos_block = np.array([-0.2+0.4*np.random.rand(), -0.4, 1.0+0.2*np.random.rand()])
 
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
