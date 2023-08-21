@@ -87,7 +87,7 @@ if args.exp_type == 'real':
 
         curr_pos = real_env.get_obs_dict()['left']['curr_pos']      # from real env
         real_data.append(curr_pos)
-        env.render()
+        # env.render()
     # Save real data
     real_data = np.array(real_data)
     save_data(real_data, "real_data_left.npy")
@@ -95,11 +95,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 100
+    n_seq = 2
     n_horrizon =1100
     n_dim = 3
     n_iter = 1000
-    n_elit = 5
+    n_elit = 1
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -108,7 +108,7 @@ else:
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_dual/data/real_data_left.npy")
+    real_data = load_data("sac_dual/data/real_data_left_indep.npy")
 
     # logging
     logging = []
@@ -201,7 +201,7 @@ else:
         logging_traj = []
         state = env.reset()
         env.wrapper_left.ur3_scale_factor[:6] = prams_mean[:6]
-
+        env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
         for j in range(n_horrizon):
             curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
             sim_data[0][j][:] = curr_pos
