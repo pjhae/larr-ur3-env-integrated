@@ -171,23 +171,23 @@ while True:
     step = 0
     done = False
 
-    # Receive a NumPy vector of size 3 from the user
-    user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
-    elements = user_input.split()
+    # # Receive a NumPy vector of size 3 from the user
+    # user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
+    # elements = user_input.split()
 
-    # If the entered values are not exactly 3, exit the program.
-    if len(elements) != 3:
-        print("You must input 3 values.")
-    else:
-    # Convert the entered values to floating-point numbers and create a NumPy array.
-        env.env.goal_pos = np.array([float(element) for element in elements])
-        env.env.goal_pos = np.concatenate([env.env.goal_pos, env.env.goal_pos])
-        env.env.goal_pos[3] = -env.env.goal_pos[3]
+    # # If the entered values are not exactly 3, exit the program.
+    # if len(elements) != 3:
+    #     print("You must input 3 values.")
+    # else:
+    # # Convert the entered values to floating-point numbers and create a NumPy array.
+    #     env.env.goal_pos = np.array([float(element) for element in elements])
+    #     env.env.goal_pos = np.concatenate([env.env.goal_pos, env.env.goal_pos])
+    #     env.env.goal_pos[3] = -env.env.goal_pos[3]
 
     while not done:
         # env.goal_pos = np.array([1,2,3,4,5,6])
         # state[:3] = np.array([1,2,3])
-
+        print(env.goal_pos)
         action = agent.select_action(state, evaluate=True)
         next_state, reward, done, _  = env.step({
             'right': {
