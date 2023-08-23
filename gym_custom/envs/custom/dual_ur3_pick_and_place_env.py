@@ -265,7 +265,7 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos_block, self.curr_pos_block, self.curr_pos_arm,
+        return np.concatenate([self.goal_pos_block, self.curr_pos_block, self.curr_pos_arm,  # 3+3+6
                                np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]), np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
                                np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]), np.cos(self._get_ur3_qpos()[self.ur3_nqpos:])
                                ]).ravel()
@@ -306,7 +306,7 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
 
     def get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos_block, self.curr_pos_block, self.curr_pos_arm,
+        return np.concatenate([self.goal_pos_block, self.curr_pos_block, self.curr_pos_arm,  # 3+3+6
                                np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]), np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
                                np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]), np.cos(self._get_ur3_qpos()[self.ur3_nqpos:])
                                ]).ravel()
@@ -351,6 +351,7 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
         self.curr_pos_block = self.sim.data.qpos[-14:-11]
 
         delta = self.goal_pos_block - self.curr_pos_block
+        # delta[2] = delta[2]*2 # weight z-axis
         err = np.linalg.norm(delta)
 
         reward = -err
@@ -359,7 +360,7 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
             reward = 100
             print("GOAL")
 
-        reward -= 0.003*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
+        reward -= 0.0001*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
 
         for i in range(12):  # TODO :change it to 12
             qpos = self.sim.data.qpos
@@ -375,7 +376,7 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
     def reset_model(self):
         '''overridable method'''
 
-        self.goal_pos_block = np.array([-0.2+0.4*np.random.rand(), -0.4, 1.0+0.2*np.random.rand()])
+        self.goal_pos_block = np.array([-0.2+0.4*np.random.rand(), -0.4, 1.0])
 
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
