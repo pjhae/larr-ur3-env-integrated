@@ -107,7 +107,7 @@ env.wrapper_right.ur3_scale_factor[:6] = [24.52907494, 24.02851783, 25.56517597,
 env.wrapper_left.ur3_scale_factor[:6] =  [23.03403947, 23.80201627, 30.65127641, 14.93660589, 23.06927071, 21.52280244]
 
 # Agent
-agent = SAC(36, action_space, args)
+agent = SAC(12, action_space, args)
 
 # Tesnorboard
 writer = SummaryWriter('runs_dual/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'dual-ur3-pick-and-place-larr-for-train-v0',
@@ -127,7 +127,7 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
-    state = state[:36]
+    state = state[:12]
     while not done:
         if args.start_steps > total_numsteps:
             action = action_space.sample()  # Sample random action
@@ -146,6 +146,9 @@ for i_episode in itertools.count(1):
                 writer.add_scalar('loss/entropy_loss', ent_loss, updates)
                 writer.add_scalar('entropy_temprature/alpha', alpha, updates)
                 updates += 1
+
+        # action[5] = 0
+        # action[11] = 0
 
         next_state, reward, done, _  = env.step({
             'right': {
@@ -169,9 +172,9 @@ for i_episode in itertools.count(1):
         # Ignore the "done" signal if it comes from hitting the time horizon. (max timestep 되었다고 done 해서 next Q = 0 되는 것 방지)
         mask = 1 if episode_steps == max_episode_steps else float(not done)
 
-        memory.push(state, action, reward, next_state[:36], mask) # Append transition to memory
+        memory.push(state, action, reward, next_state[:12], mask) # Append transition to memory
 
-        state = next_state[:36]
+        state = next_state[:12]
         
     if total_numsteps > args.num_steps:
         break   
@@ -201,7 +204,7 @@ for i_episode in itertools.count(1):
         episodes = 5
         for _  in range(episodes):
             state = env.reset()
-            state = state[:36]
+            state = state[:12]
             episode_steps = 0
             episode_reward = 0
             done = False
@@ -211,17 +214,17 @@ for i_episode in itertools.count(1):
                 next_state, reward, done, _  = env.step({
                     'right': {
                         'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                        'move_gripper_force': {'gf': np.array([10.0])}
+                        'move_gripper_force': {'gf': np.array([-10.0])}
                     },
                     'left': {
                         'speedj': {'qd': action[6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                        'move_gripper_force': {'gf': np.array([10.0])}
+                        'move_gripper_force': {'gf': np.array([-10.0])}
                     }
                 })
                 episode_reward += -np.linalg.norm(state[:3]-state[3:6])
                 episode_steps += 1
 
-                state = next_state[:36]
+                state = next_state[:12]
             avg_reward += episode_reward
             avg_step += episode_steps
         avg_reward /= episodes
