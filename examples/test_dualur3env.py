@@ -155,14 +155,14 @@ def servoj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.9])
-    ee_pos_left = np.array([-0.1, -0.5, 0.9])
+    ee_pos_right = np.array([0.2, -0.5, 0.9])
+    ee_pos_left = np.array([-0.2, -0.5, 0.9])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
 
     if env_type == list_of_env_types[0]:
         PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}}
-        ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 4.0, 4.0, 1.0])
+        ur3_scale_factor = np.array([20.0, 20.0, 20.0, 10.0, 10.0, 1.0])
         gripper_scale_factor = np.array([1.0])
         env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
     elif env_type == list_of_env_types[1]:
@@ -181,11 +181,11 @@ def servoj_and_forceg(env_type='sim', render=False):
         ob, _, _, _ = env.step({
             'right': {
                 'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
-                'move_gripper_force': {'gf': np.array([1.0])}
+                'move_gripper_force': {'gf': np.array([-1.0])}
             },
             'left': {
                 'servoj': {'q': q_left_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
-                'move_gripper_force': {'gf': np.array([1.0])}
+                'move_gripper_force': {'gf': np.array([-1.0])}
             }
         })
         if render: env.render()
@@ -275,7 +275,8 @@ def speedj_and_forceg(env_type='sim', render=False):
             host_ip_left='192.168.5.101',
             rate=25
         )
-        speedj_args = {'a': 5, 't': 2/env.rate._freq, 'wait': False}
+        
+        speedj_args = {'a': 5, 't': 2/env.rate._freq, 'wait': False} 
         env.set_initial_joint_pos('current')
         env.set_initial_gripper_pos('current')
         # 2. Set inital as default configuration
@@ -288,13 +289,13 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.3, 0.9])
-    ee_pos_left = np.array([-0.1, -0.3, 0.9])
+    ee_pos_right = np.array([0.4, -0.3, 1.1])
+    ee_pos_left = np.array([-0.0, -0.5, 0.8])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
 
     if env_type == list_of_env_types[0]:
-        PI_gains = {'speedj': {'P': 0.2, 'I': 10.0}} # was 0.2, 10.0
+        PI_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':10.0}}
         ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
         gripper_scale_factor = np.array([1.0])
         env = URScriptWrapper(env, PI_gains, ur3_scale_factor, gripper_scale_factor)
@@ -311,13 +312,13 @@ def speedj_and_forceg(env_type='sim', render=False):
     # Move to goal
     duration = 5.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
-    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
-    q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/duration
+    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration*12)
+    q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/(duration*12)
     start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
             'right': {
-                'speedj': {'qd': q_right_des_vel, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'servoj': {'q': q_right_des, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([1.0])}
             },
             'left': {
@@ -1037,8 +1038,8 @@ if __name__ == '__main__':
     # test_fkine_ikine()
 
     # 2.1 Updated UR wrapper examples
-    # servoj_and_forceg(env_type='real', render=False)
-    speedj_and_forceg(env_type='real', render=False)
+    servoj_and_forceg(env_type='sim', render=True)
+    # speedj_and_forceg(env_type='sim', render=True)
     # pick_and_place(env_type='real', render=False)
     # collide(env_type='sim', render=True)
     # fidget_in_place(env_type='sim', render=True)

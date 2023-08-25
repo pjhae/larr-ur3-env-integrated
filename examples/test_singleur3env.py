@@ -184,7 +184,7 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.5, 0.9])  ## end-effector
+    ee_pos_right = np.array([0.3, -0.4, 0.9])  ## end-effector
     # ee_pos_right = np.array([0.6, -0.3, 1.0])  ## end-effector
 
 
@@ -206,7 +206,7 @@ def speedj_and_forceg(env_type='sim', render=False):
             sys.exit()
 
     # Move to goal
-    duration = 3.0 # in seconds
+    duration = 5.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
 
@@ -922,7 +922,7 @@ if __name__ == '__main__':
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='sim', render=True)
-    speedj_and_forceg(env_type='real', render=False)
+    speedj_and_forceg(env_type='sim', render=True)
 
     # while True:# 0.0-0.2  -0.5   1.0-1.2   *np.random.rand()
     #     _goal_pos = np.array([0.0, -0.4, 1.0])
