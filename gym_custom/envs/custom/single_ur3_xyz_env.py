@@ -9,23 +9,25 @@ from gym_custom import utils
 from gym_custom.envs.mujoco import MujocoEnv
 
 
-class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
+# For Simulation environment
+
+class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
 
     # class variables
-    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/dual_ur3_pick_and_place_base.xml')
+    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/single_ur3_pick_and_place_base.xml')
     mujocoenv_frame_skip = 1
+    # state
     ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
+    objects_nqpos = [7, 7] # there is 4 objects on the table, each object has qpos = (3trans + 4quat)
+    objects_nqvel = [6, 6] # there is 4 objects on the table, each object has qpos = (3trans + 3rota)
+    # action
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
-    objects_nqpos = [7, 7]
-    objects_nqvel = [6, 6]
     ENABLE_COLLISION_CHECKER = False
-    # ee pos
-    curr_pos_arm = np.array([0, 0, 0, 0, 0, 0])
-
-    # block pos
-    curr_pos_block = np.array([0, 0, 0])
-    goal_pos_block = np.array([0, 0, 1])
+    # ee position
+    curr_pos = np.array([0, 0, 0])
+    curr_pos_block = np.array([1,1,1])
+    goal_pos = np.array([-0.3, -0.6, 0.75])
 
 
     def __init__(self):
@@ -46,17 +48,16 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
 
     def _check_model_parameter_dimensions(self):
         '''overridable method'''
-        assert 2*self.ur3_nqpos + 2*self.gripper_nqpos + sum(self.objects_nqpos) == self.model.nq, 'Number of qpos elements mismatch'
-        assert 2*self.ur3_nqvel + 2*self.gripper_nqvel + sum(self.objects_nqvel) == self.model.nv, 'Number of qvel elements mismatch'
-        assert 2*self.ur3_nact + 2*self.gripper_nact == self.model.nu, 'Number of action elements mismatch'
+        assert self.ur3_nqpos + self.gripper_nqpos + sum(self.objects_nqpos) == self.model.nq, 'Number of qpos elements mismatch'
+        assert self.ur3_nqvel + self.gripper_nqvel + sum(self.objects_nqvel) == self.model.nv, 'Number of qvel elements mismatch'
+        assert self.ur3_nact + self.gripper_nact == self.model.nu, 'Number of action elements mismatch'
 
     def _define_class_variables(self):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
             np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
-        self.init_qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos] = \
-            np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
+            # np.array([-90.0, -90.0, -90.0, -90.0, -135.0, 90.0])*np.pi/180.0 # right arm
         
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
@@ -75,10 +76,6 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
         self.kinematics_params['T_wb_right'] = np.eye(4)
         self.kinematics_params['T_wb_right'][0:3,0:3] = self.sim.data.get_body_xmat('right_arm_rotz').reshape([3,3]).copy()
         self.kinematics_params['T_wb_right'][0:3,3] = self.sim.data.get_body_xpos('right_arm_rotz').copy()
-        
-        self.kinematics_params['T_wb_left'] = np.eye(4)
-        self.kinematics_params['T_wb_left'][0:3,0:3] = self.sim.data.get_body_xmat('left_arm_rotz').reshape([3,3]).copy()
-        self.kinematics_params['T_wb_left'][0:3,3] = self.sim.data.get_body_xpos('left_arm_rotz').copy()
 
         path_to_pkl = os.path.join(os.path.dirname(__file__), '../real/ur/dual_ur3_kinematics_params.pkl')
         if not os.path.isfile(path_to_pkl):
@@ -160,7 +157,7 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.01, threshold_null=0.001, max_iter=100, epsilon=1e-6
+            q_init='current', threshold=0.01, threshold_null=0.01, max_iter=50, epsilon=1e-6
         ):
         '''
         inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
@@ -211,9 +208,9 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
             # evaluate
             err = np.linalg.norm(delta_x)
         
-        if iter_taken == max_iter:
-            warnings.warn('Max iteration limit reached! err: %f (threshold: %f), null_obj_err: %f (threshold: %f)'%(err, threshold, null_obj_val, threshold_null),
-                RuntimeWarning)
+        # if iter_taken == max_iter:
+        #     warnings.warn('Max iteration limit reached! err: %f (threshold: %f), null_obj_err: %f (threshold: %f)'%(err, threshold, null_obj_val, threshold_null),
+        #         RuntimeWarning)
         
         return q, iter_taken, err, null_obj_val
 
@@ -230,188 +227,129 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
         return R, p, T
 
 ####
-
     def _get_ur3_qpos(self):
-        return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos], 
-            self.sim.data.qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos]]).ravel()
+        return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos]]).ravel()
 
     def _get_gripper_qpos(self):
-        return np.concatenate([self.sim.data.qpos[self.ur3_nqpos:self.ur3_nqpos+self.gripper_nqpos], 
-            self.sim.data.qpos[2*self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+2*self.gripper_nqpos]]).ravel()
+        return np.concatenate([self.sim.data.qpos[self.ur3_nqpos:self.ur3_nqpos+self.gripper_nqpos]]).ravel()
 
     def _get_ur3_qvel(self):
-        return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel], 
-            self.sim.data.qvel[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel]]).ravel()
 
     def _get_gripper_qvel(self):
-        return np.concatenate([self.sim.data.qvel[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel], 
-            self.sim.data.qvel[2*self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+2*self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qvel[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel]]).ravel()
 
     def _get_ur3_bias(self):
-        return np.concatenate([self.sim.data.qfrc_bias[0:self.ur3_nqvel], 
-            self.sim.data.qfrc_bias[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qfrc_bias[0:self.ur3_nqvel]]).ravel()
 
     def _get_gripper_bias(self):
-        return np.concatenate([self.sim.data.qfrc_bias[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel], 
-            self.sim.data.qfrc_bias[2*self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+2*self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qfrc_bias[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel]]).ravel()
 
     def _get_ur3_constraint(self):
-        return np.concatenate([self.sim.data.qfrc_constraint[0:self.ur3_nqvel], 
-            self.sim.data.qfrc_constraint[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qfrc_constraint[0:self.ur3_nqvel]]).ravel()
 
     def _get_ur3_actuator(self):
-        return np.concatenate([self.sim.data.qfrc_actuator[0:self.ur3_nqvel], 
-            self.sim.data.qfrc_actuator[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qfrc_actuator[0:self.ur3_nqvel]]).ravel()
 
     def _get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos_block, self.curr_pos_block, self.curr_pos_arm,  # 3+3+6
-                               np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]), np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
-                               np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]), np.cos(self._get_ur3_qpos()[self.ur3_nqpos:])
-                               ]).ravel()
-
+        return np.concatenate([self.goal_pos, self.curr_pos, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
+                               self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
+    
 ####
 
     def get_ur3_qpos(self):
-        return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos], 
-            self.sim.data.qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos]]).ravel()
+        return np.concatenate([self.sim.data.qpos[0:self.ur3_nqpos]]).ravel()
 
     def get_gripper_qpos(self):
-        return np.concatenate([self.sim.data.qpos[self.ur3_nqpos:self.ur3_nqpos+self.gripper_nqpos], 
-            self.sim.data.qpos[2*self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+2*self.gripper_nqpos]]).ravel()
+        return np.concatenate([self.sim.data.qpos[self.ur3_nqpos:self.ur3_nqpos+self.gripper_nqpos]]).ravel()
 
     def get_ur3_qvel(self):
-        return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel], 
-            self.sim.data.qvel[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qvel[0:self.ur3_nqvel]]).ravel()
 
     def get_gripper_qvel(self):
-        return np.concatenate([self.sim.data.qvel[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel], 
-            self.sim.data.qvel[2*self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+2*self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qvel[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel]]).ravel()
 
     def get_ur3_bias(self):
-        return np.concatenate([self.sim.data.qfrc_bias[0:self.ur3_nqvel], 
-            self.sim.data.qfrc_bias[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qfrc_bias[0:self.ur3_nqvel]]).ravel()
 
     def get_gripper_bias(self):
-        return np.concatenate([self.sim.data.qfrc_bias[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel], 
-            self.sim.data.qfrc_bias[2*self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+2*self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qfrc_bias[self.ur3_nqvel:self.ur3_nqvel+self.gripper_nqvel]]).ravel()
 
     def get_ur3_constraint(self):
-        return np.concatenate([self.sim.data.qfrc_constraint[0:self.ur3_nqvel], 
-            self.sim.data.qfrc_constraint[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qfrc_constraint[0:self.ur3_nqvel]]).ravel()
 
     def get_ur3_actuator(self):
-        return np.concatenate([self.sim.data.qfrc_actuator[0:self.ur3_nqvel], 
-            self.sim.data.qfrc_actuator[self.ur3_nqvel+self.gripper_nqvel:2*self.ur3_nqvel+self.gripper_nqvel]]).ravel()
+        return np.concatenate([self.sim.data.qfrc_actuator[0:self.ur3_nqvel]]).ravel()
 
     def get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos_block, self.curr_pos_block, self.curr_pos_arm,  # 3+3+6
-                               np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]), np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
-                               np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]), np.cos(self._get_ur3_qpos()[self.ur3_nqpos:])
-                               ]).ravel()
+        return np.concatenate([self.goal_pos, self.curr_pos, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
+                               self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
 
 ####
 
     def get_obs_dict(self):
         '''overridable method'''
-        _, curr_right_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
-        _, curr_left_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[self.ur3_nqpos:], 'left')
-        return {
-            'right': {
-                'curr_pos' : curr_right_pos,
-                "qpos_sine"  : np.sin(self._get_ur3_qpos()[:self.ur3_nqpos]),
-                "qpos_cosine": np.cos(self._get_ur3_qpos()[:self.ur3_nqpos]),
-                'qpos': self._get_ur3_qpos()[:self.ur3_nqpos],
-                'qvel': self._get_ur3_qvel()[:self.ur3_nqvel],
-                'gripperpos': self._get_gripper_qpos()[:self.gripper_nqpos],
-                'grippervel': self._get_gripper_qvel()[:self.gripper_nqvel]
-            },
-            'left': {
-                'curr_pos' : curr_left_pos,
-                "qpos_sine"  : np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]),
-                "qpos_cosine": np.cos(self._get_ur3_qpos()[self.ur3_nqpos:]),
-                'qpos': self._get_ur3_qpos()[self.ur3_nqpos:],
-                'qvel': self._get_ur3_qvel()[self.ur3_nqvel:],
-                'gripperpos': self._get_gripper_qpos()[self.gripper_nqpos:],
-                'grippervel':self._get_gripper_qvel()[self.gripper_nqvel:]
+        _, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos(), 'right')
+        return {'right': {
+                'goal_pos': self.goal_pos,
+                'curr_pos': curr_pos,
+                "qpos_sine"  : np.sin(self._get_ur3_qpos()),
+                "qpos_cosine": np.cos(self._get_ur3_qpos()),
+                'qpos': self._get_ur3_qpos(),
+                'qvel': self._get_ur3_qvel(),
+                'gripperpos': self._get_gripper_qpos(),
+                'grippervel': self._get_gripper_qvel()
             }
         }
 
-    #
+
     # Overrided MujocoEnv methods
 
     def step(self, a):
         '''overridable method'''
 
-        _, curr_right_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
-        _, curr_left_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[self.ur3_nqpos:], 'left')
-
-        self.curr_pos_arm = np.concatenate([curr_right_pos, curr_left_pos])
         self.curr_pos_block = self.sim.data.qpos[-14:-11]
+        SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
+        self.curr_pos = curr_pos
 
-        delta = self.goal_pos_block - self.curr_pos_block
+        # reward_object = -np.linalg.norm(self.goal_pos - self.curr_pos_block)
+        # if np.linalg.norm(self.goal_pos - self.curr_pos_block) < 0.05:
+        #     reward_object = 10
+        #     print("GOAL")
 
-        if np.linalg.norm(delta) < 0.05:
-            reward_err = 200
-        else:
-            reward_err = -np.linalg.norm(delta)
+        reward_gripper = -np.linalg.norm(curr_pos - self.curr_pos_block)
+        if np.linalg.norm(curr_pos - self.curr_pos_block) < 0.05:
+            reward_gripper = 1000
+            print("GOAL")
 
-        reward_reaching = -2*(np.linalg.norm(self.curr_pos_block - curr_right_pos) + np.linalg.norm(self.curr_pos_block - curr_left_pos))
 
-        # collision_checker_right= []
-        # collision_checker_left= []
-        # fingertip_geomname_right = ["right_gripper:right_follower_mesh", "right_gripper:left_follower_mesh"]
-        # fingertip_geomname_left = ["left_gripper:right_follower_mesh", "left_gripper:left_follower_mesh"]
+        reward_acion = -0.0000001*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
 
-        # for i in range(self.sim.data.ncon):
-        #     sim_contact = self.sim.data.contact[i]
-        #     if str(self.sim.model.geom_id2name(sim_contact.geom1)) == "cube":
-        #         if str(self.sim.model.geom_id2name(sim_contact.geom2)) in fingertip_geomname_right:
-        #             collision_checker_right.append(str(self.sim.model.geom_id2name(sim_contact.geom2)))
-        #         elif str(self.sim.model.geom_id2name(sim_contact.geom2)) in fingertip_geomname_left:
-        #             collision_checker_left.append(str(self.sim.model.geom_id2name(sim_contact.geom2)))
+        # reward = reward_acion + reward_gripper + 3.5*reward_object
 
-        # if (len(collision_checker_right) >= 1) and (len(collision_checker_left) >= 1):
-        #     print("Touched")
-        #     reward_reaching = 5*(len(collision_checker_right) + len(collision_checker_left))
-        #     reward_object = -err
-        #     if (err < 0.075):
-        #         reward_object = 1000
-        #         print("GOAL")
-                
-        # for i in range(self.sim.data.ncon):
-        #     sim_contact = self.sim.data.contact[i]
-        #     if str(self.sim.model.geom_id2name(sim_contact.geom1)) in fingertip_geomname_right:
-        #         if str(self.sim.model.geom_id2name(sim_contact.geom2)) in fingertip_geomname_left:
-        #             print("Collision")
-        #             reward_reaching = -10
-        #     if str(self.sim.model.geom_id2name(sim_contact.geom2)) in fingertip_geomname_right:
-        #         if str(self.sim.model.geom_id2name(sim_contact.geom1)) in fingertip_geomname_left:
-        #             print("Collision")
-        #             reward_reaching = -10  
+        reward = reward_acion + reward_gripper
 
-        reward_action = -0.0003*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
-
-        # reward =  reward_object + 2*reward_reaching + reward_action
-
-        reward = reward_action + 6*reward_err + reward_reaching
-
-        for i in range(12):  # TODO :change it to 12
+        for i in range(12):
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
-            qpos[-7:-4] = self.goal_pos_block
+            qpos[-7:-4] = self.goal_pos 
             self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
 
         ob = self._get_obs()
         done = False
+
         return ob, reward, done, {}
+
 
     def reset_model(self):
         '''overridable method'''
 
-        self.goal_pos_block = np.array([-0.3+0.6*np.random.rand(), -0.46, 0.76])
+        self.goal_pos = np.array([0.0+0.2*np.random.rand(), -0.4, 0.8+0.2*np.random.rand()])
+        #self.goal_pos = np.array([0.2, -0.4, 1.0])
+        # print("G :" ,self.goal_pos)
 
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
@@ -419,9 +357,8 @@ class DualUR3PickandPlaceEnv(MujocoEnv, utils.EzPickle):
         # # For CEM, don't randommize when initialize
         # qpos = self.init_qpos 
         # qvel = self.init_qvel
-
         self.set_state(qpos, qvel)
-        
+
         return self._get_obs()
 
     def viewer_setup(self):
@@ -439,11 +376,12 @@ def test_video_record(env):
     for i in range(10000):
         action = env.action_space.sample()
         env.step(action)
+        # print(action) # action dim == 8
         env.render()
         print('step: %d'%(i))
     ftime = time.time()
 
 
 if __name__ == '__main__':
-    env = gym_custom.make('dual-ur3-larr-v0')
+    env = gym_custom.make('single-ur3-larr-v0')
     test_video_record(env)

@@ -70,6 +70,7 @@ COMMAND_LIMITS = {
 
 # Pre-defined action sequence
 action_seq = np.array([[0.4,-0.4,0.9,-0.4,-0.4,0.9]]*100+[[0.1,-0.2,1.0,-0.1,-0.2,1.0]]*100+\
+                    #   [[0.2,-0.4,1.1,-0.2,-0.4,1.1]]*20+[[0.1,-0.5,1.1,-0.1,-0.5,1.1]]*20+\
                       [[0.2,-0.3,1.0,-0.2,-0.3,1.0]]*150+[[0.3,-0.4,1.0,-0.3,-0.4,1.0]]*150+\
                       [[0.2,-0.4,1.1,-0.2,-0.4,1.1]]*50+[[0.1,-0.5,1.1,-0.1,-0.5,1.1]]*50)
 
@@ -77,18 +78,18 @@ null_obj_func = UprightConstraint()
 
 # Run simulation
 # if real, get the data
-if args.exp_type == 'real':
+if args.exp_type == 'sim':
     real_data = []
-    state = real_env.reset()
-    # env.wrapper_right.ur3_scale_factor[:6] = [5,5,5,5,5,5]
-    # env.wrapper_left.ur3_scale_factor[:6] =  [5,5,5,5,5,5]
+    state = env.reset()
+    env.wrapper_right.ur3_scale_factor[:6] = [5,5,5,5,5,5]
+    env.wrapper_left.ur3_scale_factor[:6] =  [5,5,5,5,5,5]
     
     for i in range(600):
         
-        q_right_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(action_seq[i][:3], null_obj_func, arm='right')
-        q_left_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(action_seq[i][3:], null_obj_func, arm='left')
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(action_seq[i][:3], null_obj_func, arm='right')
+        q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(action_seq[i][3:], null_obj_func, arm='left')
 
-        next_state, reward, done, _  = real_env.step({
+        next_state, reward, done, _  = env.step({
             'right': {
                 'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
@@ -99,9 +100,9 @@ if args.exp_type == 'real':
             }
         })
 
-        curr_pos = real_env.get_obs_dict()['left']['curr_pos']      # from real env
+        curr_pos = env.get_obs_dict()['left']['curr_pos']      # from real env
         real_data.append(curr_pos)
-        # env.render()
+        env.render()
     # Save real data
     real_data = np.array(real_data)
     save_data(real_data, "real_data_xyz_left.npy")
@@ -109,11 +110,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 100
+    n_seq = 20
     n_horrizon =600
     n_dim = 3
     n_iter = 1000
-    n_elit = 5
+    n_elit = 3
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
