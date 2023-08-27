@@ -157,8 +157,9 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.01, threshold_null=0.01, max_iter=50, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=100, epsilon=1e-6
         ):
+        
         '''
         inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
         '''
@@ -319,8 +320,8 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         #     reward_object = 10
         #     print("GOAL")
 
-        reward_gripper = -np.linalg.norm(curr_pos - self.curr_pos_block)
-        if np.linalg.norm(curr_pos - self.curr_pos_block) < 0.05:
+        reward_gripper = -np.linalg.norm(curr_pos - self.goal_pos)
+        if np.linalg.norm(curr_pos - self.goal_pos) < 0.05:
             reward_gripper = 1000
             print("GOAL")
 
@@ -351,12 +352,12 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         #self.goal_pos = np.array([0.2, -0.4, 1.0])
         # print("G :" ,self.goal_pos)
 
-        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
-        qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+        # qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        # qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
         # # For CEM, don't randommize when initialize
-        # qpos = self.init_qpos 
-        # qvel = self.init_qvel
+        qpos = self.init_qpos 
+        qvel = self.init_qvel
         self.set_state(qpos, qvel)
 
         return self._get_obs()

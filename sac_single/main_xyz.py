@@ -31,7 +31,7 @@ parser.add_argument('--lr', type=float, default=0.0003, metavar='G',
 parser.add_argument('--alpha', type=float, default=0.2, metavar='G',
                     help='Temperature parameter α determines the relative importance of the entropy\
                             term against the reward (default: 0.2)')
-parser.add_argument('--automatic_entropy_tuning', type=bool, default=True, metavar='G',
+parser.add_argument('--automatic_entropy_tuning', type=bool, default=False, metavar='G',
                     help='Automaically adjust α (default: True)')
 parser.add_argument('--seed', type=int, default=123456, metavar='N',
                     help='random seed (default: 123456)')
@@ -77,8 +77,8 @@ video = VideoRecorder(dir_name = video_directory)
 
 
 COMMAND_LIMITS = {
-    'movej': [np.array([-0.055, -0.055, -0.055]),
-        np.array([0.055, 0.055, 0.055])], # [m]
+    'movej': [np.array([-0.04, -0.04, -0.04]),
+        np.array([0.04, 0.04, 0.04])], # [m]
 
     'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.1,
         np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.1], # [rad/s]
@@ -106,7 +106,7 @@ def _set_action_space():
 action_space = _set_action_space()['movej']
 
 # # Set motor gain scale
-env.wrapper_right.ur3_scale_factor[:6] = [40,40,40,40,40,10]
+env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
 # print(env.wrapper_right.ur3_scale_factor[:6])
 
 # Agent
@@ -145,7 +145,9 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
+    state[3:6] = [0.16262042, -0.2576475, 0.91949741]
     state = state[:6]
+
     while not done:
         if args.start_steps > total_numsteps:
             action = action_space.sample()  # Sample random action
@@ -169,9 +171,12 @@ for i_episode in itertools.count(1):
         # env.render()
 
         q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
+        dt = 1
+        qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+
         next_state, reward, done, _  = env.step({
             'right': {
-                'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
+                'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
             }
         })
@@ -217,17 +222,22 @@ for i_episode in itertools.count(1):
         episodes = 5
         for _  in range(episodes):
             state = env.reset()
+            state[3:6] = [0.16262042, -0.2576475, 0.91949741]
             state = state[:6]
             episode_steps = 0
             episode_reward = 0
             done = False
             while not done:
                 action = agent.select_action(state, evaluate=True)
+
                 q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
+                dt = 1
+                qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+
                 video.record(env.render(mode='rgb_array', camera_id=1))
                 next_state, reward, done, _  = env.step({
                     'right': {
-                        'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
+                        'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                         'move_gripper_force': {'gf': np.array([10.0])}
                     }
                 })

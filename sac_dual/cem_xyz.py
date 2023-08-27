@@ -264,7 +264,7 @@ else:
         state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
 
         for j in range(n_horrizon):
-            q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9]+action_seq[j][:3], null_obj_func, arm='right')
+            q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9] +action_seq[j][:3], null_obj_func, arm='right')
             q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action_seq[j][3:], null_obj_func, arm='left')
             dt = 1
             qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
