@@ -54,7 +54,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
             np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         self.init_qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos] = \
             np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
-        
+
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
         self.kinematics_params = {}
@@ -157,7 +157,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.01, threshold_null=0.001, max_iter=100, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=100, epsilon=1e-6
         ):
         '''
         inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
@@ -211,7 +211,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         if iter_taken == max_iter:
             warnings.warn('Max iteration limit reached! err: %f (threshold: %f), null_obj_err: %f (threshold: %f)'%(err, threshold, null_obj_val, threshold_null),
                 RuntimeWarning)
-        
+
         return q, iter_taken, err, null_obj_val
 
     #
@@ -380,12 +380,12 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         self.goal_pos = np.array([0.1+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand(), -0.1-0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
         # self.goal_pos = np.array([0.2, -0.4, 1.0, -0.2, -0.4, 1.0])
 
-        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
-        qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+        # qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        # qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
         # # For CEM, don't randommize when initialize
-        # qpos = self.init_qpos 
-        # qvel = self.init_qvel
+        qpos = self.init_qpos 
+        qvel = self.init_qvel
 
         self.set_state(qpos, qvel)
         

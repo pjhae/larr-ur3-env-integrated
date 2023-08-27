@@ -107,7 +107,7 @@ action_space = _set_action_space()['movej']
 
 # # Set motor gain scale
 env.wrapper_right.ur3_scale_factor[:6] = [40,40,40,40,40,10]
-# print(env.wrapper_right.ur3_scale_factor[:6])
+print(env.wrapper_right.ur3_scale_factor[:6])
 
 # Agent
 agent = SAC(6, action_space, args)

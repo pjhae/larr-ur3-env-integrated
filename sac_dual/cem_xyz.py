@@ -30,6 +30,29 @@ class UprightConstraint(NullObjectiveBase):
         axis_curr = SO3[:,2]
         return 1.0 - np.dot(axis_curr, axis_des)
     
+class UprightConstraint_right(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        angle_desired = np.deg2rad(45)
+        axis_des = np.array([-np.cos(angle_desired), 0, -np.sin(angle_desired)])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
+
+class UprightConstraint_left(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        angle_desired = np.deg2rad(45)
+        axis_des = np.array([np.cos(angle_desired), 0, -np.sin(angle_desired)])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
+    
+
 # choose the env
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
 parser.add_argument('--exp_type', default="sim", help='choose sim or real')
@@ -48,15 +71,15 @@ if args.exp_type == 'real':
     real_env = gym_custom.make('dual-ur3-larr-real-for-train-v0',
         host_ip_right='192.168.5.102',
         host_ip_left='192.168.5.101',
-        rate=25
+        rate=20
     )
-    servoj_args, speedj_args = {'t': 2/real_env.rate._freq, 'wait': False}, {'a': 1, 't': 4/real_env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 12/real_env.rate._freq, 'wait': False}, {'a': 1, 't': 2/real_env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
     real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
-    real_env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+    real_env.set_initial_gripper_pos(np.array([255.0, 255.0]))
 
     time.sleep(1.0)
 
@@ -69,40 +92,48 @@ COMMAND_LIMITS = {
 }
 
 # Pre-defined action sequence
-action_seq = np.array([[0.4,-0.4,0.9,-0.4,-0.4,0.9]]*100+[[0.1,-0.2,1.0,-0.1,-0.2,1.0]]*100+\
-                    #   [[0.2,-0.4,1.1,-0.2,-0.4,1.1]]*20+[[0.1,-0.5,1.1,-0.1,-0.5,1.1]]*20+\
-                      [[0.2,-0.3,1.0,-0.2,-0.3,1.0]]*150+[[0.3,-0.4,1.0,-0.3,-0.4,1.0]]*150+\
-                      [[0.2,-0.4,1.1,-0.2,-0.4,1.1]]*50+[[0.1,-0.5,1.1,-0.1,-0.5,1.1]]*50)
+action_seq = np.array([[0.0,0.0,0.0,0.04,-0.0,0.0]] *50+[[-0.0,-0.0,-0.0,-0.04, 0.0,-0.0]]*50+\
+                      [[0.0,0.0,0.0,-0.0,-0.04,0.0]]*50+[[-0.0,-0.0,-0.0,0.00, 0.04,-0.0]]*50+\
+                      [[0.0,0.0,0.0,-0.0,-0.0,0.04]]*50+[[-0.0,-0.0,-0.0,0.0,-0.00,-0.04]]*50+\
+                      [[0.0,0.0,0.0,-0.02,0.0,0.00]]*50+[[-0.0,-0.0,-0.0,0.02,0.00,0.00]]*50)
 
+null_obj_func_right = UprightConstraint_right()
+null_obj_func_left = UprightConstraint_left()
 null_obj_func = UprightConstraint()
 
 # Run simulation
 # if real, get the data
-if args.exp_type == 'sim':
+if args.exp_type == 'real':
     real_data = []
-    state = env.reset()
-    env.wrapper_right.ur3_scale_factor[:6] = [5,5,5,5,5,5]
-    env.wrapper_left.ur3_scale_factor[:6] =  [5,5,5,5,5,5]
+    state = real_env.reset()
+    # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
     
-    for i in range(600):
+    for i in range(400):
         
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(action_seq[i][:3], null_obj_func, arm='right')
-        q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(action_seq[i][3:], null_obj_func, arm='left')
-
-        next_state, reward, done, _  = env.step({
+        q_right_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(state[6:9]+action_seq[i][:3], null_obj_func, arm='right')
+        q_left_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(state[9:12]+action_seq[i][3:], null_obj_func, arm='left')
+        dt = 1
+        qvel_right = (q_right_des - real_env.get_obs_dict()['right']['qpos'])/dt
+        qvel_left = (q_left_des - real_env.get_obs_dict()['left']['qpos'])/dt
+        
+        next_state, reward, done, _  = real_env.step({
             'right': {
-                'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
+                'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
             },
             'left': {
-                'servoj': {'q': q_left_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
+                'speedj': {'qd': qvel_left, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
             }
         })
+        
+        state = next_state
+        curr_pos = real_env.get_obs_dict()['left']['curr_pos']      # from real env
 
-        curr_pos = env.get_obs_dict()['left']['curr_pos']      # from real env
         real_data.append(curr_pos)
-        env.render()
+        # env.render()
     # Save real data
     real_data = np.array(real_data)
     save_data(real_data, "real_data_xyz_left.npy")
@@ -110,20 +141,20 @@ if args.exp_type == 'sim':
 
 # if sim, RUN CEM
 else:
-    n_seq = 20
-    n_horrizon =600
+    n_seq = 2
+    n_horrizon = 400
     n_dim = 3
     n_iter = 1000
-    n_elit = 3
+    n_elit = 1
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
-    lim_high = np.array([10, 10, 10, 10, 10, 10])
+    lim_high = np.array([50, 50, 50, 50, 50, 10])
     lim_low  = np.array([0, 0, 0, 0, 0, 0])
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_dual/data/real_data_xyz_left.npy")
+    real_data = load_data("sac_dual/data/real_data_xyz_left_vel.npy")
 
     # logging
     logging = []
@@ -146,25 +177,31 @@ else:
             # ur3_scale_factor
             env.wrapper_left.ur3_scale_factor[:6]= candidate_parameters[i][:6]
 
+            state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
+
             for j in range(n_horrizon):
 
-                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(action_seq[j][:3], null_obj_func, arm='right')
-                q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(action_seq[j][3:], null_obj_func, arm='left')
+                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9]+action_seq[j][:3], null_obj_func, arm='right')
+                q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action_seq[j][3:], null_obj_func, arm='left')
 
+                dt = 1
+
+                qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+                qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
 
                 curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
                 sim_data[i][j][:] = curr_pos
                 next_state, reward, done, _  = env.step({
                     'right': {
-                        'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
+                        'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                         'move_gripper_force': {'gf': np.array([10.0])}
                     },
                     'left': {
-                        'servoj': {'q': q_left_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
+                        'speedj': {'qd': qvel_left, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                         'move_gripper_force': {'gf': np.array([10.0])}
                     }
                 })
-
+                state = next_state
                 # env.render()
         
         mse_results = np.zeros(n_seq)
@@ -220,24 +257,33 @@ else:
         logging_traj = []
         state = env.reset()
         env.wrapper_left.ur3_scale_factor[:6] = prams_mean[:6]
-        # env.wrapper_left.ur3_scale_factor[:6] =  [5,5,5,5,5,5]
-        for j in range(n_horrizon):
 
-            q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(action_seq[j][:3], null_obj_func, arm='right')
-            q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(action_seq[j][3:], null_obj_func, arm='left')
+        # env.wrapper_left.ur3_scale_factor[:6] =  [5,5,5,5,5,5]
+        env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+        env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+        state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
+
+        for j in range(n_horrizon):
+            q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9]+action_seq[j][:3], null_obj_func, arm='right')
+            q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action_seq[j][3:], null_obj_func, arm='left')
+            dt = 1
+            qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+            qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
             curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
 
+            sim_data[i][j][:] = curr_pos
             next_state, reward, done, _  = env.step({
                 'right': {
-                    'servoj': {'q': q_right_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
+                    'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                     'move_gripper_force': {'gf': np.array([10.0])}
                 },
                 'left': {
-                    'servoj': {'q': q_left_des, 't': servoj_args['t'], 'wait': servoj_args['wait']},
+                    'speedj': {'qd': qvel_left, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                     'move_gripper_force': {'gf': np.array([10.0])}
                 }
             })
-            
+            state = next_state
+
             logging_traj.append(curr_pos)
 
         # Plot

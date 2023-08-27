@@ -159,8 +159,9 @@ class DualUR3RealEnv(gym_custom.Env):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.01, threshold_null=0.001, max_iter=100, epsilon=1e-6
+            q_init='current', threshold=0.0001, threshold_null=0.01, max_iter=100, epsilon=1e-6
         ):
+
         '''
         inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
         '''
@@ -213,7 +214,7 @@ class DualUR3RealEnv(gym_custom.Env):
         if iter_taken == max_iter:
             warnings.warn('Max iteration limit reached! err: %f (threshold: %f), null_obj_err: %f (threshold: %f)'%(err, threshold, null_obj_val, threshold_null),
                 RuntimeWarning)
-        
+            
         return q, iter_taken, err, null_obj_val
 
     #
