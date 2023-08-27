@@ -157,7 +157,7 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=100, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=10, epsilon=1e-6
         ):
         
         '''
@@ -212,7 +212,7 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         # if iter_taken == max_iter:
         #     warnings.warn('Max iteration limit reached! err: %f (threshold: %f), null_obj_err: %f (threshold: %f)'%(err, threshold, null_obj_val, threshold_null),
         #         RuntimeWarning)
-        
+        # print(iter_taken)
         return q, iter_taken, err, null_obj_val
 
     #
@@ -322,11 +322,11 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
 
         reward_gripper = -np.linalg.norm(curr_pos - self.goal_pos)
         if np.linalg.norm(curr_pos - self.goal_pos) < 0.05:
-            reward_gripper = 1000
+            reward_gripper = 100
             print("GOAL")
 
 
-        reward_acion = -0.0000001*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
+        reward_acion = -0.0001*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
 
         # reward = reward_acion + reward_gripper + 3.5*reward_object
 
@@ -352,12 +352,12 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         #self.goal_pos = np.array([0.2, -0.4, 1.0])
         # print("G :" ,self.goal_pos)
 
-        # qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
-        # qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
         # # For CEM, don't randommize when initialize
-        qpos = self.init_qpos 
-        qvel = self.init_qvel
+        # qpos = self.init_qpos 
+        # qvel = self.init_qvel
         self.set_state(qpos, qvel)
 
         return self._get_obs()

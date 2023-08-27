@@ -28,7 +28,7 @@ parser.add_argument('--tau', type=float, default=0.005, metavar='G',
                     help='target smoothing coefficient(τ) (default: 0.005)')
 parser.add_argument('--lr', type=float, default=0.0003, metavar='G',
                     help='learning rate (default: 0.0003)')
-parser.add_argument('--alpha', type=float, default=0.2, metavar='G',
+parser.add_argument('--alpha', type=float, default=0.005, metavar='G',
                     help='Temperature parameter α determines the relative importance of the entropy\
                             term against the reward (default: 0.2)')
 parser.add_argument('--automatic_entropy_tuning', type=bool, default=True, metavar='G',
@@ -53,9 +53,21 @@ parser.add_argument('--cuda', action="store_false",
                     help='run on CUDA (default: True)')
 args = parser.parse_args()
 
+# Constraint
+class UprightConstraint(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        axis_des = np.array([0, 0, -1])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
+    
+
 # Environment
 # env = NormalizedActions(gym.make(args.env_name))
-env = gym_custom.make('dual-ur3-pick-and-place-larr-for-train-v0')
+env = gym_custom.make('dual-ur3-larr-for-train-v0')
 servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
 PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':10.0}}
 ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
@@ -76,11 +88,20 @@ video_directory = '/home/jonghae/larr-ur3-env-integrated/sac_dual/video/{}'.form
 video = VideoRecorder(dir_name = video_directory)
 
 
+## for 6dof control
+# COMMAND_LIMITS = {
+#     'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi])*0.1,
+#         np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi])*0.1], # [rad/s]
+#     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
+# }
+
+# for xyz + qvel
 COMMAND_LIMITS = {
-    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi])*0.1,
-        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi])*0.1], # [rad/s]
+    'speedj': [np.array([-0.04, -0.04, -0.04, -0.04, -0.04, -0.04]),
+        np.array([0.04, 0.04, 0.04, 0.04, 0.04, 0.04])], # [rad/s]
     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
 }
+
 
 def convert_action_to_space(action_limits):
     if isinstance(action_limits, dict):
@@ -107,7 +128,7 @@ env.wrapper_right.ur3_scale_factor[:6] = [24.52907494, 24.02851783, 25.56517597,
 env.wrapper_left.ur3_scale_factor[:6] =  [23.03403947, 23.80201627, 30.65127641, 14.93660589, 23.06927071, 21.52280244]
 
 # Agent
-agent = SAC(36, action_space, args)
+agent = SAC(12, action_space, args)
 
 # Tesnorboard
 writer = SummaryWriter('runs_dual/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'dual-ur3-pick-and-place-larr-for-train-v0',
@@ -116,6 +137,9 @@ writer = SummaryWriter('runs_dual/{}_SAC_{}_{}_{}'.format(datetime.datetime.now(
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
 # (HER) HER_memory = HERMemory(args.replay_size, args.seed)
+
+# Constraint
+null_obj_func = UprightConstraint()
 
 # Training Loop
 total_numsteps = 0
@@ -127,7 +151,9 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
-    state = state[:36]
+    state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
+    state = state[:12]
+
     while not done:
         if args.start_steps > total_numsteps:
             action = action_space.sample()  # Sample random action
@@ -146,18 +172,25 @@ for i_episode in itertools.count(1):
                 writer.add_scalar('loss/entropy_loss', ent_loss, updates)
                 writer.add_scalar('entropy_temprature/alpha', alpha, updates)
                 updates += 1
-        #################
-        action[5] = 0
-        action[11] = 0
-        #################
+        # #################
+        # action[5] = 0
+        # action[11] = 0
+        # #################
+
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9] +action[:3], null_obj_func, arm='right')
+        q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action[3:], null_obj_func, arm='left')
+        dt = 1
+        qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+        qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
+
         next_state, reward, done, _  = env.step({
             'right': {
-                'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([-10.0])}
+                'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'move_gripper_force': {'gf': np.array([10.0])}
             },
             'left': {
-                'speedj': {'qd': action[6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([-10.0])}
+                'speedj': {'qd': qvel_left, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'move_gripper_force': {'gf': np.array([10.0])}
             }
         })
         
@@ -172,9 +205,9 @@ for i_episode in itertools.count(1):
         # Ignore the "done" signal if it comes from hitting the time horizon. (max timestep 되었다고 done 해서 next Q = 0 되는 것 방지)
         mask = 1 if episode_steps == max_episode_steps else float(not done)
 
-        memory.push(state, action, reward, next_state[:36], mask) # Append transition to memory
+        memory.push(state, action, reward, next_state[:12], mask) # Append transition to memory
 
-        state = next_state[:36]
+        state = next_state[:12]
         
     if total_numsteps > args.num_steps:
         break   
@@ -204,31 +237,41 @@ for i_episode in itertools.count(1):
         episodes = 5
         for _  in range(episodes):
             state = env.reset()
-            state = state[:36]
+            state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
+            state = state[:12]
+
             episode_steps = 0
             episode_reward = 0
             done = False
             while not done:
                 action = agent.select_action(state, evaluate=True)
-                #################
-                action[5] = 0
-                action[11] = 0
-                #################
+                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9]+action[:3], null_obj_func, arm='right')
+                q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action[3:], null_obj_func, arm='left')
+
+                dt = 1
+
+                qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+                qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
+
+                # #################
+                # action[5] = 0
+                # action[11] = 0
+                # #################
                 video.record(env.render(mode='rgb_array', camera_id=1))
                 next_state, reward, done, _  = env.step({
                     'right': {
-                        'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                        'move_gripper_force': {'gf': np.array([-10.0])}
+                        'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                        'move_gripper_force': {'gf': np.array([10.0])}
                     },
                     'left': {
-                        'speedj': {'qd': action[6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                        'move_gripper_force': {'gf': np.array([-10.0])}
+                        'speedj': {'qd': qvel_left, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                        'move_gripper_force': {'gf': np.array([10.0])}
                     }
                 })
-                episode_reward += -np.linalg.norm(state[:3]-state[3:6])
+                episode_reward += -np.linalg.norm(state[:6]-state[6:12])
                 episode_steps += 1
 
-                state = next_state[:36]
+                state = next_state[:12]
             avg_reward += episode_reward
             avg_step += episode_steps
         avg_reward /= episodes

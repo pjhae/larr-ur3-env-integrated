@@ -156,7 +156,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=100, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=20, epsilon=1e-6
         ):
         '''
         inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
@@ -210,7 +210,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         if iter_taken == max_iter:
             warnings.warn('Max iteration limit reached! err: %f (threshold: %f), null_obj_err: %f (threshold: %f)'%(err, threshold, null_obj_val, threshold_null),
                 RuntimeWarning)
-
+        # print(iter_taken)
         return q, iter_taken, err, null_obj_val
 
     #

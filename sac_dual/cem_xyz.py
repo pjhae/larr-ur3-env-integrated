@@ -283,7 +283,7 @@ else:
                 }
             })
             state = next_state
-
+            env.render()
             logging_traj.append(curr_pos)
 
         # Plot
