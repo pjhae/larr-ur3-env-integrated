@@ -159,7 +159,7 @@ class DualUR3RealEnv(gym_custom.Env):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.0001, threshold_null=0.01, max_iter=100, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=100, epsilon=1e-6
         ):
 
         '''

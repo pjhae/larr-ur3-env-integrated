@@ -24,7 +24,6 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
     curr_pos = np.array([0, 0, 0, 0, 0, 0])
     goal_pos = np.array([-0.3, -0.6, 0.75, 0.3, -0.6, 0.75])
 
-
     def __init__(self):
         if self.ENABLE_COLLISION_CHECKER:
             self._define_collision_checker_variables()
