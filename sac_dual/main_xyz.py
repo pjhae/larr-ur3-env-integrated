@@ -200,7 +200,7 @@ for i_episode in itertools.count(1):
         episode_reward += reward
 
         # render
-        # env.render()
+        env.render()
 
         # Ignore the "done" signal if it comes from hitting the time horizon. (max timestep 되었다고 done 해서 next Q = 0 되는 것 방지)
         mask = 1 if episode_steps == max_episode_steps else float(not done)

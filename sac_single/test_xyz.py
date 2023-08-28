@@ -65,7 +65,7 @@ args = parser.parse_args()
 num_epi = 260
 
 # Rendering (if exp_type is real, render should be FALSE)
-render = True
+render = False
 
 # Environment
 if args.exp_type == "sim":
@@ -77,13 +77,13 @@ elif args.exp_type == "real":
         host_ip_right='192.168.5.102',
         rate=20
     )
-    servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 1, 't': 4/env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 1, 't': 2/env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     env.set_initial_joint_pos('current')
     env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
     env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
-    env.set_initial_gripper_pos(np.array([0.0]))
+    env.set_initial_gripper_pos(np.array([255.0]))
     assert render is False
 
 else:
@@ -179,16 +179,16 @@ while True:
     step = 0
     done = False
 
-    # # Receive a NumPy vector of size 3 from the user
-    # user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
-    # elements = user_input.split()
+    # Receive a NumPy vector of size 3 from the user
+    user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
+    elements = user_input.split()
 
-    # # If the entered values are not exactly 3, exit the program.
-    # if len(elements) != 3:
-    #     print("You must input 3 values.")
-    # else:
-    # # Convert the entered values to floating-point numbers and create a NumPy array.
-    #     env.goal_pos = np.array([float(element) for element in elements])
+    # If the entered values are not exactly 3, exit the program.
+    if len(elements) != 3:
+        print("You must input 3 values.")
+    else:
+    # Convert the entered values to floating-point numbers and create a NumPy array.
+        env.goal_pos = np.array([float(element) for element in elements])
 
     while not done:
 
