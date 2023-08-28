@@ -359,7 +359,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
             reward = 100
             print("GOAL_dual")
 
-        reward -= 0.003*(np.linalg.norm(self.get_obs_dict()['right']['qvel']) + np.linalg.norm(self.get_obs_dict()['left']['qvel']))
+        reward -= 0.0001*(np.linalg.norm(a))
 
         for i in range(12):  # TODO :change it to 12
             qpos = self.sim.data.qpos
