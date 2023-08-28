@@ -326,7 +326,7 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
             print("GOAL")
 
 
-        reward_acion = -0.0001*np.linalg.norm(self.get_obs_dict()['right']['qvel'])
+        reward_acion = -0.0001*np.linalg.norm(a)
 
         # reward = reward_acion + reward_gripper + 3.5*reward_object
 
