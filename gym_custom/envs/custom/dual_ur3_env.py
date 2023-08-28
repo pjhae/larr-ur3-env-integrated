@@ -376,7 +376,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
     def reset_model(self):
         '''overridable method'''
 
-        self.goal_pos = np.array([0.1+0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand(), -0.1-0.3*np.random.rand(), -0.4, 0.9+0.3*np.random.rand()])
+        self.goal_pos = np.array([0.1+0.3*np.random.rand(), -0.3-0.2*np.random.rand(), 0.7+0.4*np.random.rand(), -0.1-0.3*np.random.rand(), -0.3-0.2*np.random.rand(), 0.7+0.4*np.random.rand()])
         # self.goal_pos = np.array([0.2, -0.4, 1.0, -0.2, -0.4, 1.0])
 
         # qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
