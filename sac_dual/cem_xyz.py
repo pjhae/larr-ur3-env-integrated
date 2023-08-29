@@ -92,7 +92,7 @@ COMMAND_LIMITS = {
 }
 
 # Pre-defined action sequence
-action_seq = np.array([[0.0,0.0,0.0,0.04,-0.0,0.0]] *50+[[-0.0,-0.0,-0.0,-0.04, 0.0,-0.0]]*50+\
+action_seq = np.array([[0.0,0.0,0.0,-0.04,-0.0,0.0]] *150+[[-0.0,-0.0,-0.0,-0.04, 0.0,-0.0]]*50+\
                       [[0.0,0.0,0.0,-0.0,-0.04,0.0]]*50+[[-0.0,-0.0,-0.0,0.00, 0.04,-0.0]]*50+\
                       [[0.0,0.0,0.0,-0.0,-0.0,0.04]]*50+[[-0.0,-0.0,-0.0,0.0,-0.00,-0.04]]*50+\
                       [[0.0,0.0,0.0,-0.02,0.0,0.00]]*50+[[-0.0,-0.0,-0.0,0.02,0.00,0.00]]*50)
@@ -103,22 +103,22 @@ null_obj_func = UprightConstraint()
 
 # Run simulation
 # if real, get the data
-if args.exp_type == 'real':
+if args.exp_type == 'sim':
     real_data = []
-    state = real_env.reset()
+    state = env.reset()
     # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
     
     for i in range(400):
         
-        q_right_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(state[6:9]+action_seq[i][:3], null_obj_func, arm='right')
-        q_left_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(state[9:12]+action_seq[i][3:], null_obj_func, arm='left')
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9]+action_seq[i][:3], null_obj_func, arm='right')
+        q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[9:12]+action_seq[i][3:], null_obj_func, arm='left')
         dt = 1
-        qvel_right = (q_right_des - real_env.get_obs_dict()['right']['qpos'])/dt
-        qvel_left = (q_left_des - real_env.get_obs_dict()['left']['qpos'])/dt
+        qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+        qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
         
-        next_state, reward, done, _  = real_env.step({
+        next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
@@ -130,10 +130,10 @@ if args.exp_type == 'real':
         })
         
         state = next_state
-        curr_pos = real_env.get_obs_dict()['left']['curr_pos']      # from real env
+        curr_pos = env.get_obs_dict()['left']['curr_pos']      # from real env
 
         real_data.append(curr_pos)
-        # env.render()
+        env.render()
     # Save real data
     real_data = np.array(real_data)
     save_data(real_data, "real_data_xyz_left.npy")

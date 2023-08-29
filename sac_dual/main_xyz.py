@@ -31,7 +31,7 @@ parser.add_argument('--lr', type=float, default=0.0003, metavar='G',
 parser.add_argument('--alpha', type=float, default=0.005, metavar='G',
                     help='Temperature parameter α determines the relative importance of the entropy\
                             term against the reward (default: 0.2)')
-parser.add_argument('--automatic_entropy_tuning', type=bool, default=True, metavar='G',
+parser.add_argument('--automatic_entropy_tuning', type=bool, default=False, metavar='G',
                     help='Automaically adjust α (default: True)')
 parser.add_argument('--seed', type=int, default=123456, metavar='N',
                     help='random seed (default: 123456)')
@@ -54,11 +54,9 @@ parser.add_argument('--cuda', action="store_false",
 args = parser.parse_args()
 
 # Constraint
-class UprightConstraint(NullObjectiveBase):
-    
+class UprightConstraint(NullObjectiveBase):  
     def __init__(self):
         pass
-
     def _evaluate(self, SO3):
         axis_des = np.array([0, 0, -1])
         axis_curr = SO3[:,2]
@@ -200,7 +198,7 @@ for i_episode in itertools.count(1):
         episode_reward += reward
 
         # render
-        env.render()
+        # env.render()
 
         # Ignore the "done" signal if it comes from hitting the time horizon. (max timestep 되었다고 done 해서 next Q = 0 되는 것 방지)
         mask = 1 if episode_steps == max_episode_steps else float(not done)

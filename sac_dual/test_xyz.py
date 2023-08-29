@@ -63,21 +63,21 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 3000
+num_epi = 3800
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True
 
 # Environment
 if args.exp_type == "sim":
-    env = gym_custom.make('dual-ur3-pick-and-place-larr-for-train-v0')
+    env = gym_custom.make('dual-ur3-larr-for-train-v0')
     servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
 
 elif args.exp_type == "real":
     env = gym_custom.make('dual-ur3-larr-real-for-train-v0',
         host_ip_right='192.168.5.102',
         host_ip_left='192.168.5.101',
-        rate=25
+        rate=20
     )
     servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 1, 't': 4/env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
@@ -85,7 +85,7 @@ elif args.exp_type == "real":
     env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
     env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
-    env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+    env.set_initial_gripper_pos(np.array([255.0, 255.0]))
     assert render is False
 
 else:
@@ -122,11 +122,13 @@ torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
 
+# for xyz + qvel
 COMMAND_LIMITS = {
-    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi])*0.1,
-        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi])*0.1], # [rad/s]
+    'speedj': [np.array([-0.04, -0.04, -0.04, -0.04, -0.04, -0.04]),
+        np.array([0.04, 0.04, 0.04, 0.04, 0.04, 0.04])], # [rad/s]
     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
 }
+
 
 def convert_action_to_space(action_limits):
     if isinstance(action_limits, dict):
@@ -144,12 +146,12 @@ def convert_action_to_space(action_limits):
     return space
 
 def _set_action_space():
-    return convert_action_to_space({'right_and_left': COMMAND_LIMITS})
+    return convert_action_to_space({'right': COMMAND_LIMITS})
 
 action_space = _set_action_space()['speedj']
 
 # agent
-agent = SAC(36, action_space, args)
+agent = SAC(12, action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
@@ -157,6 +159,18 @@ memory = ReplayMemory(args.replay_size, args.seed)
 # Load the parameter
 agent.load_checkpoint("checkpoints_dual/sac_checkpoint_{}_{}".format('dual-ur3-pick-and-place-larr-for-train-v0', num_epi), True)
 
+# Constraint
+class UprightConstraint(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        axis_des = np.array([0, 0, -1])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
+
+null_obj_func = UprightConstraint()
 
 # Start evaluation
 avg_reward = 0.
@@ -165,7 +179,8 @@ episodes = 10
 
 while True:
     state = env.reset()
-    state = state[:36]
+    state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
+    state = state[:12]
     
     episode_reward = 0
     step = 0
@@ -191,27 +206,29 @@ while True:
         # print(env.goal_pos)
         action = agent.select_action(state, evaluate=True)
 
-        #################
-        action[5] = 0
-        action[11] = 0
-        #################
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9] +action[:3], null_obj_func, arm='right')
+        q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action[3:], null_obj_func, arm='left')
+        dt = 1
+        qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+        qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
+
 
         next_state, reward, done, _  = env.step({
             'right': {
-                'speedj': {'qd': action[:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([-10.0])}
+                'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'move_gripper_force': {'gf': np.array([10.0])}
             },
             'left': {
-                'speedj': {'qd': action[6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([-10.0])}
+                'speedj': {'qd': qvel_left, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'move_gripper_force': {'gf': np.array([10.0])}
             }
         })
 
         if render == True :
             env.render()
-        episode_reward += -np.linalg.norm(state[:3]-state[3:6])
+        episode_reward += -np.linalg.norm(state[:6]-state[6:12])
         step += 1
-        state = next_state[:36]
+        state = next_state[:12]
 
          # If exp_type is real, evaluate just for 500 step
         if args.exp_type == "real" and step == 300:
