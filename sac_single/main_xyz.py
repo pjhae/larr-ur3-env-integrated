@@ -55,7 +55,7 @@ args = parser.parse_args()
 
 # Environment
 # env = NormalizedActions(gym.make(args.env_name))
-env = gym_custom.make('single-ur3-xyz-larr-for-train-v0')
+env = gym_custom.make('single-ur3-xy-larr-for-train-v0')
 servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
 PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':10.0}}
 ur3_scale_factor = np.array([5,5,5,5,5,5])
@@ -77,8 +77,8 @@ video = VideoRecorder(dir_name = video_directory)
 
 
 COMMAND_LIMITS = {
-    'movej': [np.array([-0.04, -0.04, -0.04]),
-        np.array([0.04, 0.04, 0.04])] # [m]
+    'movej': [np.array([-0.04, -0.04, 0]),
+        np.array([0.04, 0.04, 0])] # [m]
 }
 
 def convert_action_to_space(action_limits):
@@ -106,7 +106,7 @@ env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597,
 # print(env.wrapper_right.ur3_scale_factor[:6])
 
 # Agent
-agent = SAC(6, action_space, args)
+agent = SAC(8, action_space, args)
 
 # Tesnorboard
 writer = SummaryWriter('runs_single/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'single-ur3-larr-for-train-v0',
@@ -133,7 +133,6 @@ class UprightConstraint(NullObjectiveBase):
     
 null_obj_func = UprightConstraint()
 
-
 # train
 for i_episode in itertools.count(1):
 
@@ -141,8 +140,8 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
-    state[3:6] = [0.16262042, -0.2576475, 0.91949741]
-    state = state[:6]
+    state[:2] = np.array([0.05, -0.4])
+    state = state[:8]
 
     while not done:
         if args.start_steps > total_numsteps:
@@ -165,8 +164,8 @@ for i_episode in itertools.count(1):
 
         # render
         # env.render()
-
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
+        curr_pos = np.concatenate([state[:2],[0.8]])
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos+action, null_obj_func, arm='right')
         dt = 1
         qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
 
@@ -185,10 +184,10 @@ for i_episode in itertools.count(1):
         # Ignore the "done" signal if it comes from hitting the time horizon. (max timestep 되었다고 done 해서 next Q = 0 되는 것 방지)
         mask = 1 if episode_steps == max_episode_steps else float(not done)
 
-        memory.push(state, action, reward, next_state[:6], mask) # Append transition to memory
+        memory.push(state, action, reward, next_state[:8], mask) # Append transition to memory
         # (HER) HER_memory.push(state, action, reward, next_state[:18], mask) # Append transition to HER memory 
 
-        state = next_state[:6]
+        state = next_state[:8]
         
     if total_numsteps > args.num_steps:
         break   
@@ -218,15 +217,16 @@ for i_episode in itertools.count(1):
         episodes = 5
         for _  in range(episodes):
             state = env.reset()
-            state[3:6] = [0.16262042, -0.2576475, 0.91949741]
-            state = state[:6]
+            state[:2] = np.array([0.05, -0.4])
+            state = state[:8]
             episode_steps = 0
             episode_reward = 0
             done = False
             while not done:
                 action = agent.select_action(state, evaluate=True)
 
-                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
+                curr_pos = np.concatenate([state[:2],[0.8]])
+                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos+action, null_obj_func, arm='right')
                 dt = 1
                 qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
 
@@ -237,10 +237,10 @@ for i_episode in itertools.count(1):
                         'move_gripper_force': {'gf': np.array([10.0])}
                     }
                 })
-                episode_reward += -np.linalg.norm(state[:3]-state[3:6])
+                episode_reward += reward
                 episode_steps += 1
 
-                state = next_state[:6]
+                state = next_state[:8]
             avg_reward += episode_reward
             avg_step += episode_steps
         avg_reward /= episodes

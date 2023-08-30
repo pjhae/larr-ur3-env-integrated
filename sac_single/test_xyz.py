@@ -18,19 +18,19 @@ from collections import OrderedDict
 import os
 import os.path as osp
 
-# ros related
-import rospy
-from std_msgs.msg import String
-from geometry_msgs.msg import PoseStamped
+# # ros related
+# import rospy
+# from std_msgs.msg import String
+# from geometry_msgs.msg import PoseStamped
 
-def listener_wait_msg():
+# def listener_wait_msg():
 
-    rospy.init_node('ros_subscription_test_node')
+#     rospy.init_node('ros_subscription_test_node')
 
-    ctrl_msg = rospy.wait_for_message('optitrack/ctrl_jh/poseStamped', PoseStamped)
-    ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
+#     ctrl_msg = rospy.wait_for_message('optitrack/ctrl_jh/poseStamped', PoseStamped)
+#     ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
 
-    return ctrl_msg.pose.position, ref_msg.pose.position
+#     return ctrl_msg.pose.position, ref_msg.pose.position
 
 
 

@@ -11,7 +11,7 @@ from gym_custom.envs.mujoco import MujocoEnv
 
 # For Simulation environment
 
-class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
+class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
     # class variables
     mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/single_ur3_base.xml')
@@ -25,9 +25,9 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
     ENABLE_COLLISION_CHECKER = False
     # ee position
-    curr_pos = np.array([0, 0, 0])
-    curr_pos_block = np.array([1,1,1])
-    goal_pos = np.array([-0.3, -0.6, 0.75])
+    curr_pos = np.array([0, 0])
+    curr_pos_block = np.array([1,1,2,2,3,3])
+
 
 
     def __init__(self):
@@ -255,7 +255,7 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos, self.curr_pos, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
+        return np.concatenate([self.curr_pos, self.curr_pos_block, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
                                self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
     
 ####
@@ -286,7 +286,7 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
 
     def get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.goal_pos, self.curr_pos, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
+        return np.concatenate([self.curr_pos, self.curr_pos_block, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
                                self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
 
 ####
@@ -295,7 +295,7 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         _, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos(), 'right')
         return {'right': {
-                'goal_pos': self.goal_pos,
+                'curr_pos_block': self.curr_pos_block,
                 'curr_pos': curr_pos,
                 "qpos_sine"  : np.sin(self._get_ur3_qpos()),
                 "qpos_cosine": np.cos(self._get_ur3_qpos()),
@@ -306,44 +306,38 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
             }
         }
 
-    
     # Overrided MujocoEnv methods
 
     def step(self, a):
         '''overridable method'''
+
+        id_cube_4 = self.sim.model.geom_name2id("cube_4")
+        id_cube_1 = self.sim.model.geom_name2id("cube_1")
+        id_cube_5 = self.sim.model.geom_name2id("cube_5")
+
+        self.curr_pos_block = np.concatenate([self.sim.data.geom_xpos[id_cube_4][:2],
+                                              self.sim.data.geom_xpos[id_cube_1][:2],
+                                              self.sim.data.geom_xpos[id_cube_5][:2]])
         
-        self.curr_pos_block = self.sim.data.qpos[-14:-11]
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         self.curr_pos = curr_pos
 
-        # reward_object = -np.linalg.norm(self.goal_pos - self.curr_pos_block)
-        # if np.linalg.norm(self.goal_pos - self.curr_pos_block) < 0.05:
-        #     reward_object = 10
-        #     print("GOAL")
-
-        reward_gripper = -np.linalg.norm(curr_pos - self.goal_pos)
-        if np.linalg.norm(curr_pos - self.goal_pos) < 0.05:
-            reward_gripper = 100
-            print("GOAL")
-
         quat = self.sim.data.qpos[-25:-21]
-        (self.quaternion_to_euler(quat)*180/np.pi)
-        print(self._get_ur3_qpos()[:self.ur3_nqpos])
-        reward_acion = -0.0001*np.linalg.norm(a)
+        yaw = self.quaternion_to_euler(quat)
 
-        print(self.sim.model.geom_name2id("cube_6"))
-        print(self.sim.data.geom_xpos[96])
+        reward_rot = np.abs(yaw)**2
 
-        # reward = reward_acion + reward_gripper + 3.5*reward_object
+        if np.abs(yaw)>170*np.pi/180:
+            print("SUCCESS")
+            reward_rot = 100
+        
+        reward_keeppos = -np.linalg.norm(self.sim.data.qpos[-28:-26] - np.array([0.2, -0.4]))
 
-        reward = reward_acion + reward_gripper
+        reward_acion = -0.000001*np.linalg.norm(a)
+
+        reward = reward_acion + 2*reward_rot + 0.2*reward_keeppos
 
         for i in range(12):
-            qpos = self.sim.data.qpos
-            qvel = self.sim.data.qvel
-            # qvel[-19] = -1.5  
-            qpos[-7:-4] = self.goal_pos 
-            self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
 
         ob = self._get_obs()
@@ -355,16 +349,9 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
     def reset_model(self):
         '''overridable method'''
 
-        # self.goal_pos = np.array([0.0+0.2*np.random.rand(), -0.4, 0.8+0.2*np.random.rand()])
-        self.goal_pos = np.array([0.3, -0.4, 0.81])
-        # print("G :" ,self.goal_pos)
-
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
-        # # For CEM, don't randommize when initialize
-        # qpos = self.init_qpos 
-        # qvel = self.init_qvel
         self.set_state(qpos, qvel)
 
         return self._get_obs()
@@ -376,20 +363,14 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         v.cam.distance = self.model.stat.extent
 
     def quaternion_to_euler(self, quat):
-        # 쿼터니언 데이터를 numpy 배열로 변환
+
         quat = np.array(quat)
-        
-        # 쿼터니언의 스칼라 부분과 벡터 부분 추출
         q0, q1, q2, q3 = quat
-        
-        # 쿼터니언 데이터를 회전 행렬로 변환
         rotation_matrix = np.array([
             [1 - 2*q2**2 - 2*q3**2, 2*q1*q2 - 2*q0*q3, 2*q1*q3 + 2*q0*q2],
             [2*q1*q2 + 2*q0*q3, 1 - 2*q1**2 - 2*q3**2, 2*q2*q3 - 2*q0*q1],
             [2*q1*q3 - 2*q0*q2, 2*q2*q3 + 2*q0*q1, 1 - 2*q1**2 - 2*q2**2]
         ])
-        
-        # 회전 행렬을 사용하여 오일러 각도 계산 (yaw, pitch, roll)
         yaw = np.arctan2(rotation_matrix[1, 0], rotation_matrix[0, 0])
         pitch = np.arcsin(-rotation_matrix[2, 0])
         roll = np.arctan2(rotation_matrix[2, 1], rotation_matrix[2, 2])

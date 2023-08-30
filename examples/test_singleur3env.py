@@ -113,7 +113,7 @@ def servoj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.9, -0.2, 1.0])  ## end-effector
+    ee_pos_right = np.array([0.1, -0.4, 1.0])  ## end-effector
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -163,7 +163,7 @@ def speedj_and_forceg(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
     
     if env_type == list_of_env_types[0]:
-        env = gym_custom.make('single-ur3-larr-v0')
+        env = gym_custom.make('single-ur3-xyz-larr-for-train-v0')
         speedj_args = {'a': 5, 't': None, 'wait': None}
     elif env_type == list_of_env_types[1]:
         env = gym_custom.make('single-ur3-larr-real-v0',
@@ -184,9 +184,8 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.3, -0.4, 0.9])  ## end-effector
+    ee_pos_right = np.array([0.05, -0.40, 0.80])  ## end-effector
     # ee_pos_right = np.array([0.6, -0.3, 1.0])  ## end-effector
-
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -206,9 +205,11 @@ def speedj_and_forceg(env_type='sim', render=False):
             sys.exit()
 
     # Move to goal
-    duration = 5.0 # in seconds
+    duration = 3.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
-    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/duration
+    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration*12)
+
+    
 
     start = time.time()
     for t in range(int(duration/dt)):
