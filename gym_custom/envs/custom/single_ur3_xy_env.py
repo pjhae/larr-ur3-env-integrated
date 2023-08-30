@@ -320,7 +320,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
                                               self.sim.data.geom_xpos[id_cube_5][:2]])
         
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
-        self.curr_pos = curr_pos
+        self.curr_pos = curr_pos[:2]
 
         quat = self.sim.data.qpos[-25:-21]
         yaw = self.quaternion_to_euler(quat)
@@ -335,7 +335,9 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
         reward_acion = -0.000001*np.linalg.norm(a)
 
-        reward = reward_acion + 2*reward_rot + 0.2*reward_keeppos
+        reward_reaching = -np.linalg.norm(self.sim.data.geom_xpos[id_cube_1][:2] - self.curr_pos)
+
+        reward = reward_acion + 2*reward_rot + 0.4*reward_keeppos + 0.2*reward_reaching
 
         for i in range(12):
             self.do_simulation(a, self.frame_skip)
