@@ -14,13 +14,13 @@ from gym_custom.envs.mujoco import MujocoEnv
 class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
 
     # class variables
-    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/single_ur3_pick_and_place_base.xml')
+    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/single_ur3_base.xml')
     mujocoenv_frame_skip = 1
     # state
     ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
-    objects_nqpos = [7, 7] # there is 4 objects on the table, each object has qpos = (3trans + 4quat)
-    objects_nqvel = [6, 6] # there is 4 objects on the table, each object has qpos = (3trans + 3rota)
+    objects_nqpos = [7, 7, 7, 7] # there is 4 objects on the table, each object has qpos = (3trans + 4quat)
+    objects_nqvel = [6, 6, 6, 6] # there is 4 objects on the table, each object has qpos = (3trans + 3rota)
     # action
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
     ENABLE_COLLISION_CHECKER = False
@@ -348,8 +348,8 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
     def reset_model(self):
         '''overridable method'''
 
-        self.goal_pos = np.array([0.0+0.2*np.random.rand(), -0.4, 0.8+0.2*np.random.rand()])
-        # self.goal_pos = np.array([0.0, -0.4, 1.2])
+        # self.goal_pos = np.array([0.0+0.2*np.random.rand(), -0.4, 0.8+0.2*np.random.rand()])
+        self.goal_pos = np.array([0.3, -0.4, 0.81])
         # print("G :" ,self.goal_pos)
 
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)

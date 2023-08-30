@@ -18,6 +18,21 @@ from collections import OrderedDict
 import os
 import os.path as osp
 
+# ros related
+import rospy
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
+
+def listener_wait_msg():
+
+    rospy.init_node('ros_subscription_test_node')
+
+    ctrl_msg = rospy.wait_for_message('optitrack/ctrl_jh/poseStamped', PoseStamped)
+    ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
+
+    return ctrl_msg.pose.position, ref_msg.pose.position
+
+
 
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
 parser.add_argument('--env-name', default="HalfCheetah-v2",
@@ -65,7 +80,7 @@ args = parser.parse_args()
 num_epi = 260
 
 # Rendering (if exp_type is real, render should be FALSE)
-render = False
+render = True
 
 # Environment
 if args.exp_type == "sim":
@@ -179,18 +194,26 @@ while True:
     step = 0
     done = False
 
-    # Receive a NumPy vector of size 3 from the user
-    user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
-    elements = user_input.split()
+    # # Receive a NumPy vector of size 3 from the user
+    # user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
+    # elements = user_input.split()
 
-    # If the entered values are not exactly 3, exit the program.
-    if len(elements) != 3:
-        print("You must input 3 values.")
-    else:
-    # Convert the entered values to floating-point numbers and create a NumPy array.
-        env.goal_pos = np.array([float(element) for element in elements])
+    # # If the entered values are not exactly 3, exit the program.
+    # if len(elements) != 3:
+    #     print("You must input 3 values.")
+    # else:
+    # # Convert the entered values to floating-point numbers and create a NumPy array.
+    #     env.goal_pos = np.array([float(element) for element in elements])
+
 
     while not done:
+        # ctrl_pos, ref_pos = listener_wait_msg()
+        
+        # ctrl_pos_array = np.array([ctrl_pos.x, ctrl_pos.y, ctrl_pos.z])
+        # ref_pos_array  = np.array([ref_pos.x, ref_pos.y, ref_pos.z])
+        # print("rel vec : ", ctrl_pos_array-ref_pos_array)
+
+        # env.goal_pos = ctrl_pos_array-ref_pos_array + np.array([0.1, 0.4, 0.8])
 
         action = agent.select_action(state, evaluate=True)
 
