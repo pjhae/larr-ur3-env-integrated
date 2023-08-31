@@ -184,11 +184,13 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.2, -0.40, 1.2])  ## end-effector
+    ee_pos_right = np.array([0.5, -0.4, 0.8])  ## end-effector
     # ee_pos_right = np.array([0.6, -0.3, 1.0])  ## end-effector
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
-
+    print(q_right_des)
+    
+    # q_right_des = [ 1.28102047, -1.05779244 , 1.66962981 ,-2.42181553 , 0.81905588, -0.00674777]
     if env_type == list_of_env_types[0]:
         PI_gains = {'speedj': {'P': 0.2, 'I': 10}} # was 0.2, 10.0
         ur3_scale_factor = np.array([24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463])
@@ -208,7 +210,7 @@ def speedj_and_forceg(env_type='sim', render=False):
     duration = 3.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration*12)
-
+    
     start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
@@ -217,6 +219,7 @@ def speedj_and_forceg(env_type='sim', render=False):
                 'move_gripper_force': {'gf': np.array([1.0])}
             }
         })
+
         if render: env.render()
         # TODO: get_obs_dict() takes a long time causing timing issues.
         #   Is it due to Upboard's lackluster performance or some deeper

@@ -56,7 +56,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-            np.array([ 1.28102047, -1.05779244 , 1.66962981 ,-2.42181553 , 0.81905588, -0.00674777]) # for block
+            np.array([ 1.02932853, -1.13501661,  1.31379418, -2.1756853,   0.90919408, -0.00931401]) # for block
             # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
             # np.array([-90.0, -90.0, -90.0, -90.0, -135.0, 90.0])*np.pi/180.0 # right arm
         
@@ -318,20 +318,27 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         self.curr_pos = curr_pos[:2]
 
+        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], 0, -0.5, 0.55, 0.4)
+        if is_inside_bound == False:
+            reward_bound = -1
+        else:
+            reward_bound = 0
+
         # quat = self.sim.data.qpos[-25:-21]
         # yaw = self.quaternion_to_euler(quat)
         # reward_rot = np.abs(yaw)
 
-        reward_acion = -0.00001*np.linalg.norm(a)
-
-        reward_pos = -np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))
-        if np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))< 0.05:
-            reward_pos = 10
-            print("goal in")
+        reward_acion = -0.0001*np.linalg.norm(a)
 
         reward_reaching = -np.linalg.norm(self.curr_pos_block - self.curr_pos)
 
-        reward = reward_acion + reward_pos + 0.2*reward_reaching
+        reward_pos = -np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))
+        if np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))< 0.04:
+            reward_pos = 10
+            reward_reaching = 0
+            print("goal in")
+
+        reward = reward_acion + reward_pos + 0.3*reward_reaching + reward_bound 
 
         for i in range(12):
             qpos = self.sim.data.qpos
@@ -351,8 +358,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
-        qpos[-21] = 0.10 + 0.2*np.random.rand()
-        qpos[-20] = -0.35 -0.1*np.random.rand()
+        qpos[-21] = 0.10 + 0.3*np.random.rand() # x  0 ~ 0.55
+        qpos[-20] = -0.40 -0.2*np.random.rand() # y -0.5 ~ -0.1
 
         self.set_state(qpos, qvel)
 

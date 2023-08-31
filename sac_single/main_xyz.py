@@ -140,6 +140,7 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
+    print(state)
     state[:2] = np.array([0.05, -0.4])
     state = state[:4]
 
