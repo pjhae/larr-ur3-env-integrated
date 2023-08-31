@@ -318,7 +318,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         self.curr_pos = curr_pos[:2]
 
-        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], 0, -0.5, 0.55, 0.4)
+        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], -0.1, -0.6, 0.75, 0.60)
         if is_inside_bound == False:
             reward_bound = -1
         else:
@@ -358,7 +358,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
-        qpos[-21] = 0.10 + 0.3*np.random.rand() # x  0 ~ 0.55
+        qpos[-21] = 0.10 + 0.35*np.random.rand() # x  0 ~ 0.55
         qpos[-20] = -0.20 -0.2*np.random.rand() # y -0.5 ~ -0.1
 
         self.set_state(qpos, qvel)
