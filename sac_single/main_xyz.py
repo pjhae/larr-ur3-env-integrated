@@ -106,7 +106,7 @@ env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597,
 # print(env.wrapper_right.ur3_scale_factor[:6])
 
 # Agent
-agent = SAC(8, action_space, args)
+agent = SAC(4, action_space, args)
 
 # Tesnorboard
 writer = SummaryWriter('runs_single/{}_SAC_{}_{}_{}'.format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 'single-ur3-larr-for-train-v0',
@@ -141,7 +141,7 @@ for i_episode in itertools.count(1):
     done = False
     state = env.reset()
     state[:2] = np.array([0.05, -0.4])
-    state = state[:8]
+    state = state[:4]
 
     while not done:
         if args.start_steps > total_numsteps:
@@ -184,10 +184,10 @@ for i_episode in itertools.count(1):
         # Ignore the "done" signal if it comes from hitting the time horizon. (max timestep 되었다고 done 해서 next Q = 0 되는 것 방지)
         mask = 1 if episode_steps == max_episode_steps else float(not done)
 
-        memory.push(state, action, reward, next_state[:8], mask) # Append transition to memory
+        memory.push(state, action, reward, next_state[:4], mask) # Append transition to memory
         # (HER) HER_memory.push(state, action, reward, next_state[:18], mask) # Append transition to HER memory 
 
-        state = next_state[:8]
+        state = next_state[:4]
         
     if total_numsteps > args.num_steps:
         break   
@@ -218,7 +218,7 @@ for i_episode in itertools.count(1):
         for _  in range(episodes):
             state = env.reset()
             state[:2] = np.array([0.05, -0.4])
-            state = state[:8]
+            state = state[:4]
             episode_steps = 0
             episode_reward = 0
             done = False
@@ -240,7 +240,7 @@ for i_episode in itertools.count(1):
                 episode_reward += reward
                 episode_steps += 1
 
-                state = next_state[:8]
+                state = next_state[:4]
             avg_reward += episode_reward
             avg_step += episode_steps
         avg_reward /= episodes

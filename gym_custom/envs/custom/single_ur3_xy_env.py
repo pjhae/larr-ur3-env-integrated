@@ -26,7 +26,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
     ENABLE_COLLISION_CHECKER = False
     # ee position
     curr_pos = np.array([0, 0])
-    curr_pos_block = np.array([1,1,2,2,3,3])
+    curr_pos_block = np.array([1,1])
 
 
 
@@ -311,14 +311,10 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
     def step(self, a):
         '''overridable method'''
 
-        id_cube_4 = self.sim.model.geom_name2id("cube_4")
-        id_cube_1 = self.sim.model.geom_name2id("cube_1")
-        id_cube_5 = self.sim.model.geom_name2id("cube_5")
+        id_cube_6 = self.sim.model.geom_name2id("cube_6")
 
-        self.curr_pos_block = np.concatenate([self.sim.data.geom_xpos[id_cube_4][:2],
-                                              self.sim.data.geom_xpos[id_cube_1][:2],
-                                              self.sim.data.geom_xpos[id_cube_5][:2]])
-        
+        self.curr_pos_block = np.concatenate([self.sim.data.geom_xpos[id_cube_6][:2]])
+
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         self.curr_pos = curr_pos[:2]
 
@@ -326,16 +322,16 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         # yaw = self.quaternion_to_euler(quat)
         # reward_rot = np.abs(yaw)
 
+        reward_acion = -0.00001*np.linalg.norm(a)
 
-        reward_acion = -0.0001*np.linalg.norm(a)
-        reward_pos = -np.linalg.norm(self.sim.data.qpos[-28:-26] - np.array([0.0, -0.4]))
-        if np.linalg.norm(self.sim.data.qpos[-28:-26] - np.array([0.0, -0.4]))< 0.05:
-            reward_pos = 100
+        reward_pos = -np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))
+        if np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))< 0.05:
+            reward_pos = 10
             print("goal in")
 
-        # reward_reaching = -np.linalg.norm(self.sim.data.geom_xpos[id_cube_1][:2] - self.curr_pos)
+        reward_reaching = -np.linalg.norm(self.curr_pos_block - self.curr_pos)
 
-        reward = reward_acion + reward_pos
+        reward = reward_acion + reward_pos + 0.2*reward_reaching
 
         for i in range(12):
             self.do_simulation(a, self.frame_skip)
@@ -343,8 +339,6 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
             qvel = self.sim.data.qvel
             self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
-
-
 
         ob = self._get_obs()
         done = False
@@ -358,8 +352,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
-        qpos[-28:] = self.init_qpos[-28:]
-        qvel[-24:] = self.init_qvel[-24:]
+        qpos[-21] = 0.10 + 0.2*np.random.rand()
+        qpos[-20] = -0.35 -0.1*np.random.rand()
 
         self.set_state(qpos, qvel)
 
