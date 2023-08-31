@@ -395,6 +395,7 @@ class SingleUR3XYZEnv(MujocoEnv, utils.EzPickle):
         roll = np.arctan2(rotation_matrix[2, 1], rotation_matrix[2, 2])
         
         return np.array(yaw)
+    
 
 
 def test_video_record(env):

@@ -334,7 +334,6 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         reward = reward_acion + reward_pos + 0.2*reward_reaching
 
         for i in range(12):
-            self.do_simulation(a, self.frame_skip)
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
             self.set_state(qpos, qvel)
@@ -380,6 +379,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         
         return np.array(yaw)
 
+    def is_inside_bound(self, x, y, start_x, start_y, bound_width, bound_height):
+        return start_x <= x < start_x + bound_width and start_y <= y < start_y + bound_height
 
 def test_video_record(env):
     import time

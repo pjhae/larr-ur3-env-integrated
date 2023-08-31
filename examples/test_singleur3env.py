@@ -163,7 +163,7 @@ def speedj_and_forceg(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
     
     if env_type == list_of_env_types[0]:
-        env = gym_custom.make('single-ur3-xyz-larr-for-train-v0')
+        env = gym_custom.make('single-ur3-xy-larr-for-train-v0')
         speedj_args = {'a': 5, 't': None, 'wait': None}
     elif env_type == list_of_env_types[1]:
         env = gym_custom.make('single-ur3-larr-real-v0',
@@ -184,14 +184,14 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.05, -0.40, 0.80])  ## end-effector
+    ee_pos_right = np.array([0.2, -0.40, 1.2])  ## end-effector
     # ee_pos_right = np.array([0.6, -0.3, 1.0])  ## end-effector
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
     if env_type == list_of_env_types[0]:
         PI_gains = {'speedj': {'P': 0.2, 'I': 10}} # was 0.2, 10.0
-        ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
+        ur3_scale_factor = np.array([24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463])
         gripper_scale_factor = np.array([1.0])
         env = URScriptWrapper(env, PI_gains, ur3_scale_factor, gripper_scale_factor)
     elif env_type == list_of_env_types[1]:
@@ -208,8 +208,6 @@ def speedj_and_forceg(env_type='sim', render=False):
     duration = 3.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration*12)
-
-    
 
     start = time.time()
     for t in range(int(duration/dt)):
