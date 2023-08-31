@@ -334,7 +334,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
         reward_pos = -np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))
         if np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))< 0.04:
-            reward_pos = 10
+            reward_pos = 100
             reward_reaching = 0
             print("goal in")
 
