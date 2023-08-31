@@ -71,7 +71,7 @@ parser.add_argument('--exp_type', default="sim",
 args = parser.parse_args()
 
 # Episode to test
-num_epi = 240
+num_epi = 180
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True
@@ -153,7 +153,7 @@ def _set_action_space():
 action_space = _set_action_space()['movej']
 
 
-agent = SAC(8, action_space, args)
+agent = SAC(4, action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
@@ -182,7 +182,7 @@ episodes = 10
 while True:
     state = env.reset()
     state[:2] = np.array([0.05, -0.4])
-    state = state[:8]
+    state = state[:4]
     
     episode_reward = 0
     step = 0
@@ -239,7 +239,7 @@ while True:
             env.render()
         episode_reward += reward
         step += 1
-        state = next_state[:8]
+        state = next_state[:4]
 
          # If exp_type is real, evaluate just for 500 step
         if args.exp_type == "real" and step == 300:
