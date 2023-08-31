@@ -24,15 +24,10 @@ import os.path as osp
 # from geometry_msgs.msg import PoseStamped
 
 # def listener_wait_msg():
-
 #     rospy.init_node('ros_subscription_test_node')
-
 #     ctrl_msg = rospy.wait_for_message('optitrack/ctrl_jh/poseStamped', PoseStamped)
 #     ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
-
 #     return ctrl_msg.pose.position, ref_msg.pose.position
-
-
 
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
 parser.add_argument('--env-name', default="HalfCheetah-v2",
@@ -75,7 +70,6 @@ parser.add_argument('--exp_type', default="sim",
                     help='choose sim or real')
 args = parser.parse_args()
 
-
 # Episode to test
 num_epi = 260
 
@@ -84,7 +78,7 @@ render = True
 
 # Environment
 if args.exp_type == "sim":
-    env = gym_custom.make('single-ur3-xyz-larr-for-train-v0')
+    env = gym_custom.make('single-ur3-xy-larr-for-train-v0')
     servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
 
 elif args.exp_type == "real":
@@ -134,8 +128,8 @@ np.random.seed(args.seed)
 
 
 COMMAND_LIMITS = {
-    'movej': [np.array([-0.04, -0.04, -0.04]),
-        np.array([0.04, 0.04, 0.04])] # [m]
+    'movej': [np.array([-0.04, -0.04, -0.0]),
+        np.array([0.04, 0.04, 0.0])] # [m]
 }
 
 def convert_action_to_space(action_limits):
@@ -159,7 +153,7 @@ def _set_action_space():
 action_space = _set_action_space()['movej']
 
 
-agent = SAC(6, action_space, args)
+agent = SAC(8, action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
@@ -187,8 +181,8 @@ episodes = 10
 
 while True:
     state = env.reset()
-    state[3:6] = [0.16262042, -0.2576475, 0.91949741]
-    state = state[:6]
+    state[:2] = np.array([0.05, -0.4])
+    state = state[:8]
     
     episode_reward = 0
     step = 0
@@ -217,10 +211,22 @@ while True:
 
         action = agent.select_action(state, evaluate=True)
 
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
+        # q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
+        # dt = 1
+        # qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
+        
+        # next_state, reward, done, _  = env.step({
+        #     'right': {
+        #         'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+        #         'move_gripper_force': {'gf': np.array([10.0])}
+        #     }
+        # })
+
+        curr_pos = np.concatenate([state[:2],[0.8]])
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos+action, null_obj_func, arm='right')
         dt = 1
         qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
-        
+
         next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -228,11 +234,12 @@ while True:
             }
         })
 
+
         if render == True :
             env.render()
-        episode_reward += -np.linalg.norm(state[:3]-state[3:6])
+        episode_reward += reward
         step += 1
-        state = next_state[:6]
+        state = next_state[:8]
 
          # If exp_type is real, evaluate just for 500 step
         if args.exp_type == "real" and step == 300:

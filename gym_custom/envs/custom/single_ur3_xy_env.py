@@ -322,25 +322,29 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         self.curr_pos = curr_pos[:2]
 
-        quat = self.sim.data.qpos[-25:-21]
-        yaw = self.quaternion_to_euler(quat)
+        # quat = self.sim.data.qpos[-25:-21]
+        # yaw = self.quaternion_to_euler(quat)
+        # reward_rot = np.abs(yaw)
 
-        reward_rot = np.abs(yaw)**2
 
-        if np.abs(yaw)>170*np.pi/180:
-            print("SUCCESS")
-            reward_rot = 100
-        
-        reward_keeppos = -np.linalg.norm(self.sim.data.qpos[-28:-26] - np.array([0.2, -0.4]))
+        reward_acion = -0.0001*np.linalg.norm(a)
+        reward_pos = -np.linalg.norm(self.sim.data.qpos[-28:-26] - np.array([0.0, -0.4]))
+        if np.linalg.norm(self.sim.data.qpos[-28:-26] - np.array([0.0, -0.4]))< 0.05:
+            reward_pos = 100
+            print("goal in")
 
-        reward_acion = -0.000001*np.linalg.norm(a)
+        # reward_reaching = -np.linalg.norm(self.sim.data.geom_xpos[id_cube_1][:2] - self.curr_pos)
 
-        reward_reaching = -np.linalg.norm(self.sim.data.geom_xpos[id_cube_1][:2] - self.curr_pos)
-
-        reward = reward_acion + 2*reward_rot + 0.4*reward_keeppos + 0.2*reward_reaching
+        reward = reward_acion + reward_pos
 
         for i in range(12):
             self.do_simulation(a, self.frame_skip)
+            qpos = self.sim.data.qpos
+            qvel = self.sim.data.qvel
+            self.set_state(qpos, qvel)
+            self.do_simulation(a, self.frame_skip)
+
+
 
         ob = self._get_obs()
         done = False
@@ -353,6 +357,9 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
+
+        qpos[-28:] = self.init_qpos[-28:]
+        qvel[-24:] = self.init_qvel[-24:]
 
         self.set_state(qpos, qvel)
 
