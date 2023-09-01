@@ -339,7 +339,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
             print("goal in")
 
         reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound 
-
+        # print("reward reaching :",reward_reaching)
+        # print("reward_pos :",reward_pos)
         for i in range(12):
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel

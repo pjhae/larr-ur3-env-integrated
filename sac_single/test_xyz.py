@@ -71,7 +71,7 @@ parser.add_argument('--exp_type', default="sim",
 args = parser.parse_args()
 
 # Episode to test
-num_epi = 240
+num_epi = 6600
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True
@@ -181,7 +181,7 @@ episodes = 10
 
 while True:
     state = env.reset()
-    state[:2] = np.array([0.05, -0.4])
+    state[:2] = np.array([0.5, -0.4])
     state = state[:4]
     
     episode_reward = 0
