@@ -18,16 +18,19 @@ from collections import OrderedDict
 import os
 import os.path as osp
 
-# # ros related
-# import rospy
-# from std_msgs.msg import String
-# from geometry_msgs.msg import PoseStamped
+# ros related
+import rospy
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
 
-# def listener_wait_msg():
-#     rospy.init_node('ros_subscription_test_node')
-#     ctrl_msg = rospy.wait_for_message('optitrack/ctrl_jh/poseStamped', PoseStamped)
-#     ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
-#     return ctrl_msg.pose.position, ref_msg.pose.position
+def listener_wait_msg():
+
+    rospy.init_node('ros_subscription_test_node')
+
+    cube_msg = rospy.wait_for_message('optitrack/cube_jh/poseStamped', PoseStamped)
+    #ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
+
+    return cube_msg.pose.position
 
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
 parser.add_argument('--env-name', default="HalfCheetah-v2",
@@ -74,7 +77,7 @@ args = parser.parse_args()
 num_epi = 6600
 
 # Rendering (if exp_type is real, render should be FALSE)
-render = True
+render = False
 
 # Environment
 if args.exp_type == "sim":
@@ -86,7 +89,7 @@ elif args.exp_type == "real":
         host_ip_right='192.168.5.102',
         rate=20
     )
-    servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 1, 't': 2/env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 2/env.rate._freq, 'wait': False}, {'a': 1, 't': 4/env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     env.set_initial_joint_pos('current')
     env.set_initial_gripper_pos('current')
@@ -175,6 +178,7 @@ class UprightConstraint(NullObjectiveBase):
     
 null_obj_func = UprightConstraint()
 
+
 # Start evaluation
 avg_reward = 0.
 avg_step = 0.
@@ -202,26 +206,13 @@ while True:
 
 
     while not done:
-        # ctrl_pos, ref_pos = listener_wait_msg()
+        cube_pos = listener_wait_msg()
         
-        # ctrl_pos_array = np.array([ctrl_pos.x, ctrl_pos.y, ctrl_pos.z])
-        # ref_pos_array  = np.array([ref_pos.x, ref_pos.y, ref_pos.z])
-        # print("rel vec : ", ctrl_pos_array-ref_pos_array)
+        cube_pos_array = np.array([cube_pos.x, cube_pos.y])
 
-        # env.goal_pos = ctrl_pos_array-ref_pos_array + np.array([0.1, 0.4, 0.8])
-
+        env.curr_pos_block = cube_pos_array - [0.11719225 ,2.44359732] + [0, -0.4]
+        print(env.curr_pos_block)
         action = agent.select_action(state, evaluate=True)
-
-        # q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
-        # dt = 1
-        # qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
-        
-        # next_state, reward, done, _  = env.step({
-        #     'right': {
-        #         'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-        #         'move_gripper_force': {'gf': np.array([10.0])}
-        #     }
-        # })
 
         curr_pos = np.concatenate([state[:2],[0.8]])
         q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos+action, null_obj_func, arm='right')
@@ -235,7 +226,7 @@ while True:
             }
         })
 
-
+        print(step)
         if render == True :
             env.render()
         episode_reward += reward
@@ -243,7 +234,7 @@ while True:
         state = next_state[:4]
 
          # If exp_type is real, evaluate just for 500 step
-        if args.exp_type == "real" and step == 300:
+        if args.exp_type == "real" and step == 600:
             break   
     
     avg_reward = episode_reward/500

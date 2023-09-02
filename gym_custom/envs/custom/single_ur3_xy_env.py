@@ -359,8 +359,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
-        qpos[-21] =  0.10 +0.3*np.random.rand() # x  0 ~ 0.55
-        qpos[-20] = -0.25 -0.1*np.random.rand() # y -0.5 ~ -0.1
+        qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
+        qpos[-20] = -0.25 -0.15*np.random.rand() # y -0.5 ~ -0.1
         # qpos[-20] = -0.35
         self.set_state(qpos, qvel)
 

@@ -9,10 +9,10 @@ def listener_wait_msg():
 
     rospy.init_node('ros_subscription_test_node')
 
-    ctrl_msg = rospy.wait_for_message('optitrack/ctrl_jh/poseStamped', PoseStamped)
-    ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
+    cube_msg = rospy.wait_for_message('optitrack/cube_jh/poseStamped', PoseStamped)
+    #ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
 
-    return ctrl_msg.pose.position, ref_msg.pose.position
+    return cube_msg.pose.position
 
 if __name__ == '__main__':
 
@@ -20,15 +20,15 @@ if __name__ == '__main__':
 
     while True:
  
-        ctrl_pos, ref_pos = listener_wait_msg()
+        cube_pos = listener_wait_msg()
         
-        ctrl_pos_array = np.array([ctrl_pos.x, ctrl_pos.y, ctrl_pos.z])
-        ref_pos_array  = np.array([ref_pos.x, ref_pos.y, ref_pos.z])
+        cube_pos_array = np.array([cube_pos.x, cube_pos.y])
+
 
         msg_count += 1
-        print("ctrl : ", ctrl_pos_array)
-        print("ref : ", ref_pos_array)
-        print("rel vec : ", ctrl_pos_array-ref_pos_array)
+        print("ctrl : ", cube_pos_array- [0.11719225 ,2.44359732] + [0, -0.4])
+ 
+        #print("rel vec : ", ctrl_pos_array-ref_pos_array)
 
         if msg_count >= 10000: break
 
