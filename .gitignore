@@ -20,7 +20,7 @@ runs_single/
 video/
 checkpoints_dual/
 checkpoints_single/
-
+checkpoints_single_excellent/
 sac_single/video/
 sac_dual/video/
 
