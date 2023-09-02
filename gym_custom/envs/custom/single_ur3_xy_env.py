@@ -29,7 +29,6 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
     curr_pos_block = np.array([1,1])
 
 
-
     def __init__(self):
         if self.ENABLE_COLLISION_CHECKER:
             self._define_collision_checker_variables()
@@ -56,9 +55,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-            np.array([ 1.02932853, -1.13501661,  1.31379418, -2.1756853,   0.90919408, -0.00931401]) # for block
-            # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
-            # np.array([-90.0, -90.0, -90.0, -90.0, -135.0, 90.0])*np.pi/180.0 # right arm
+        np.array([1.53191699, -1.10984404, 2.66969775, -3.17037705, 0.78613642, -0.00637764])
+        # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
@@ -158,7 +156,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=10, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.001, max_iter=10, epsilon=1e-6
         ):
         
         '''
@@ -311,12 +309,19 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
     def step(self, a):
         '''overridable method'''
 
+        # cube pos
         id_cube_6 = self.sim.model.geom_name2id("cube_6")
-
         self.curr_pos_block = np.concatenate([self.sim.data.geom_xpos[id_cube_6][:2]])
 
+        # gripper pos
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         self.curr_pos = curr_pos[:2]
+
+        # inital pos
+        init_pos = np.array([0.2, -0.2])
+
+        # goal pos
+        goal_pos = np.array([0.0, -0.3])
 
         is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], -0.1, -0.6, 0.75, 0.60)
         if is_inside_bound == False:
@@ -324,23 +329,22 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         else:
             reward_bound = 0
 
-        # quat = self.sim.data.qpos[-25:-21]
-        # yaw = self.quaternion_to_euler(quat)
-        # reward_rot = np.abs(yaw)
-
-        reward_acion = -0.0000001*np.linalg.norm(a)
+        reward_acion = -0.00000001*np.linalg.norm(a)
 
         reward_reaching = -np.linalg.norm(self.curr_pos_block - self.curr_pos)
 
-        reward_pos = -np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))
-        if np.linalg.norm(self.curr_pos_block - np.array([0.0, -0.4]))< 0.04:
+        reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
+        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.04:
             reward_pos = 100
-            reward_reaching = 0
-            print("goal in")
+            if np.linalg.norm(init_pos - self.curr_pos)< 0.05:
+                reward_reaching = 5
+                print("goal in & initial pos")
+            else:
+                reward_reaching = -3*np.linalg.norm(init_pos - self.curr_pos)
+                print("goal in")
 
-        reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound 
-        # print("reward reaching :",reward_reaching)
-        # print("reward_pos :",reward_pos)
+        reward = reward_acion + reward_pos + 0.005*reward_reaching + reward_bound 
+
         for i in range(12):
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
@@ -360,8 +364,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
         qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
-        qpos[-20] = -0.25 -0.15*np.random.rand() # y -0.5 ~ -0.1
-        # qpos[-20] = -0.35
+        qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
         self.set_state(qpos, qvel)
 
         return self._get_obs()

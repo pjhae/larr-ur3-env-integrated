@@ -18,19 +18,20 @@ from collections import OrderedDict
 import os
 import os.path as osp
 
-# ros related
-import rospy
-from std_msgs.msg import String
-from geometry_msgs.msg import PoseStamped
+# # ROS related
+# import rospy
+# from std_msgs.msg import String
+# from geometry_msgs.msg import PoseStamped
 
-def listener_wait_msg():
+# def listener_wait_msg():
 
-    rospy.init_node('ros_subscription_test_node')
+#     rospy.init_node('ros_subscription_test_node')
 
-    cube_msg = rospy.wait_for_message('optitrack/cube_jh/poseStamped', PoseStamped)
-    #ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
+#     cube_msg = rospy.wait_for_message('optitrack/cube_jh/poseStamped', PoseStamped)
+#     #ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
 
-    return cube_msg.pose.position
+#     return cube_msg.pose.position
+
 
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
 parser.add_argument('--env-name', default="HalfCheetah-v2",
@@ -77,7 +78,7 @@ args = parser.parse_args()
 num_epi = 6600
 
 # Rendering (if exp_type is real, render should be FALSE)
-render = False
+render = True
 
 # Environment
 if args.exp_type == "sim":
@@ -95,7 +96,7 @@ elif args.exp_type == "real":
     env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
     # env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
-    env.set_initial_joint_pos(np.array([ 1.02932853, -1.13501661,  1.31379418, -2.1756853,   0.90919408, -0.00931401]))
+    env.set_initial_joint_pos(np.array([1.53191699, -1.10984404, 2.66969775, -3.17037705, 0.78613642, -0.00637764]))
     env.set_initial_gripper_pos(np.array([255.0]))
     assert render is False
 
@@ -206,14 +207,14 @@ while True:
 
 
     while not done:
-        cube_pos = listener_wait_msg()
-        
-        cube_pos_array = np.array([cube_pos.x, cube_pos.y])
 
-        env.curr_pos_block = cube_pos_array - [0.11719225 ,2.44359732] + [0, -0.4]
-        print(env.curr_pos_block)
+        # # ROS related
+        # cube_pos = listener_wait_msg()
+        # cube_pos_array = np.array([cube_pos.x, cube_pos.y])
+        # env.curr_pos_block = cube_pos_array - [0.11719225 ,2.44359732] + [0, -0.4]
+        # print(env.curr_pos_block)
+
         action = agent.select_action(state, evaluate=True)
-
         curr_pos = np.concatenate([state[:2],[0.8]])
         q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos+action, null_obj_func, arm='right')
         dt = 1
