@@ -353,7 +353,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         else:
             reward_bound = 0
 
-        reward = reward_acion + reward_pos + 0.2*reward_reaching + reward_bound 
+        reward = reward_acion + reward_pos + 0.1*reward_reaching + reward_bound 
 
         for i in range(12):
             qpos = self.sim.data.qpos
