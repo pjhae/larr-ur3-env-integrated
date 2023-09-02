@@ -140,7 +140,7 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
-    state[:2] = np.array([0.5, -0.4])
+    state[:2] = np.array([0.2, -0.2])
     state = state[:4]
 
     while not done:
@@ -210,14 +210,14 @@ for i_episode in itertools.count(1):
     if i_episode % 10 == 0:
         agent.save_checkpoint('single-ur3-larr-for-train-v0',"{}".format(i_episode))
 
-    if i_episode % 20 == 0 and args.eval is True:
+    if i_episode % 25 == 0 and args.eval is True:
         video.init(enabled=True)
         avg_reward = 0.
         avg_step = 0.
         episodes = 5
         for _  in range(episodes):
             state = env.reset()
-            state[:2] = np.array([0.05, -0.4])
+            state[:2] = np.array([0.2, -0.2])
             state = state[:4]
             episode_steps = 0
             episode_reward = 0
@@ -237,7 +237,7 @@ for i_episode in itertools.count(1):
                         'move_gripper_force': {'gf': np.array([10.0])}
                     }
                 })
-                episode_reward += reward
+                episode_reward += -np.linalg.norm([state[:2]-state[2:4]])
                 episode_steps += 1
 
                 state = next_state[:4]

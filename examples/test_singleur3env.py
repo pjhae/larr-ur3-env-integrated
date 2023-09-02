@@ -184,7 +184,7 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.5, -0.5, 0.8])  ## end-effector
+    ee_pos_right = np.array([0.3, -0.2, 0.8])  ## end-effector
     # ee_pos_right = np.array([0.6, -0.3, 1.0])  ## end-effector
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
