@@ -55,8 +55,8 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
-        # np.array([1.53191699, -1.10984404, 2.66969775, -3.17037705, 0.78613642, -0.00637764])
+        np.array([-0.5556232,  -1.25402664, -2.21761154, -0.56803883, -1.17712696, -0.00996483])
+        # np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
         # Variables for forward/inverse kinematics
@@ -100,7 +100,6 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
     # Utilities (general)
 
     def forward_kinematics_DH(self, q, arm):
-        print(self.ur3_nqpos)
         assert len(q) == self.ur3_nqpos
         self._define_class_variables()
 
@@ -314,20 +313,17 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         id_cube_6 = self.sim.model.geom_name2id("cube_6")
         self.curr_pos_block = np.concatenate([self.sim.data.geom_xpos[id_cube_6][:2]])
 
-
-        print("wow",self.sim.data.qpos)
-        
         # gripper pos
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'left')
         self.curr_pos = curr_pos[:2]
 
         # inital pos
-        init_pos = np.array([0.2, -0.2])
+        init_pos = np.array([-0.2, -0.2])
 
         # goal pos
         goal_pos = np.array([0.0, -0.3])
 
-        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], -0.1, -0.6, 0.75, 0.60)
+        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], 0.1, -0.6, -0.75, 0.60)
         if is_inside_bound == False:
             reward_bound = -1
         else:

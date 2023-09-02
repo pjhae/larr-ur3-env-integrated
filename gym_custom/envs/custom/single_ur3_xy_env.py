@@ -323,27 +323,37 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         # goal pos
         goal_pos = np.array([0.0, -0.3])
 
+        # cube offset
+        offset = np.array([0.072, 0])
+
+        # reward action
+        reward_acion = -0.00000001*np.linalg.norm(a)
+
+        # reward pos & reward reaching
+        reward_pos = -0.8
+        reward_reaching = -np.linalg.norm(self.curr_pos_block +offset -self.curr_pos)
+
+        if np.linalg.norm(self.curr_pos_block + offset -self.curr_pos)< 0.072:
+            reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
+
+        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.04:
+            reward_pos += 100
+            reward_reaching = -5*np.linalg.norm(init_pos -self.curr_pos)
+            
+            if np.linalg.norm(init_pos -self.curr_pos)< 0.04:
+                print("GOAL IN & INITIALIZE!")
+                reward_pos += 20
+            else:
+                print("GOAL IN")
+
+        # reward_bound 
         is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], -0.1, -0.6, 0.75, 0.60)
         if is_inside_bound == False:
-            reward_bound = -1
+            reward_bound = -1.5
         else:
             reward_bound = 0
 
-        reward_acion = -0.00000001*np.linalg.norm(a)
-
-        reward_reaching = -np.linalg.norm(self.curr_pos_block - self.curr_pos)
-
-        reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
-        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.04:
-            reward_pos = 100
-            if np.linalg.norm(init_pos - self.curr_pos)< 0.05:
-                reward_reaching = 5
-                print("goal in & initial pos")
-            else:
-                reward_reaching = -3*np.linalg.norm(init_pos - self.curr_pos)
-                print("goal in")
-
-        reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound 
+        reward = reward_acion + reward_pos + 0.2*reward_reaching + reward_bound 
 
         for i in range(12):
             qpos = self.sim.data.qpos
