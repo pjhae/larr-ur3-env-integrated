@@ -26,7 +26,7 @@ parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor for reward (default: 0.99)')
 parser.add_argument('--tau', type=float, default=0.005, metavar='G',
                     help='target smoothing coefficient(τ) (default: 0.005)')
-parser.add_argument('--lr', type=float, default=0.0005, metavar='G',
+parser.add_argument('--lr', type=float, default=0.0003, metavar='G',
                     help='learning rate (default: 0.0003)')
 parser.add_argument('--alpha', type=float, default=0.005, metavar='G',
                     help='Temperature parameter α determines the relative importance of the entropy\
@@ -207,10 +207,10 @@ for i_episode in itertools.count(1):
 
     writer.add_scalar('reward/train', episode_reward, i_episode)
     print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2)))
-    if i_episode % 10 == 0:
+    if i_episode % 20 == 0:
         agent.save_checkpoint('single-ur3-larr-for-train-v0',"{}".format(i_episode))
 
-    if i_episode % 25 == 0 and args.eval is True:
+    if i_episode % 20 == 0 and args.eval is True:
         video.init(enabled=True)
         avg_reward = 0.
         avg_step = 0.
