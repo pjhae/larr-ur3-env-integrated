@@ -341,6 +341,38 @@ class URScriptWrapper_SingleUR3(ActionWrapper):
         self.wrapper_right._clear_integration_term()
         return self.env.reset(**kwargs)
 
+class URScriptWrapper_SingleUR3_LEFT(ActionWrapper):
+
+    def __init__(self, env, PID_gains, ur3_scale_factor, gripper_scale_factor):
+        super().__init__(env)
+
+        # cf. f = lambda : np.zeros([5])
+        wrapper_left_env_getters = {
+            'qpos': lambda : env.get_ur3_qpos()[:env.ur3_nqpos],
+            'qvel': lambda : env.get_ur3_qvel()[:env.ur3_nqvel],
+            'qbias': lambda : env.get_ur3_bias()[:env.ur3_nqvel],
+            'qconstraint': lambda : env.get_ur3_constraint()[:env.ur3_nqvel],
+            'gpos': lambda : np.array([self.env.get_gripper_qpos()[2], self.env.get_gripper_qpos()[7]]),
+            'gvel': lambda : np.array([self.env.get_gripper_qvel()[2], self.env.get_gripper_qvel()[7]]),
+            'gbias': lambda : np.array([self.env.get_gripper_bias()[2], self.env.get_gripper_bias()[7]]),
+            'dt': env.dt
+        }
+
+        self.wrapper_left = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor, _env_getters=wrapper_left_env_getters)
+
+        # disable step() and reset() for wrappers
+        self.wrapper_left.env = None
+
+    def action(self, ur_command): # note that ur_command is dictionary
+        left_action = self.wrapper_left.action(ur_command['left'])
+        left_ur3_action, left_gripper_action = left_action[:self.wrapper_left.ndof], left_action[self.wrapper_left.ndof:] # ndof, 2*ngripperdof
+
+        return np.concatenate([left_ur3_action, left_gripper_action])
+
+    def reset(self, **kwargs):
+        self.wrapper_left._clear_integration_term()
+        return self.env.reset(**kwargs)
+
 # class URScriptWrapper_DualUR3_fail(URScriptWrapper):
 #     '''
 #     UR Script action wrapper for DualUR3Env
