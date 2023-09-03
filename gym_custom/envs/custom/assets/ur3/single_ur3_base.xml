@@ -117,7 +117,7 @@
    
         <body name="cube" pos="0.2 -0.4 0.76" > <!--0.76-->
             <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.001" />
-            <geom name="cube_6" type="box" pos="0.0 -0.0 -0.0" size="0.024 0.024 0.024" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
+            <geom name="cube_6" type="box" pos="0.0 -0.0 -0.0" size="0.03 0.03 0.03" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
             <joint name="cube_joint" type="free" limited="false" damping="0.001" />
         </body>
 

@@ -55,7 +55,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([1.53191699, -1.10984404, 2.66969775, -3.17037705, 0.78613642, -0.00637764])
+        np.array([ 0.92082518, -1.16904956,  1.22725447, -2.15386273,  0.96812748,  0.00251208])
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
         # Variables for forward/inverse kinematics
@@ -327,7 +327,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         offset = np.array([0.09, 0])
 
         # reward action
-        reward_acion = -0.000000001*np.linalg.norm(a)
+        reward_acion = -0.00000001*np.linalg.norm(a)
 
         # new
         reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
@@ -350,7 +350,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         else:
             reward_bound = 0
 
-        reward = reward_acion + reward_pos + 0.2*reward_reaching + reward_bound 
+        reward = reward_acion + reward_pos + 0.1*reward_reaching + reward_bound 
 
         for i in range(12):
             qpos = self.sim.data.qpos
@@ -372,6 +372,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
         qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
         qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
+
         self.set_state(qpos, qvel)
 
         return self._get_obs()
