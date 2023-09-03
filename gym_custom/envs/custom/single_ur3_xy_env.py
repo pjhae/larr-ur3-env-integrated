@@ -324,23 +324,20 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         goal_pos = np.array([0.0, -0.3])
 
         # cube offset
-        offset = np.array([0.072, 0])
+        offset = np.array([0.09, 0])
 
         # reward action
-        reward_acion = -0.00000001*np.linalg.norm(a)
+        reward_acion = -0.000000001*np.linalg.norm(a)
 
-        # reward pos & reward reaching
-        reward_pos = -0.5
+        # new
+        reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
         reward_reaching = -np.linalg.norm(self.curr_pos_block +offset -self.curr_pos)
 
-        if np.linalg.norm(self.curr_pos_block + offset -self.curr_pos)< 0.072:
-            reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
-
-        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.04:
+        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.05:
             reward_pos += 100
             reward_reaching = -5*np.linalg.norm(init_pos -self.curr_pos)
             
-            if np.linalg.norm(init_pos -self.curr_pos)< 0.03:
+            if np.linalg.norm(init_pos -self.curr_pos)< 0.05:
                 print("GOAL IN & INITIALIZE!")
                 reward_pos += 20
             else:
@@ -353,7 +350,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         else:
             reward_bound = 0
 
-        reward = reward_acion + reward_pos + 0.1*reward_reaching + reward_bound 
+        reward = reward_acion + reward_pos + 0.2*reward_reaching + reward_bound 
 
         for i in range(12):
             qpos = self.sim.data.qpos
