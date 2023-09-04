@@ -321,27 +321,26 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         init_pos = np.array([0.2, -0.2])
 
         # goal pos
-        goal_pos = np.array([0.0, -0.3])
+        goal_pos = np.array([0.0, -0.375])
 
         # cube offset
-        offset = np.array([0.09, 0])
+        offset = np.array([0.06, 0])
 
         # reward action
-        reward_acion = -0.00000001*np.linalg.norm(a)
+        reward_acion = -0.00001*np.linalg.norm(a)
 
         # new
-        reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
+        reward_pos = -0.35
+        reward_pushing = 0
         reward_reaching = -np.linalg.norm(self.curr_pos_block +offset -self.curr_pos)
+
+        if np.linalg.norm(self.curr_pos_block +offset -self.curr_pos) < 0.075:
+            reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
+            reward_pushing = 0.15 - np.linalg.norm(self.curr_pos_block - self.curr_pos)
 
         if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.05:
             reward_pos += 100
-            reward_reaching = -5*np.linalg.norm(init_pos -self.curr_pos)
-            
-            if np.linalg.norm(init_pos -self.curr_pos)< 0.05:
-                print("GOAL IN & INITIALIZE!")
-                reward_pos += 20
-            else:
-                print("GOAL IN")
+            print("GOAL IN")
 
         # reward_bound 
         is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], -0.1, -0.6, 0.75, 0.60)
@@ -350,8 +349,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         else:
             reward_bound = 0
 
-        reward = reward_acion + reward_pos + 0.1*reward_reaching + reward_bound 
-
+        reward = reward_acion + 10*reward_pos + 0.8*reward_pushing + 0.2*reward_reaching + reward_bound
+        # print(reward_acion, reward_pos, reward_reaching, reward_bound)
         for i in range(12):
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
@@ -360,7 +359,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
         ob = self._get_obs()
         done = False
-
+       
         return ob, reward, done, {}
 
 
@@ -370,8 +369,15 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
-        qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
-        qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
+        # qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
+        # qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
+        rand_idx = np.random.randint(2)
+
+        qpos[-21] =  0.30
+        if rand_idx == 0 :
+            qpos[-20] = -0.30
+        else:
+            qpos[-20] = -0.45
 
         self.set_state(qpos, qvel)
 
