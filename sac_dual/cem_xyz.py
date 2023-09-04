@@ -71,15 +71,15 @@ if args.exp_type == 'real':
     real_env = gym_custom.make('dual-ur3-larr-real-for-train-v0',
         host_ip_right='192.168.5.102',
         host_ip_left='192.168.5.101',
-        rate=20
+        rate=25
     )
-    servoj_args, speedj_args = {'t': 12/real_env.rate._freq, 'wait': False}, {'a': 1, 't': 2/real_env.rate._freq, 'wait': False}
+    servoj_args, speedj_args = {'t': 12/real_env.rate._freq, 'wait': False}, {'a': 1, 't': 4/real_env.rate._freq, 'wait': False}
     # 1. Set initial as current configuration
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
-    env.set_initial_joint_pos(np.array([1.04976657, -1.27260002,  1.68865256, -2.46751188,  0.91525637, -0.01229553, -1.04912034, -1.8650689,  -1.69325681, -0.67734611, -0.91388391, -0.01221272]))
-    # real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
+    # real_env.set_initial_joint_pos(np.array([1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263, -1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267]))
+    real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
     real_env.set_initial_gripper_pos(np.array([255.0, 255.0]))
     time.sleep(1.0)
 
@@ -97,11 +97,11 @@ action_seq = np.array([[0.0 , -0.0,  0.0, 0.0, 0.0, 0.0]]*100 + [[-0.04, -0.0, 0
                       [[0.0 ,  0.04, 0.0, 0.0, 0.0, 0.0]]*75 +  [[0.0 , 0.0, 0.04, 0.0, 0.0, 0.0]]*100+\
                       [[0.0 , 0.0, -0.02, 0.0, 0.0, 0.0]]*50 )
 
-# left hand
-action_seq = np.array([[ 0.0, 0.0, 0.0, 0.0 , -0.0,  0.0]]*100 + [[ 0.0, 0.0, 0.0, 0.04, -0.0, 0.0]]*200+\
-                      [[ 0.0, 0.0, 0.0, 0.0 , -0.04, 0.0]]*75 +  [[ 0.0, 0.0, 0.0, -0.04 ,0.0,   0.0]]*100+\
-                      [[ 0.0, 0.0, 0.0, 0.0 ,  0.04, 0.0]]*75 +  [[ 0.0, 0.0, 0.0, 0.0 , 0.0,  0.04]]*100+\
-                      [[ 0.0, 0.0, 0.0, 0.0 , 0.0, -0.02]]*50 )
+# # left hand
+# action_seq = np.array([[ 0.0, 0.0, 0.0, 0.0 , -0.0,  0.0]]*100 + [[ 0.0, 0.0, 0.0, 0.04, -0.0, 0.0]]*200+\
+#                       [[ 0.0, 0.0, 0.0, 0.0 , -0.04, 0.0]]*75 +  [[ 0.0, 0.0, 0.0, -0.04 ,0.0,   0.0]]*100+\
+#                       [[ 0.0, 0.0, 0.0, 0.0 ,  0.04, 0.0]]*75 +  [[ 0.0, 0.0, 0.0, 0.0 , 0.0,  0.04]]*100+\
+#                       [[ 0.0, 0.0, 0.0, 0.0 , 0.0, -0.02]]*50 )
 
 
 null_obj_func_right = UprightConstraint_right()
@@ -112,39 +112,39 @@ null_obj_func = UprightConstraint()
 # if real, get the data
 if args.exp_type == 'real':
     real_data = []
-    state = env.reset()
-    env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-    env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    state = real_env.reset()
+    # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     state[:4] = [0.45, -0.35, -0.45, -0.35]
 
     for i in range(700):
         curr_pos_right = np.concatenate([state[:2],[0.8]])
         curr_pos_left  = np.concatenate([state[2:4],[0.8]])
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_right + action_seq[i][:3], null_obj_func, arm='right')
-        q_left_des,  _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_left + action_seq[i][3:], null_obj_func, arm='left')
+        q_right_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(curr_pos_right + action_seq[i][:3], null_obj_func, arm='right')
+        q_left_des,  _ ,_ ,_ = real_env.inverse_kinematics_ee(curr_pos_left + action_seq[i][3:], null_obj_func, arm='left')
         dt = 1
-        qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
-        qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
+        qvel_right = (q_right_des - real_env.get_obs_dict()['right']['qpos'])/dt
+        qvel_left = (q_left_des - real_env.get_obs_dict()['left']['qpos'])/dt
         
-        next_state, reward, done, _  = env.step({
+        next_state, reward, done, _  = real_env.step({
             'right': {
-                'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'speedj': {'qd': np.array([-0.1,0,0,0,0,0]), 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
             },
             'left': {
-                'speedj': {'qd': qvel_left, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'speedj': {'qd': np.array([0,0,0,0,0,0]), 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
             }
         })
         
         state = next_state
-        curr_pos = env.get_obs_dict()['right']['curr_pos']      # from real env
+        curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env
 
         real_data.append(curr_pos)
-        env.render()
+        # env.render()
     # Save real data
     real_data = np.array(real_data)
-    save_data(real_data, "real_data_xy_right.npy")
+    save_data(real_data, "real_data_xy_right_0904.npy")
 
 
 # if sim, RUN CEM

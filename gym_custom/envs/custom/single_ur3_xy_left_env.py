@@ -55,7 +55,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([-1.04912034, -1.8650689,  -1.69325681, -0.67734611, -0.91388391, -0.01221272])
+        np.array([-1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267])
         # np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
@@ -311,7 +311,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         # cube pos
         id_cube_6 = self.sim.model.geom_name2id("cube_6")
         self.curr_pos_block = np.concatenate([self.sim.data.geom_xpos[id_cube_6][:2]])
-
+        print(self._get_ur3_qpos()[:self.ur3_nqpos])
         # gripper pos
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'left')
         self.curr_pos = curr_pos[:2]

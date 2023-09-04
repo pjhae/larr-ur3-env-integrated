@@ -96,7 +96,7 @@ elif args.exp_type == "real":
     env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
     # env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
-    env.set_initial_joint_pos(np.array([ 1.08087911, -1.20305451,  1.57889565, -2.37654162,  0.89481043, -0.00445367]))
+    env.set_initial_joint_pos(np.array([ 1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263]))
     env.set_initial_gripper_pos(np.array([255.0]))
     assert render is False
 

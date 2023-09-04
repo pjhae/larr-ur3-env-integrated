@@ -146,14 +146,14 @@ def speedj_and_forceg(env_type='sim', render=False):
         env = gym_custom.make('dual-ur3-larr-real-v0',
             host_ip_right='192.168.5.102',
             host_ip_left='192.168.5.101',
-            rate=25
+            rate=20
         )
         
         speedj_args = {'a': 5, 't': 2/env.rate._freq, 'wait': False} 
         env.set_initial_joint_pos('current')
         env.set_initial_gripper_pos('current')
         # 2. Set inital as default configuration
-        env.set_initial_joint_pos(np.array([1.04976657, -1.27260002,  1.68865256, -2.46751188,  0.91525637, -0.01229553, -1.04912034, -1.8650689,  -1.69325681, -0.67734611, -0.91388391, -0.01221272]))
+        env.set_initial_joint_pos(np.array([1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263, -1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267]))
         # env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
         env.set_initial_gripper_pos(np.array([0.0, 0.0]))
         assert render is False
@@ -186,8 +186,8 @@ def speedj_and_forceg(env_type='sim', render=False):
     # Move to goal
     duration = 5.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
-    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration*12)
-    q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/(duration*12)
+    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration)
+    q_left_des_vel = (q_left_des - obs_dict_current['left']['qpos'])/(duration)
     start = time.time()
     for t in range(int(duration/dt)):
         obs, _, _, _ = env.step({
@@ -711,7 +711,7 @@ if __name__ == '__main__':
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='sim', render=True)
-    speedj_and_forceg(env_type='sim', render=True)
+    speedj_and_forceg(env_type='real', render=False)
     # pick_and_place(env_type='real', render=False)
     # collide(env_type='sim', render=True)
     # fidget_in_place(env_type='sim', render=True)

@@ -11,7 +11,7 @@
         <geom name="floor" type="plane" pos="0 0 0" size="2.5 2.5 0.1" rgba=".6 .6 .5 1"
             contype="1" conaffinity="1" friction="2 0.1 0.002" material="light_wood_v3"/>
 
-        <body name="stand" pos="0 0 0.0">
+        <body name="stand" pos="0 0 0.09">
             <!-- <joint name="slidez" type="slide" axis="0 0 1" pos="0 0 0" limited="true" range="-1 1" /> -->
             <inertial pos="0 0 0" quat="1 0 0 0" mass="75" diaginertia="10 10 10" />
             <!--Dual UR3 Stand (visualization)-->

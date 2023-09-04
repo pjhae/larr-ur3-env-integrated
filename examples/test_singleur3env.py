@@ -174,7 +174,9 @@ def speedj_and_forceg(env_type='sim', render=False):
         env.set_initial_joint_pos('current')
         env.set_initial_gripper_pos('current')
         # 2. Set inital as default configuration
-        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
+        
+        env.set_initial_joint_pos(np.array([1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263]))
+        # env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
         env.set_initial_gripper_pos(np.array([0.0]))
         assert render is False
 
@@ -922,7 +924,7 @@ if __name__ == '__main__':
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='sim', render=True)
-    speedj_and_forceg(env_type='sim', render=True)
+    speedj_and_forceg(env_type='real', render=False)
 
     # while True:# 0.0-0.2  -0.5   1.0-1.2   *np.random.rand()
     #     _goal_pos = np.array([0.0, -0.4, 1.0])

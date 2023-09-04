@@ -55,7 +55,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([1.04976657, -1.27260002,  1.68865256, -2.46751188,  0.91525637, -0.01229553])
+        np.array([ 1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263])
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
        
 

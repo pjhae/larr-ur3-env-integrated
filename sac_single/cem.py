@@ -68,21 +68,21 @@ action_seq = np.array([[-0.3,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0]]*100+\
 
 # Run simulation
 # if real, get the data
-if args.exp_type == 'sim':
+if args.exp_type == 'real':
     real_data = []
-    state = env.reset()
+    state = real_env.reset()
     env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     for i in range(1100):
-        next_state, reward, done, _  = env.step({
+        next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([action_seq[i][6]])}}
         })
         # print((i//100)%2)
-        curr_pos = env.get_obs_dict()['right']['curr_pos']      # from real env
+        curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env
         real_data.append(curr_pos)
-        print(curr_pos)
-        env.render()
+        # print(curr_pos)
+        # env.render()
     # Save real data
     real_data = np.array(real_data)
     save_data(real_data, "real_data.npy")
