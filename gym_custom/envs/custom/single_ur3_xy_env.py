@@ -328,7 +328,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
         reward_reaching = -np.linalg.norm(self.curr_pos_block - self.curr_pos)
 
-        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.05:
+        if np.linalg.norm(self.curr_pos_block - goal_pos) < 0.05:
             reward_pos = 100
             reward_reaching = 0
             print("goal in")
@@ -340,13 +340,14 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         else:
             reward_bound = 0.0
 
-        reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound
+        reward = reward_acion + reward_pos + 0.04*reward_reaching + reward_bound
 
         for i in range(12):
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
             self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
+
 
         ob = self._get_obs()
         done = False
