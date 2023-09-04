@@ -98,9 +98,9 @@ action_seq = np.array([[0.0 , -0.0,  0.0, 0.0, 0.0, 0.0]]*100 + [[-0.04, -0.0, 0
                       [[0.0 , 0.0, -0.02, 0.0, 0.0, 0.0]]*50 )
 
 # # left hand
-# action_seq = np.array([[ 0.0, 0.0, 0.0, 0.0 , -0.0,  0.0]]*100 + [[ 0.0, 0.0, 0.0, 0.04, -0.0, 0.0]]*200+\
-#                       [[ 0.0, 0.0, 0.0, 0.0 , -0.04, 0.0]]*75 +  [[ 0.0, 0.0, 0.0, -0.04 ,0.0,   0.0]]*100+\
-#                       [[ 0.0, 0.0, 0.0, 0.0 ,  0.04, 0.0]]*75 +  [[ 0.0, 0.0, 0.0, 0.0 , 0.0,  0.04]]*100+\
+# action_seq = np.array([[ 0.0, 0.0, 0.0, 0.0 , -0.0,  0.0]]*100 + [[ 0.0, 0.0, 0.0, 0.04, -0.0, 0.0]]*150+\
+#                       [[ 0.0, 0.0, 0.0, 0.0 , -0.04, 0.0]]*50 +  [[ 0.0, 0.0, 0.0, -0.04 ,0.0, 0.0]]*100+\
+#                       [[ 0.0, 0.0, 0.0, 0.0 ,  0.04, 0.0]]*50 +  [[ 0.0, 0.0, 0.0, 0.0 , 0.0, 0.04]]*100+\
 #                       [[ 0.0, 0.0, 0.0, 0.0 , 0.0, -0.02]]*50 )
 
 
@@ -110,37 +110,37 @@ null_obj_func = UprightConstraint()
 
 # Run simulation
 # if real, get the data
-if args.exp_type == 'sim':
+if args.exp_type == 'real':
     real_data = []
-    state = env.reset()
+    state = real_env.reset()
     env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
 
-    # if sim env
-    state[:4]  = [0.45, -0.35, -0.45, -0.35]
+    # # if sim env
+    # state[:4]  = [0.45, -0.35, -0.45, -0.35]
 
     # # if real env
-    # state[6:8]  = [0.45, -0.35]
-    # state[9:11] = [-0.45, -0.35]
+    state[6:8]  = [0.45, -0.35]
+    state[9:11] = [-0.45, -0.35]
 
     for i in range(600):
 
-        # if sim env
-        curr_pos_right = np.concatenate([state[0:2],[0.8]])
-        curr_pos_left  = np.concatenate([state[2:4],[0.8]])
+        # # if sim env
+        # curr_pos_right = np.concatenate([state[0:2],[0.8]])
+        # curr_pos_left  = np.concatenate([state[2:4],[0.8]])
 
-        # # if real env
-        # curr_pos_right = np.concatenate([state[6:8],[0.8]])
-        # curr_pos_left  = np.concatenate([state[9:11],[0.8]])
+        # if real env
+        curr_pos_right = np.concatenate([state[6:8],[0.8]])
+        curr_pos_left  = np.concatenate([state[9:11],[0.8]])
 
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_right + action_seq[i][:3], null_obj_func, arm='right')
-        q_left_des,  _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_left + action_seq[i][3:], null_obj_func, arm='left')
+        q_right_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(curr_pos_right + action_seq[i][:3], null_obj_func, arm='right')
+        q_left_des,  _ ,_ ,_ = real_env.inverse_kinematics_ee(curr_pos_left + action_seq[i][3:], null_obj_func, arm='left')
         dt = 1
         print(curr_pos_right, action_seq[i][3:])
-        qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
-        qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
+        qvel_right = (q_right_des - real_env.get_obs_dict()['right']['qpos'])/dt
+        qvel_left = (q_left_des - real_env.get_obs_dict()['left']['qpos'])/dt
         
-        next_state, reward, done, _  = env.step({
+        next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
@@ -152,22 +152,22 @@ if args.exp_type == 'sim':
         })
         
         state = next_state
-        curr_pos = env.get_obs_dict()['right']['curr_pos']      # from real env
+        curr_pos = real_env.get_obs_dict()['left']['curr_pos']      # from real env
 
         real_data.append(curr_pos)
-        env.render()
+        # env.render()
     # Save real data
     real_data = np.array(real_data)
-    # save_data(real_data, "real_data_xy_right_0904.npy")
+    save_data(real_data, "real_data_xy_left_0904.npy")
 
 
 # if sim, RUN CEM
 else:
-    n_seq = 10
+    n_seq = 2
     n_horrizon = 600
     n_dim = 2
     n_iter = 1000
-    n_elit = 2
+    n_elit = 1
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -176,7 +176,8 @@ else:
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_dual/data/real_data_xy_right.npy")
+    real_data = load_data("sac_dual/data/real_data_xy_right_0904_real.npy")
+    real_data = real_data[:,:2]
 
     # logging
     logging = []
@@ -308,7 +309,7 @@ else:
                 }
             })
             state = next_state
-            # env.render()
+            env.render()
             logging_traj.append(curr_pos)
 
         # Plot
