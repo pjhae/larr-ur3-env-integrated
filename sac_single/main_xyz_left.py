@@ -2,7 +2,7 @@ import argparse
 import datetime
 import gym_custom
 from gym_custom import spaces
-from gym_custom.envs.custom.ur_utils import URScriptWrapper_SingleUR3 as URScriptWrapper
+from gym_custom.envs.custom.ur_utils import URScriptWrapper_SingleUR3_LEFT as URScriptWrapper
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
 from collections import OrderedDict
 import numpy as np
