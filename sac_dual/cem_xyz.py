@@ -78,11 +78,11 @@ if args.exp_type == 'real':
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
-    real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
+    real_env.set_initial_joint_pos(np.array([ 1.08087911, -1.20305451,  1.57889565, -2.37654162,  0.89481043, -0.00445367, -1.07724367, -1.91845204, -1.60118395, -0.77929552, -0.88728982, -0.01893623]))
+    # real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
     real_env.set_initial_gripper_pos(np.array([255.0, 255.0]))
 
     time.sleep(1.0)
-
 
 # (참고용) Action limits 
 COMMAND_LIMITS = {
@@ -92,10 +92,19 @@ COMMAND_LIMITS = {
 }
 
 # Pre-defined action sequence
+# right hand
+action_seq = np.array([[0.04,-0.0, 0.0, 0.0]]*100+[[-0.0,-0.0,-0.04, 0.00]]*50+\
+                      [[0.0, -0.04,0.0, 0.0]]*50 +[[-0.0,-0.0, 0.00, 0.04]]*50+\
+                      [[0.0, -0.0, 0.0, 0.0]]*50 +[[-0.0,-0.0, 0.0, -0.00]]*50+\
+                      [[0.02, 0.0, 0.0, 0.0]]*50 +[[-0.0,-0.0, 0.02, 0.00]]*50)
+
+# left hand
 action_seq = np.array([[0.0,0.0,0.0,-0.04,-0.0,0.0]] *150+[[-0.0,-0.0,-0.0,-0.04, 0.0,-0.0]]*50+\
                       [[0.0,0.0,0.0,-0.0,-0.04,0.0]]*50+[[-0.0,-0.0,-0.0,0.00, 0.04,-0.0]]*50+\
                       [[0.0,0.0,0.0,-0.0,-0.0,0.04]]*50+[[-0.0,-0.0,-0.0,0.0,-0.00,-0.04]]*50+\
                       [[0.0,0.0,0.0,-0.02,0.0,0.00]]*50+[[-0.0,-0.0,-0.0,0.02,0.00,0.00]]*50)
+
+
 
 null_obj_func_right = UprightConstraint_right()
 null_obj_func_left = UprightConstraint_left()
@@ -108,7 +117,7 @@ if args.exp_type == 'sim':
     state = env.reset()
     # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-    state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
+    state[:4] = [0.4, -0.35, -0.4, -0.35]
     
     for i in range(400):
         
