@@ -136,13 +136,15 @@ null_obj_func = UprightConstraint()
 # train
 for i_episode in itertools.count(1):
 
+    env.rand_idx = -1
+
     episode_reward = 0
     episode_steps = 0
     done = False
     state = env.reset()
     state[:2] = np.array([0.4, -0.375])
     state = state[:4]
-
+    
     while not done:
         if args.start_steps > total_numsteps:
             action = action_space.sample()  # Sample random action

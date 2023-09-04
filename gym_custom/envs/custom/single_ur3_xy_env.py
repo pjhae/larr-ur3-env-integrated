@@ -370,9 +370,11 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         # qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
         # qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
 
-        self.rand_idx = np.random.randint(5)
         block_pos_candi = np.array([[0.15, -0.3], [0.3, -0.3], [0.15, -0.4], [0.3, -0.4], [0.225, -0.35]])
 
+        if self.rand_idx == -1:
+            self.rand_idx = np.random.randint(5)    
+        
         qpos[-21:-19] = block_pos_candi[self.rand_idx]
 
         self.set_state(qpos, qvel)
