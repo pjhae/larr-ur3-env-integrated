@@ -17,8 +17,8 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
     ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
     ur3_nqvel, gripper_nqvel = 6, 10 # per ur3/gripper joint vel dim
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
-    objects_nqpos = [7, 7, 7]
-    objects_nqvel = [6, 6, 6]
+    objects_nqpos = [7, 7, 7, 7]
+    objects_nqvel = [6, 6, 6, 6]
     ENABLE_COLLISION_CHECKER = False
     # ee position
     curr_pos = np.array([0, 0, 0, 0, 0, 0])
@@ -50,9 +50,9 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-            np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
+            np.array([ 1.08087911, -1.20305451,  1.57889565, -2.37654162,  0.89481043, -0.00445367]) # right arm
         self.init_qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos] = \
-            np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
+            np.array([-1.07724367, -1.91845204, -1.60118395, -0.77929552, -0.88728982, -0.01893623])# left arm
 
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
@@ -156,7 +156,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.001, threshold_null=0.01, max_iter=10, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.001, max_iter=10, epsilon=1e-6
         ):
         '''
         inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
@@ -364,8 +364,6 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         for i in range(12):  # TODO :change it to 12
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
-            qpos[-14:-11] = self.goal_pos[:3]
-            qpos[-7:-4] = self.goal_pos[3:] 
             self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
 
@@ -375,9 +373,6 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
 
     def reset_model(self):
         '''overridable method'''
-
-        self.goal_pos = np.array([0.1+0.3*np.random.rand(), -0.3-0.2*np.random.rand(), 0.9+0.2*np.random.rand(), -0.1-0.3*np.random.rand(), -0.3-0.2*np.random.rand(), 0.9+0.2*np.random.rand()])
-        # self.goal_pos = np.array([0.4, -0.4, 1.0, -0.2, -0.4, 1.0])
 
         # qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         # qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)

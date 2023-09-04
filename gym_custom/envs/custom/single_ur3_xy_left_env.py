@@ -332,7 +332,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
             print("goal in")
 
         # reward_bound 
-        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], 0.1, -0.6, -0.75, 0.60)
+        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], -0.65, -0.6, 0.75, 0.60)
         if is_inside_bound == False:
             reward_bound = -1.0
         else:
