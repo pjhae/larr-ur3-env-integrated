@@ -55,7 +55,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([-0.5556232,  -1.25402664, -2.21761154, -0.56803883, -1.17712696, -0.00996483])
+        np.array([-1.07724367, -1.91845204, -1.60118395, -0.77929552, -0.88728982, -0.01893623])
         # np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
@@ -308,7 +308,6 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
 
     def step(self, a):
         '''overridable method'''
-
         # cube pos
         id_cube_6 = self.sim.model.geom_name2id("cube_6")
         self.curr_pos_block = np.concatenate([self.sim.data.geom_xpos[id_cube_6][:2]])
@@ -317,33 +316,29 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'left')
         self.curr_pos = curr_pos[:2]
 
-        # inital pos
-        init_pos = np.array([-0.2, -0.2])
-
         # goal pos
-        goal_pos = np.array([0.0, -0.3])
+        goal_pos = np.array([0.0, -0.35])
 
-        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], 0.1, -0.6, -0.75, 0.60)
-        if is_inside_bound == False:
-            reward_bound = -1
-        else:
-            reward_bound = 0
+        # reward action
+        reward_acion = -0.0000001*np.linalg.norm(a)
 
-        reward_acion = -0.00000001*np.linalg.norm(a)
-
+        # reward pos & reward reaching
+        reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
         reward_reaching = -np.linalg.norm(self.curr_pos_block - self.curr_pos)
 
-        reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
-        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.04:
+        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.05:
             reward_pos = 100
-            if np.linalg.norm(init_pos - self.curr_pos)< 0.05:
-                reward_reaching = 5
-                print("goal in & initial pos")
-            else:
-                reward_reaching = -3*np.linalg.norm(init_pos - self.curr_pos)
-                print("goal in")
+            reward_reaching = 0
+            print("goal in")
 
-        reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound 
+        # reward_bound 
+        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], 0.1, -0.6, -0.75, 0.60)
+        if is_inside_bound == False:
+            reward_bound = -1.0
+        else:
+            reward_bound = 0.0
+
+        reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound
 
         for i in range(12):
             qpos = self.sim.data.qpos
@@ -353,7 +348,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
 
         ob = self._get_obs()
         done = False
-
+       
         return ob, reward, done, {}
 
 
@@ -363,11 +358,18 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
 
-        qpos[-21] = -0.10 -0.35*np.random.rand() # x  0 ~ 0.55
-        qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
+        # qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
+        # qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
+
+        block_pos_candi = np.array([[-0.15, -0.3], [-0.3, -0.3], [-0.15, -0.4], [-0.3, -0.4], [-0.225, -0.35]])
+
+        rand_idx = np.random.randint(5)
+        qpos[-21:-19] = block_pos_candi[rand_idx]
+
         self.set_state(qpos, qvel)
 
         return self._get_obs()
+    
 
     def viewer_setup(self):
         '''overridable method'''
