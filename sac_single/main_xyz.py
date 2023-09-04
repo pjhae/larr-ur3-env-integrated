@@ -140,7 +140,7 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
-    state[:2] = np.array([0.55, -0.375])
+    state[:2] = np.array([0.4, -0.375])
     state = state[:4]
 
     while not done:
@@ -217,7 +217,7 @@ for i_episode in itertools.count(1):
         episodes = 5
         for _  in range(episodes):
             state = env.reset()
-            state[:2] = np.array([0.55, -0.375])
+            state[:2] = np.array([0.4, -0.375])
             state = state[:4]
             episode_steps = 0
             episode_reward = 0

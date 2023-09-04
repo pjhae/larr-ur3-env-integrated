@@ -171,14 +171,14 @@ register(
 register(
     id='single-ur3-xy-larr-for-train-v0',
     entry_point='gym_custom.envs.custom.single_ur3_xy_env:SingleUR3XYEnv',
-    max_episode_steps=800,
+    max_episode_steps=600,
     reward_threshold=0.0,
 )
 
 register(
     id='single-ur3-xy-left-larr-for-train-v0',
     entry_point='gym_custom.envs.custom.single_ur3_xy_left_env:SingleUR3XYLEFTEnv',
-    max_episode_steps=800,
+    max_episode_steps=600,
     reward_threshold=0.0,
 )
 

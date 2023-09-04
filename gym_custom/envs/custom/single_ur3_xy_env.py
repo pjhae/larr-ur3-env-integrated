@@ -55,9 +55,10 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([ 0.92082518, -1.16904956,  1.22725447, -2.15386273,  0.96812748,  0.00251208])
+        np.array([ 1.16909164, -1.17849712,  1.69786527, -2.45245075,  0.8595422,  -0.00423629])
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
-        
+       
+
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
         self.kinematics_params = {}
@@ -327,29 +328,26 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         offset = np.array([0.06, 0])
 
         # reward action
-        reward_acion = -0.00001*np.linalg.norm(a)
+        reward_acion = -0.0000001*np.linalg.norm(a)
 
-        # new
-        reward_pos = -0.35
-        reward_pushing = 0
-        reward_reaching = -np.linalg.norm(self.curr_pos_block +offset -self.curr_pos)
-
-        if np.linalg.norm(self.curr_pos_block +offset -self.curr_pos) < 0.075:
-            reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
-            reward_pushing = 0.15 - np.linalg.norm(self.curr_pos_block - self.curr_pos)
+        # reward pos & reward reaching
+        reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
+        reward_reaching = -np.linalg.norm(self.curr_pos_block - self.curr_pos)
 
         if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.05:
-            reward_pos += 100
-            print("GOAL IN")
+            reward_pos = 100
+            reward_reaching = 0
+            print("goal in")
 
         # reward_bound 
         is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], -0.1, -0.6, 0.75, 0.60)
         if is_inside_bound == False:
-            reward_bound = -1.5
+            reward_bound = -1.0
         else:
-            reward_bound = 0
+            reward_bound = 0.0
 
-        reward = reward_acion + 10*reward_pos + 0.8*reward_pushing + 0.2*reward_reaching + reward_bound
+        reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound
+
         # print(reward_acion, reward_pos, reward_reaching, reward_bound)
         for i in range(12):
             qpos = self.sim.data.qpos
@@ -371,13 +369,10 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
         # qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
         # qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
-        rand_idx = np.random.randint(2)
+        rand_idx = np.random.randint(4)
+        goal_pos_candi = np.array([[0.15, -0.3], [0.3, -0.3], [0.15, -0.4], [0.3, -0.4]])
 
-        qpos[-21] =  0.30
-        if rand_idx == 0 :
-            qpos[-20] = -0.30
-        else:
-            qpos[-20] = -0.45
+        qpos[-21:-19] = goal_pos_candi[rand_idx]
 
         self.set_state(qpos, qvel)
 
