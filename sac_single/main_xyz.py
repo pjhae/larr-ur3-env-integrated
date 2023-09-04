@@ -136,13 +136,11 @@ null_obj_func = UprightConstraint()
 # train
 for i_episode in itertools.count(1):
 
-    env.rand_idx = -1
-
     episode_reward = 0
     episode_steps = 0
     done = False
     state = env.reset()
-    state[:2] = np.array([0.4, -0.375])
+    state[:2] = np.array([0.45, -0.375])
     state = state[:4]
     
     while not done:
@@ -174,7 +172,7 @@ for i_episode in itertools.count(1):
         next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([20.0])}
             }
         })
         
@@ -204,10 +202,11 @@ for i_episode in itertools.count(1):
         avg_reward = 0.
         avg_step = 0.
         episodes = 5
+
         for i in range(episodes):
-            env.rand_idx = i
+
             state = env.reset()
-            state[:2] = np.array([0.4, -0.375])
+            state[:2] = np.array([0.45, -0.375])
             state = state[:4]
             episode_steps = 0
             episode_reward = 0
@@ -224,7 +223,7 @@ for i_episode in itertools.count(1):
                 next_state, reward, done, _  = env.step({
                     'right': {
                         'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                        'move_gripper_force': {'gf': np.array([10.0])}
+                        'move_gripper_force': {'gf': np.array([20.0])}
                     }
                 })
                 episode_reward += -np.linalg.norm([state[:2]-state[2:4]])
@@ -233,6 +232,7 @@ for i_episode in itertools.count(1):
                 state = next_state[:4]
             avg_reward += episode_reward
             avg_step += episode_steps
+
         avg_reward /= episodes
         avg_step /= episodes
 

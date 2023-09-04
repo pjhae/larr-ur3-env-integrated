@@ -27,7 +27,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
     # ee position
     curr_pos = np.array([0, 0])
     curr_pos_block = np.array([1,1])
-    rand_idx = -1
+
 
     def __init__(self):
         if self.ENABLE_COLLISION_CHECKER:
@@ -55,7 +55,7 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([ 1.16909164, -1.17849712,  1.69786527, -2.45245075,  0.8595422,  -0.00423629])
+        np.array([ 1.08087911, -1.20305451,  1.57889565, -2.37654162,  0.89481043, -0.00445367])
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
        
 
@@ -318,14 +318,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         self.curr_pos = curr_pos[:2]
 
-        # inital pos
-        init_pos = np.array([0.2, -0.2])
-
         # goal pos
-        goal_pos = np.array([0.0, -0.375])
-
-        # cube offset
-        offset = np.array([0.06, 0])
+        goal_pos = np.array([0.0, -0.35])
 
         # reward action
         reward_acion = -0.0000001*np.linalg.norm(a)
@@ -348,7 +342,6 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
         reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound
 
-        # print(reward_acion, reward_pos, reward_reaching, reward_bound)
         for i in range(12):
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
@@ -372,10 +365,8 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
 
         block_pos_candi = np.array([[0.15, -0.3], [0.3, -0.3], [0.15, -0.4], [0.3, -0.4], [0.225, -0.35]])
 
-        if self.rand_idx == -1:
-            self.rand_idx = np.random.randint(5)    
-        
-        qpos[-21:-19] = block_pos_candi[self.rand_idx]
+        rand_idx = np.random.randint(5)
+        qpos[-21:-19] = block_pos_candi[rand_idx]
 
         self.set_state(qpos, qvel)
 

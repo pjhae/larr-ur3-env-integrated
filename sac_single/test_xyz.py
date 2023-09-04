@@ -187,7 +187,7 @@ episodes = 10
 
 while True:
     state = env.reset()
-    state[:2] = np.array([0.4, -0.375])
+    state[:2] = np.array([0.45, -0.375])
     state = state[:4]
     
     episode_reward = 0
@@ -223,7 +223,7 @@ while True:
         next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
+                'move_gripper_force': {'gf': np.array([20.0])}
             }
         })
 
