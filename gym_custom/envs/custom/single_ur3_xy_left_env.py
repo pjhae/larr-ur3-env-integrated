@@ -55,7 +55,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([-1.07724367, -1.91845204, -1.60118395, -0.77929552, -0.88728982, -0.01893623])
+        np.array([-1.04912034, -1.8650689,  -1.69325681, -0.67734611, -0.91388391, -0.01221272])
         # np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
@@ -157,7 +157,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.01, threshold_null=0.001, max_iter=100, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.001, max_iter=100, epsilon=1e-6
         ):
         '''
         inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
