@@ -108,36 +108,29 @@
             <geom name="cir:leg3" type="cylinder" fromto="-0.2 0 0.59 -0.2 0 0" size="0.025" material="metal"/>
             <geom name="cir:leg4" type="cylinder" fromto="0 -0.2 0.59 0 -0.2 0" size="0.025" material="metal"/>
         </body>
-        
-        <body name="curved_cube" pos="-0.3 -0.6 0.754" euler ="0 0 0" > <!---->
-            <inertial pos="0 0 0" mass="0.1" diaginertia="0.01 0.01 0.01" />
-            <geom name="cube_1" type="box" pos="-0.024  0.000 -0.0" size="0.024 0.048 0.024" friction="0.01 0.001 0.002" rgba="0.5 0.5 0 1" />
-            <geom name="cube_2" type="box" pos="-0.024  0.072 -0.0" size="0.024 0.024 0.024" friction="0.01 0.001 0.002" rgba="0.0 0.7 0 1" />
-            <geom name="cube_3" type="box" pos="-0.024 -0.072 -0.0" size="0.024 0.024 0.024" friction="0.01 0.001 0.002" rgba="0.0 0.7 0 1" />
-            <geom name="cube_4" type="box" pos="0.024  0.072 -0.0" size="0.024 0.024 0.024"  friction="0.01 0.001 0.002" rgba="0.7 0.7 0 1" />
-            <geom name="cube_5" type="box" pos="0.024 -0.072 -0.0" size="0.024 0.024 0.024"  friction="0.01 0.001 0.002" rgba="0.7 0.7 0 1" />
-            <joint name="cube" type="free" damping="0.00" />
+
+        <body name="cube1" pos="0.15 -0.3 0.76" > <!--0.76-->
+            <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.001" />
+            <geom name="cube_1" type="box" pos="0.0 -0.0 -0.0" size="0.03 0.03 0.03" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
+            <joint name="cube_joint1" type="free" limited="false" damping="0.001" />
         </body>
    
-        <body name="cube" pos="0.2 -0.4 0.76" > <!--0.76-->
+        <body name="cube2" pos="0.3 -0.4 0.16" > <!--0.76-->
             <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.001" />
-            <geom name="cube_6" type="box" pos="0.0 -0.0 -0.0" size="0.024 0.024 0.024" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
-            <joint name="cube_joint" type="free" limited="false" damping="0.001" />
+            <geom name="cube_2" type="box" pos="0.0 -0.0 -0.0" size="0.03 0.03 0.03" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
+            <joint name="cube_joint2" type="free" limited="false" damping="0.001" />
         </body>
 
-        <body name="big_cube" pos="-0.3 -0.4 0.75" >
-            <inertial pos="0 0 0" mass="0.2" diaginertia="0.1 0.1 0.1" />
-            <geom name="cube_7" type="box" pos="0.0 -0.0 -0.0" size="0.04 0.04 0.02" friction="0.01 0.001 0.002" rgba="0.0 0.7 0.7 1" />
-            <geom name="cube_8" type="box" pos="-0.06  0.00 -0.0" size="0.02 0.04 0.02"  friction="0.01 0.001 0.002" rgba="0 0.7 0.7 1" />
-            <geom name="cube_9" type="box" pos=" 0.06 -0.00 -0.0" size="0.02 0.04 0.02"  friction="0.01 0.001 0.002" rgba="0 0.7 0.7 1" />
-
-            <joint name="big_cube_joint" type="free" limited="false" damping="0.001" />
+        <body name="cube3" pos="-0.15 -0.3 0.16" > <!--0.76-->
+            <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.001" />
+            <geom name="cube_3" type="box" pos="0.0 -0.0 -0.0" size="0.03 0.03 0.03" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
+            <joint name="cube_joint3" type="free" limited="false" damping="0.001" />
         </body>
         
-        <body name="asri_ball" pos="-0.3 -0.4 0.73" quat="0.9961946981 0.0871557427 0 0" >
-            <geom name="asri_stickball:ball" pos="0 0 0" size="0.025" type="sphere" conaffinity="0" contype="0" rgba="1 0 0 1"/>
-            <!-- <geom name="asri_stickball:stick" type="capsule" fromto="0 0 0 0 0 0.15" size="0.0025" condim="1" material="light_wood" density="700" /> -->
-            <joint name="stickball_box" type="free" damping="0.001" />
+        <body name="cube4" pos="-0.3 -0.4 0.76" > <!--0.76-->
+            <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.001" />
+            <geom name="cube_4" type="box" pos="0.0 -0.0 -0.0" size="0.03 0.03 0.03" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
+            <joint name="cube_joint4" type="free" limited="false" damping="0.001" />
         </body>
 
         <!--
