@@ -223,7 +223,7 @@ while True:
         next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([20.0])}
+                'move_gripper_force': {'gf': np.array([15.0])}
             }
         })
 
