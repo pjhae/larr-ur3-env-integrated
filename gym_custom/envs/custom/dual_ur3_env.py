@@ -52,7 +52,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         self.init_qpos[0:self.ur3_nqpos] = \
             np.array([1.04976657, -1.27260002,  1.68865256, -2.46751188,  0.91525637, -0.01229553]) # right arm
         self.init_qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos] = \
-            np.array([-1.04912034, -1.8650689,  -1.69325681, -0.67734611, -0.91388391, -0.01221272])# left arm
+            np.array([-1.04912034, -1.8650689,  -1.69325681, -0.67734611, -0.91388391, -0.01221272]) # left arm
 
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/

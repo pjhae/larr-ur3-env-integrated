@@ -109,7 +109,7 @@
             <geom name="cir:leg4" type="cylinder" fromto="0 -0.2 0.59 0 -0.2 0" size="0.025" material="metal"/>
         </body>
 
-        <body name="cube1" pos="0.15 -0.3 0.76" > <!--0.76-->
+        <body name="cube1" pos="0.15 -0.3 0.16" > <!--0.76-->
             <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.001" />
             <geom name="cube_1" type="box" pos="0.0 -0.0 -0.0" size="0.03 0.03 0.03" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
             <joint name="cube_joint1" type="free" limited="false" damping="0.001" />
@@ -127,7 +127,7 @@
             <joint name="cube_joint3" type="free" limited="false" damping="0.001" />
         </body>
         
-        <body name="cube4" pos="-0.3 -0.4 0.76" > <!--0.76-->
+        <body name="cube4" pos="-0.3 -0.4 0.16" > <!--0.76-->
             <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.001" />
             <geom name="cube_4" type="box" pos="0.0 -0.0 -0.0" size="0.03 0.03 0.03" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
             <joint name="cube_joint4" type="free" limited="false" damping="0.001" />

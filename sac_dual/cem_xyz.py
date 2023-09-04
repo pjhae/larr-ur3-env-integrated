@@ -78,10 +78,9 @@ if args.exp_type == 'real':
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
-    real_env.set_initial_joint_pos(np.array([ 1.08087911, -1.20305451,  1.57889565, -2.37654162,  0.89481043, -0.00445367, -1.07724367, -1.91845204, -1.60118395, -0.77929552, -0.88728982, -0.01893623]))
+    env.set_initial_joint_pos(np.array([1.04976657, -1.27260002,  1.68865256, -2.46751188,  0.91525637, -0.01229553, -1.04912034, -1.8650689,  -1.69325681, -0.67734611, -0.91388391, -0.01221272]))
     # real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
     real_env.set_initial_gripper_pos(np.array([255.0, 255.0]))
-
     time.sleep(1.0)
 
 # (참고용) Action limits 
@@ -93,17 +92,16 @@ COMMAND_LIMITS = {
 
 # Pre-defined action sequence
 # right hand
-action_seq = np.array([[0.04,-0.0, 0.0, 0.0]]*100+[[-0.0,-0.0,-0.04, 0.00]]*50+\
-                      [[0.0, -0.04,0.0, 0.0]]*50 +[[-0.0,-0.0, 0.00, 0.04]]*50+\
-                      [[0.0, -0.0, 0.0, 0.0]]*50 +[[-0.0,-0.0, 0.0, -0.00]]*50+\
-                      [[0.02, 0.0, 0.0, 0.0]]*50 +[[-0.0,-0.0, 0.02, 0.00]]*50)
+action_seq = np.array([[0.0 , -0.0,  0.0, 0.0, 0.0, 0.0]]*100 + [[-0.04, -0.0, 0.0, 0.0, 0.0, 0.0]]*200+\
+                      [[0.0 , -0.04, 0.0, 0.0, 0.0, 0.0]]*75 +  [[0.04 ,0.0, 0.0, 0.0, 0.0, 0.0]]*100+\
+                      [[0.0 ,  0.04, 0.0, 0.0, 0.0, 0.0]]*75 +  [[0.0 , 0.0, 0.04, 0.0, 0.0, 0.0]]*100+\
+                      [[0.0 , 0.0, -0.02, 0.0, 0.0, 0.0]]*50 )
 
 # left hand
-action_seq = np.array([[0.0,0.0,0.0,-0.04,-0.0,0.0]] *150+[[-0.0,-0.0,-0.0,-0.04, 0.0,-0.0]]*50+\
-                      [[0.0,0.0,0.0,-0.0,-0.04,0.0]]*50+[[-0.0,-0.0,-0.0,0.00, 0.04,-0.0]]*50+\
-                      [[0.0,0.0,0.0,-0.0,-0.0,0.04]]*50+[[-0.0,-0.0,-0.0,0.0,-0.00,-0.04]]*50+\
-                      [[0.0,0.0,0.0,-0.02,0.0,0.00]]*50+[[-0.0,-0.0,-0.0,0.02,0.00,0.00]]*50)
-
+action_seq = np.array([[ 0.0, 0.0, 0.0, 0.0 , -0.0,  0.0]]*100 + [[ 0.0, 0.0, 0.0, 0.04, -0.0, 0.0]]*200+\
+                      [[ 0.0, 0.0, 0.0, 0.0 , -0.04, 0.0]]*75 +  [[ 0.0, 0.0, 0.0, -0.04 ,0.0,   0.0]]*100+\
+                      [[ 0.0, 0.0, 0.0, 0.0 ,  0.04, 0.0]]*75 +  [[ 0.0, 0.0, 0.0, 0.0 , 0.0,  0.04]]*100+\
+                      [[ 0.0, 0.0, 0.0, 0.0 , 0.0, -0.02]]*50 )
 
 
 null_obj_func_right = UprightConstraint_right()
@@ -112,17 +110,18 @@ null_obj_func = UprightConstraint()
 
 # Run simulation
 # if real, get the data
-if args.exp_type == 'sim':
+if args.exp_type == 'real':
     real_data = []
     state = env.reset()
-    # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-    # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-    state[:4] = [0.4, -0.35, -0.4, -0.35]
-    
-    for i in range(400):
-        
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9]+action_seq[i][:3], null_obj_func, arm='right')
-        q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[9:12]+action_seq[i][3:], null_obj_func, arm='left')
+    env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    state[:4] = [0.45, -0.35, -0.45, -0.35]
+
+    for i in range(700):
+        curr_pos_right = np.concatenate([state[:2],[0.8]])
+        curr_pos_left  = np.concatenate([state[2:4],[0.8]])
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_right + action_seq[i][:3], null_obj_func, arm='right')
+        q_left_des,  _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_left + action_seq[i][3:], null_obj_func, arm='left')
         dt = 1
         qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
         qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
@@ -139,22 +138,22 @@ if args.exp_type == 'sim':
         })
         
         state = next_state
-        curr_pos = env.get_obs_dict()['left']['curr_pos']      # from real env
+        curr_pos = env.get_obs_dict()['right']['curr_pos']      # from real env
 
         real_data.append(curr_pos)
         env.render()
     # Save real data
     real_data = np.array(real_data)
-    save_data(real_data, "real_data_xyz_left.npy")
+    save_data(real_data, "real_data_xy_right.npy")
 
 
 # if sim, RUN CEM
 else:
-    n_seq = 2
-    n_horrizon = 400
-    n_dim = 3
+    n_seq = 10
+    n_horrizon = 700
+    n_dim = 2
     n_iter = 1000
-    n_elit = 1
+    n_elit = 2
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -163,7 +162,7 @@ else:
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_dual/data/real_data_xyz_left_vel.npy")
+    real_data = load_data("sac_dual/data/real_data_xy_right.npy")
 
     # logging
     logging = []
@@ -186,19 +185,20 @@ else:
             # ur3_scale_factor
             env.wrapper_left.ur3_scale_factor[:6]= candidate_parameters[i][:6]
 
-            state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
+            state[:4] = [0.45, -0.35, -0.45, -0.35]
 
             for j in range(n_horrizon):
-
-                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9]+action_seq[j][:3], null_obj_func, arm='right')
-                q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action_seq[j][3:], null_obj_func, arm='left')
+                curr_pos_right = np.concatenate([state[:2],[0.8]])
+                curr_pos_left  = np.concatenate([state[2:4],[0.8]])
+                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_right + action_seq[j][:3], null_obj_func, arm='right')
+                q_left_des,  _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_left + action_seq[j][3:], null_obj_func, arm='left')
 
                 dt = 1
 
                 qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
                 qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
 
-                curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
+                curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
                 sim_data[i][j][:] = curr_pos
                 next_state, reward, done, _  = env.step({
                     'right': {
@@ -268,19 +268,21 @@ else:
         env.wrapper_left.ur3_scale_factor[:6] = prams_mean[:6]
 
         # env.wrapper_left.ur3_scale_factor[:6] =  [5,5,5,5,5,5]
-        env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-        env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-        state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]
+        # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+        # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+        state[:4] = [0.45, -0.35, -0.45, -0.35]
 
         for j in range(n_horrizon):
-            q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9] +action_seq[j][:3], null_obj_func, arm='right')
-            q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action_seq[j][3:], null_obj_func, arm='left')
+            curr_pos_right = np.concatenate([state[:2],[0.8]])
+            curr_pos_left  = np.concatenate([state[2:4],[0.8]])
+
+            q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_right +action_seq[j][:3], null_obj_func, arm='right')
+            q_left_des,  _ ,_ ,_ = env.inverse_kinematics_ee(curr_pos_left  +action_seq[j][3:], null_obj_func, arm='left')
             dt = 1
             qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
             qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
-            curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
+            curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
 
-            sim_data[i][j][:] = curr_pos
             next_state, reward, done, _  = env.step({
                 'right': {
                     'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -292,7 +294,7 @@ else:
                 }
             })
             state = next_state
-            env.render()
+            # env.render()
             logging_traj.append(curr_pos)
 
         # Plot
@@ -300,8 +302,8 @@ else:
         real_array_traj = np.array(real_data).T
 
         ax3 = plt.subplot(3, 1, 3)  
-        plt.plot(history_array_traj[2], label='sim', marker=',')
-        plt.plot(real_array_traj[2], label='real', linestyle='--')
+        plt.plot(history_array_traj[0], label='sim', marker=',')
+        plt.plot(real_array_traj[0], label='real', linestyle='--')
 
         plt.xlabel("timestep")
         plt.ylabel("position")
