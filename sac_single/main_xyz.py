@@ -191,19 +191,6 @@ for i_episode in itertools.count(1):
         
     if total_numsteps > args.num_steps:
         break   
-    
-    # ## 1
-    # HER_batch = HER_memory.sample(state)
-    # HER_batch_length = len(HER_batch)
-    # HER_memory.clear()
-    # memory.push_batch(HER_batch, HER_batch_length)
-
-    ## 2
-    # print("T :",state[3:6])
-    # (HER) state, action, reward, next_state, done  = HER_memory.sample(state)
-    # (HER) for i in range(len(state)):
-    # (HER)     memory.push(state[i], action[i], reward[i], next_state[i], done[i])
-
 
     writer.add_scalar('reward/train', episode_reward, i_episode)
     print("Episode: {}, total numsteps: {}, episode steps: {}, reward: {}".format(i_episode, total_numsteps, episode_steps, round(episode_reward, 2)))
@@ -215,7 +202,8 @@ for i_episode in itertools.count(1):
         avg_reward = 0.
         avg_step = 0.
         episodes = 5
-        for _  in range(episodes):
+        for i in range(episodes):
+            env.rand_idx = i
             state = env.reset()
             state[:2] = np.array([0.4, -0.375])
             state = state[:4]
