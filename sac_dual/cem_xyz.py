@@ -78,8 +78,8 @@ if args.exp_type == 'real':
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
-    # real_env.set_initial_joint_pos(np.array([1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263, -1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267]))
-    real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
+    real_env.set_initial_joint_pos(np.array([1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263, -1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267]))
+    #real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
     real_env.set_initial_gripper_pos(np.array([255.0, 255.0]))
     time.sleep(1.0)
 
@@ -115,24 +115,26 @@ if args.exp_type == 'real':
     state = real_env.reset()
     # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-    state[:4] = [0.45, -0.35, -0.45, -0.35]
+    state[6:8]  = [0.45, -0.35]
+    state[9:11] = [-0.45, -0.35]
 
     for i in range(700):
-        curr_pos_right = np.concatenate([state[:2],[0.8]])
-        curr_pos_left  = np.concatenate([state[2:4],[0.8]])
+        curr_pos_right = np.concatenate([state[6:8],[0.8]])
+        curr_pos_left  = np.concatenate([state[9:11],[0.8]])
         q_right_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(curr_pos_right + action_seq[i][:3], null_obj_func, arm='right')
         q_left_des,  _ ,_ ,_ = real_env.inverse_kinematics_ee(curr_pos_left + action_seq[i][3:], null_obj_func, arm='left')
         dt = 1
+        print(curr_pos_right, action_seq[i][3:])
         qvel_right = (q_right_des - real_env.get_obs_dict()['right']['qpos'])/dt
         qvel_left = (q_left_des - real_env.get_obs_dict()['left']['qpos'])/dt
         
         next_state, reward, done, _  = real_env.step({
             'right': {
-                'speedj': {'qd': np.array([-0.1,0,0,0,0,0]), 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'speedj': {'qd': qvel_right, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
             },
             'left': {
-                'speedj': {'qd': np.array([0,0,0,0,0,0]), 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'speedj': {'qd': qvel_left, 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([10.0])}
             }
         })
