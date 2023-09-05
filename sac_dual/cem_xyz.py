@@ -91,17 +91,17 @@ COMMAND_LIMITS = {
 }
 
 # Pre-defined action sequence
-# right hand
-action_seq = np.array([[0.0 , -0.0,  0.0, 0.0, 0.0, 0.0]]*100 + [[-0.04, -0.0, 0.0, 0.0, 0.0, 0.0]]*150+\
-                      [[0.0 , -0.04, 0.0, 0.0, 0.0, 0.0]]*50 +  [[0.04 ,0.0, 0.0, 0.0, 0.0, 0.0]]*100+\
-                      [[0.0 ,  0.04, 0.0, 0.0, 0.0, 0.0]]*50 +  [[0.0 , 0.0, 0.04, 0.0, 0.0, 0.0]]*100+\
-                      [[0.0 , 0.0, -0.02, 0.0, 0.0, 0.0]]*50 )
+# # right hand
+# action_seq = np.array([[0.0 , -0.0,  0.0, 0.0, 0.0, 0.0]]*100 + [[-0.04, -0.0, 0.0, 0.0, 0.0, 0.0]]*150+\
+#                       [[0.0 , -0.04, 0.0, 0.0, 0.0, 0.0]]*50 +  [[0.04 ,0.0, 0.0, 0.0, 0.0, 0.0]]*100+\
+#                       [[0.0 ,  0.04, 0.0, 0.0, 0.0, 0.0]]*50 +  [[0.0 , 0.0, 0.04, 0.0, 0.0, 0.0]]*100+\
+#                       [[0.0 , 0.0, -0.02, 0.0, 0.0, 0.0]]*50 )
 
 # # left hand
-# action_seq = np.array([[ 0.0, 0.0, 0.0, 0.0 , -0.0,  0.0]]*100 + [[ 0.0, 0.0, 0.0, 0.04, -0.0, 0.0]]*150+\
-#                       [[ 0.0, 0.0, 0.0, 0.0 , -0.04, 0.0]]*50 +  [[ 0.0, 0.0, 0.0, -0.04 ,0.0, 0.0]]*100+\
-#                       [[ 0.0, 0.0, 0.0, 0.0 ,  0.04, 0.0]]*50 +  [[ 0.0, 0.0, 0.0, 0.0 , 0.0, 0.04]]*100+\
-#                       [[ 0.0, 0.0, 0.0, 0.0 , 0.0, -0.02]]*50 )
+action_seq = np.array([[ 0.0, 0.0, 0.0, 0.0 , -0.0,  0.0]]*100 + [[ 0.0, 0.0, 0.0, 0.04, -0.0, 0.0]]*150+\
+                      [[ 0.0, 0.0, 0.0, 0.0 , -0.04, 0.0]]*50 +  [[ 0.0, 0.0, 0.0, -0.04 ,0.0, 0.0]]*100+\
+                      [[ 0.0, 0.0, 0.0, 0.0 ,  0.04, 0.0]]*50 +  [[ 0.0, 0.0, 0.0, 0.0 , 0.0, 0.04]]*100+\
+                      [[ 0.0, 0.0, 0.0, 0.0 , 0.0, -0.02]]*50 )
 
 
 null_obj_func_right = UprightConstraint_right()
@@ -163,11 +163,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 2
+    n_seq = 100
     n_horrizon = 600
     n_dim = 2
     n_iter = 1000
-    n_elit = 1
+    n_elit = 5
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -198,8 +198,8 @@ else:
         for i in range(n_seq):
             state = env.reset()
             # ur3_scale_factor
-            env.wrapper_left.ur3_scale_factor[:6]= candidate_parameters[i][:6]
-
+            env.wrapper_right.ur3_scale_factor[:6]= candidate_parameters[i][:6]  # right
+            env.wrapper_left.ur3_scale_factor[:6]= candidate_parameters[i][:6]  # left
             state[:4] = [0.45, -0.35, -0.45, -0.35]
 
             for j in range(n_horrizon):
@@ -214,6 +214,7 @@ else:
                 qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
 
                 curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
+                
                 sim_data[i][j][:] = curr_pos
                 next_state, reward, done, _  = env.step({
                     'right': {
@@ -245,7 +246,9 @@ else:
         prams_std = alpha * np.std(elite_params, axis=0) + (1 - alpha) * prams_std
         logging.append(prams_mean)
         logging_err.append(elite_err)
-        print(prams_mean)
+
+        # Print
+        print("right : ",prams_mean)
         
         # Plot
         plt.clf()  
@@ -280,7 +283,8 @@ else:
         # for traj visualization, real vs sim
         logging_traj = []
         state = env.reset()
-        env.wrapper_left.ur3_scale_factor[:6] = prams_mean[:6]
+        env.wrapper_right.ur3_scale_factor[:6] = prams_mean[:6] # right
+        env.wrapper_left.ur3_scale_factor[:6] = prams_mean[:6] # left
 
         # env.wrapper_left.ur3_scale_factor[:6] =  [5,5,5,5,5,5]
         # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
@@ -296,6 +300,7 @@ else:
             dt = 1
             qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
             qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
+
             curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
 
             next_state, reward, done, _  = env.step({
@@ -309,7 +314,7 @@ else:
                 }
             })
             state = next_state
-            env.render()
+            # env.render()
             logging_traj.append(curr_pos)
 
         # Plot
