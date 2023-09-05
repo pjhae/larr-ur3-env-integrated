@@ -28,6 +28,16 @@ class UprightConstraint(NullObjectiveBase):
         axis_curr = SO3[:,2]
         return 1.0 - np.dot(axis_curr, axis_des)
 
+class FrontConstraint(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        axis_des = np.array([0, -1, 0])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
+
 
 def speedj_and_forceg(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
@@ -41,10 +51,11 @@ def speedj_and_forceg(env_type='sim', render=False):
     dt = env.dt
 
     null_obj_func = UprightConstraint()
+    null_obj_func_front = FrontConstraint()
 
     ee_pos_left = np.array([-0.45, -0.35, 0.8])  ## end-effector
 
-    q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
+    q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func_front, arm='left')
 
     if env_type == list_of_env_types[0]:
         PI_gains = {'speedj': {'P': 0.2, 'I': 10}} # was 0.2, 10.0

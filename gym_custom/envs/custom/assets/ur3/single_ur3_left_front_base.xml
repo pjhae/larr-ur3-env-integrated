@@ -2,7 +2,7 @@
 
 <mujoco model="single ur3 base">
     <include file="single_ur3_configs.xml"/>
-    <include file="single_ur3_constraints.xml"/>
+    <include file="single_ur3_left_constraints.xml"/>
 
     <worldbody>
         <camera pos="0 0 3.2" name="topview" /> <!--Remove?-->
@@ -78,38 +78,16 @@
             <geom name="/home/jgkim-larr/RL/gym-custom/utils/out/test_convex8.stl" pos="0 0 0" type="mesh" contype="1" conaffinity="0" group="0" rgba="0.2 0.2 0.2 0" mesh="/home/jgkim-larr/RL/gym-custom/utils/out/test_convex8.stl"/>
             <geom name="/home/jgkim-larr/RL/gym-custom/utils/out/test_convex9.stl" pos="0 0 0" type="mesh" contype="1" conaffinity="0" group="0" rgba="0.2 0.2 0.2 0" mesh="/home/jgkim-larr/RL/gym-custom/utils/out/test_convex9.stl"/>
         
-            <body name="right_arm_roty" pos="0.160612 0 1.189287" quat="0.382683 0 0.923880 0">
-                <body name="right_arm_rotz" quat="1 0 0 0">
-                    <include file="dual_ur3_larr_right_arm.xml"/>
+            <body name="left_arm_roty" pos="-0.160612 0 1.189287" quat="0.382683 0 -0.923880 0">
+                <body name="left_arm_rotz" quat="1 0 0 0">
+                    <include file="dual_ur3_larr_left_arm.xml"/>
                 </body>
             </body>
 
-
         </body>
 
-        <body name="goal" pos="0.0 -0.35 0.722" quat="0 0 0 0" >
-            <geom name="goal" pos="0 0 0" size="0.05 0.01" type="cylinder" conaffinity="0" contype="0" rgba="0 0 1 1"/>
-        </body>
 
-        <body name="asri_table(rectangle)" pos="0 -0.4 0" >
-            <geom name="rec:tabletop" type="box" pos="0 0 0.72" condim="1" size="0.6 0.3 0.01" rgba=".6 .6 .5 1"
-                contype="1" conaffinity="1" friction="0.01 0.001 0.0002" material="light_wood_v2"/>
-            <geom name="rec:leg1" type="cylinder" fromto="-0.45 -0.25 0.72 -0.45 -0.25 0" size="0.025" material="metal"/>
-            <geom name="rec:leg2" type="cylinder" fromto="-0.45 0.25 0.72 -0.45 0.25 0" size="0.025" material="metal"/>
-            <geom name="rec:leg3" type="cylinder" fromto="0.45 -0.25 0.72 0.45 -0.25 0" size="0.025" material="metal"/>
-            <geom name="rec:leg4" type="cylinder" fromto="0.45 0.25 0.72 0.45 0.25 0" size="0.025" material="metal"/>
-        </body>
-
-        <body name="asri_table(circle)" pos="1 1 0" >
-            <geom name="cir:tabletop" type="cylinder" pos="0 0 0.59" size="0.25 0.01" rgba=".6 .6 .5 1"
-                contype="1" conaffinity="1" friction="2 0.1 0.002" material="light_wood_v2"/>
-            <geom name="cir:leg1" type="cylinder" fromto="0.2 0 0.59 0.2 0 0" size="0.025" material="metal"/>
-            <geom name="cir:leg2" type="cylinder" fromto="0 0.2 0.59 0 0.2 0" size="0.025" material="metal"/>
-            <geom name="cir:leg3" type="cylinder" fromto="-0.2 0 0.59 -0.2 0 0" size="0.025" material="metal"/>
-            <geom name="cir:leg4" type="cylinder" fromto="0 -0.2 0.59 0 -0.2 0" size="0.025" material="metal"/>
-        </body>
-
-        <body name="curved_cube" pos="-0.3 -0.6 0.05" euler ="0 0 0" > <!--0.754-->
+        <body name="curved_cube" pos="0.3 -0.6 0.04" euler ="0 0 0" > <!---->
             <inertial pos="0 0 0" mass="0.1" diaginertia="0.01 0.01 0.01" />
             <geom name="cube_1" type="box" pos="-0.024  0.000 -0.0" size="0.024 0.048 0.024" friction="0.01 0.001 0.002" rgba="0.5 0.5 0 1" />
             <geom name="cube_2" type="box" pos="-0.024  0.072 -0.0" size="0.024 0.024 0.024" friction="0.01 0.001 0.002" rgba="0.0 0.7 0 1" />
@@ -119,14 +97,14 @@
             <joint name="cube" type="free" damping="0.00" />
         </body>
    
-        <body name="cube" pos="0.2 -0.4 0.76" > <!--0.76-->
+        <body name="cube" pos="0.2 -0.4 0.06" > <!--0.76-->
             <inertial pos="0 0 0" mass="0.2" diaginertia="0.001 0.001 0.001" />
             <geom name="cube_6" type="box" pos="0.0 -0.0 -0.0" size="0.03 0.03 0.03" friction="0.01 0.001 0.002" rgba="0.7 0.0 0 1" />
             <joint name="cube_joint" type="free" limited="false" damping="0.001" />
         </body>
 
 
-        <body name="big_cube" pos="-0.3 -0.4 0.05" >  <!--0.75-->
+        <body name="big_cube" pos="0.3 -0.4 0.05" >
             <inertial pos="0 0 0" mass="0.2" diaginertia="0.1 0.1 0.1" />
             <geom name="cube_7" type="box" pos="0.0 -0.0 -0.0" size="0.04 0.04 0.02" friction="0.01 0.001 0.002" rgba="0.0 0.7 0.7 1" />
             <geom name="cube_8" type="box" pos="-0.06  0.00 -0.0" size="0.02 0.04 0.02"  friction="0.01 0.001 0.002" rgba="0 0.7 0.7 1" />
@@ -135,30 +113,29 @@
             <joint name="big_cube_joint" type="free" limited="false" damping="0.001" />
         </body>
         
-        <body name="asri_ball" pos="0.45 -0.3 0.05" quat="0.9961946981 0.0871557427 0 0" >
-            <geom name="asri_stickball:ball" pos="0 0 0" size="0.025" type="sphere" conaffinity="0" contype="0" rgba="1 0 0 1"/>
+
+        <body name="asri_ball" pos="0.3 -0.4 0.13" quat="0.9961946981 0.0871557427 0 0" >
+            <geom name="asri_stickball:ball" pos="0 0 0" size="0.025" type="sphere" conaffinity="0" contype="1" rgba="1 0 0 1"/>
             <!-- <geom name="asri_stickball:stick" type="capsule" fromto="0 0 0 0 0 0.15" size="0.0025" condim="1" material="light_wood" density="700" /> -->
             <joint name="stickball_box" type="free" damping="0.001" />
         </body>
-
-
 
     </worldbody>
 
     <!--Define actuators-->
     <actuator>
         <!--UR3 (https://www.universal-robots.com/articles/ur-articles/max-joint-torques/)-->
-        <motor name="right_shoulder_pan_joint" joint="right_shoulder_pan_joint" ctrlrange="-50 50" />
-        <motor name="right_shoulder_lift_joint" joint="right_shoulder_lift_joint" ctrlrange="-50 50" />
-        <motor name="right_elbow_joint" joint="right_elbow_joint" ctrlrange="-25 25" />
-        <motor name="right_wrist_1_joint" joint="right_wrist_1_joint" ctrlrange="-10 10" />
-        <motor name="right_wrist_2_joint" joint="right_wrist_2_joint" ctrlrange="-10 10" />
-        <motor name="right_wrist_3_joint" joint="right_wrist_3_joint" ctrlrange="-10 10" />
-
+        <motor name="left_shoulder_pan_joint" joint="left_shoulder_pan_joint" ctrlrange="-50 50" />
+        <motor name="left_shoulder_lift_joint" joint="left_shoulder_lift_joint" ctrlrange="-50 50" />
+        <motor name="left_elbow_joint" joint="left_elbow_joint" ctrlrange="-25 25" />
+        <motor name="left_wrist_1_joint" joint="left_wrist_1_joint" ctrlrange="-10 10" />
+        <motor name="left_wrist_2_joint" joint="left_wrist_2_joint" ctrlrange="-10 10" />
+        <motor name="left_wrist_3_joint" joint="left_wrist_3_joint" ctrlrange="-10 10" />
+      
         
         <!--Gripper-->
-        <motor name="right_close_r" joint="right_gripper:right_fingertip:slide:control" ctrlrange="-10 50" />
-        <motor name="right_close_l" joint="right_gripper:left_fingertip:slide:control" ctrlrange="-10 50" />
+        <motor name="left_close_r" joint="left_gripper:right_fingertip:slide:control" ctrlrange="-10 50" />
+        <motor name="left_close_l" joint="left_gripper:left_fingertip:slide:control" ctrlrange="-10 50" />
 
     </actuator>
 
