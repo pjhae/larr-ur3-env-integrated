@@ -29,6 +29,17 @@ class UprightConstraint(NullObjectiveBase):
         axis_curr = SO3[:,2]
         return 1.0 - np.dot(axis_curr, axis_des)
 
+class FrontConstraint(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        axis_des = np.array([-1, 0, -1])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
+
+
 def show_dual_ur3():
     env = gym_custom.make('single-ur3-larr-v0')
     obs = env.reset()
@@ -113,7 +124,7 @@ def servoj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.1, -0.4, 1.0])  ## end-effector
+    ee_pos_right = np.array([0.1, -0.4, 1.1])  ## end-effector
 
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
 
@@ -163,7 +174,7 @@ def speedj_and_forceg(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
     
     if env_type == list_of_env_types[0]:
-        env = gym_custom.make('single-ur3-xy-larr-for-train-v0')
+        env = gym_custom.make('single-ur3-xy-front-larr-for-train-v0')
         speedj_args = {'a': 5, 't': None, 'wait': None}
     elif env_type == list_of_env_types[1]:
         env = gym_custom.make('single-ur3-larr-real-v0',
@@ -185,10 +196,11 @@ def speedj_and_forceg(env_type='sim', render=False):
     dt = env.dt
 
     null_obj_func = UprightConstraint()
+    null_obj_func_front = FrontConstraint()
 
-    ee_pos_right = np.array([0.45, -0.35, 0.8])  ## end-effector
+    ee_pos_right = np.array([0.1, -0.35, 0.9])  ## end-effector
 
-    q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
+    q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func_front, arm='right')
     print(q_right_des)
     
     if env_type == list_of_env_types[0]:
@@ -207,7 +219,7 @@ def speedj_and_forceg(env_type='sim', render=False):
             sys.exit()
 
     # Move to goal
-    duration = 5.0 # in seconds
+    duration = 3.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
     q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration*12)
     
@@ -924,7 +936,7 @@ if __name__ == '__main__':
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='sim', render=True)
-    speedj_and_forceg(env_type='real', render=False)
+    speedj_and_forceg(env_type='sim', render=True)
 
     # while True:# 0.0-0.2  -0.5   1.0-1.2   *np.random.rand()
     #     _goal_pos = np.array([0.0, -0.4, 1.0])

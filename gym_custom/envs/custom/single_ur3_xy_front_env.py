@@ -11,10 +11,10 @@ from gym_custom.envs.mujoco import MujocoEnv
 
 # For Simulation environment
 
-class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
+class SingleUR3XYFRONTEnv(MujocoEnv, utils.EzPickle):
 
     # class variables
-    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/single_ur3_left_base.xml')
+    mujoco_xml_full_path = os.path.join(os.path.dirname(__file__), 'assets/ur3/single_ur3_front_base.xml')
     mujocoenv_frame_skip = 1
     # state
     ur3_nqpos, gripper_nqpos = 6, 10 # per ur3/gripper joint pos dim
@@ -25,8 +25,8 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
     ur3_nact, gripper_nact = 6, 2 # per ur3/gripper action dim
     ENABLE_COLLISION_CHECKER = False
     # ee position
-    curr_pos = np.array([0, 0])
-    curr_pos_block = np.array([1,1])
+    curr_pos = np.array([0, 0, 0])
+    goal_pos = np.array([1, 1, 1])
 
 
     def __init__(self):
@@ -55,10 +55,10 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([-1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267])
-        # np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
+        np.array([ 1.56185641, -0.85030324 , 0.98202817,  0.14722887, -0.00781149,  0.00257325])
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
+
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
         self.kinematics_params = {}
@@ -73,9 +73,9 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         self.kinematics_params['ub'] = np.array([2*np.pi for _ in range(6)])
         self.kinematics_params['lb'] = np.array([-2*np.pi for _ in range(6)])
         
-        self.kinematics_params['T_wb_left'] = np.eye(4)
-        self.kinematics_params['T_wb_left'][0:3,0:3] = self.sim.data.get_body_xmat('left_arm_rotz').reshape([3,3]).copy()
-        self.kinematics_params['T_wb_left'][0:3,3] = self.sim.data.get_body_xpos('left_arm_rotz').copy()
+        self.kinematics_params['T_wb_right'] = np.eye(4)
+        self.kinematics_params['T_wb_right'][0:3,0:3] = self.sim.data.get_body_xmat('right_arm_rotz').reshape([3,3]).copy()
+        self.kinematics_params['T_wb_right'][0:3,3] = self.sim.data.get_body_xpos('right_arm_rotz').copy()
 
         path_to_pkl = os.path.join(os.path.dirname(__file__), '../real/ur/dual_ur3_kinematics_params.pkl')
         if not os.path.isfile(path_to_pkl):
@@ -84,13 +84,13 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
     def _define_collision_checker_variables(self):
         self.collision_env = self
 
-    def _is_collision(self, left_ur3_qpos):
+    def _is_collision(self, right_ur3_qpos):
         is_collision = False
         if self.ENABLE_COLLISION_CHECKER:
             qpos_original, qvel_original = self.collision_env.sim.data.qpos.copy(), self.collision_env.sim.data.qvel.copy()
             qpos = self.collision_env.sim.data.qpos.copy()
             qvel = np.zeros_like(self.collision_env.sim.data.qvel)
-            qpos[:6] = left_ur3_qpos
+            qpos[:6] = right_ur3_qpos
             self.collision_env.set_state(qpos, qvel)
             is_collision = self.collision_env.sim.data.nefc > 0
             self.collision_env.set_state(qpos_original, qvel_original)
@@ -157,8 +157,9 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         return jac
 
     def inverse_kinematics_ee(self, ee_pos, null_obj_func, arm,
-            q_init='current', threshold=0.001, threshold_null=0.001, max_iter=100, epsilon=1e-6
+            q_init='current', threshold=0.001, threshold_null=0.001, max_iter=10, epsilon=1e-6
         ):
+        
         '''
         inverse kinematics with forward_kinematics_DH() and _jacobian_DH()
         '''
@@ -170,7 +171,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
             else: raise ValueError("q_init must be one of the following: ['current', 'zero', numpy.ndarray]")
         elif arm == 'left':
             if type(q_init).__name__ == 'ndarray': q = q_init.copy()
-            elif q_init == 'current': q = self._get_ur3_qpos()[:self.ur3_nqpos]
+            elif q_init == 'current': q = self._get_ur3_qpos()[self.ur3_nqpos:]
             elif q_init == 'zero': q = np.zeros([self.ur3_nqpos])
             else: raise ValueError("q_init must be one of the following: ['current', 'zero', numpy.ndarray]")
         else:
@@ -211,7 +212,7 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
         # if iter_taken == max_iter:
         #     warnings.warn('Max iteration limit reached! err: %f (threshold: %f), null_obj_err: %f (threshold: %f)'%(err, threshold, null_obj_val, threshold_null),
         #         RuntimeWarning)
-        
+        # print(iter_taken)
         return q, iter_taken, err, null_obj_val
 
     #
@@ -253,9 +254,9 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
 
     def _get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.curr_pos, self.curr_pos_block, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
+        return np.concatenate([self.goal_pos, self.curr_pos, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
                                self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
-    
+
 ####
 
     def get_ur3_qpos(self):
@@ -284,16 +285,16 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
 
     def get_obs(self):
         '''overridable method'''
-        return np.concatenate([self.curr_pos, self.curr_pos_block, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
+        return np.concatenate([self.goal_pos, self.curr_pos, np.sin(self._get_ur3_qpos()), np.cos(self._get_ur3_qpos()),
                                self._get_gripper_qpos(), self._get_gripper_qvel()]).ravel()
 
 ####
 
     def get_obs_dict(self):
         '''overridable method'''
-        _, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos(), 'left')
-        return {'left': {
-                'curr_pos_block': self.curr_pos_block,
+        _, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos(), 'right')
+        return {'right': {
+                'goal_pos': self.goal_pos,
                 'curr_pos': curr_pos,
                 "qpos_sine"  : np.sin(self._get_ur3_qpos()),
                 "qpos_cosine": np.cos(self._get_ur3_qpos()),
@@ -308,43 +309,30 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
 
     def step(self, a):
         '''overridable method'''
-        # cube pos
-        id_cube_6 = self.sim.model.geom_name2id("cube_6")
-        self.curr_pos_block = np.concatenate([self.sim.data.geom_xpos[id_cube_6][:2]])
-        print(self._get_ur3_qpos()[:self.ur3_nqpos])
-        # gripper pos
-        SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'left')
-        self.curr_pos = curr_pos[:2]
 
-        # goal pos
-        goal_pos = np.array([0.0, -0.35])
+        # gripper pos
+        SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
+        self.curr_pos = curr_pos
 
         # reward action
-        reward_acion = -0.0000001*np.linalg.norm(a)
+        reward_acion = -0.000001*np.linalg.norm(a)
 
-        # reward pos & reward reaching
-        reward_pos = -np.linalg.norm(self.curr_pos_block - goal_pos)
-        reward_reaching = -np.linalg.norm(self.curr_pos_block - self.curr_pos)
+        # reward reaching
+        reward_reaching = -np.linalg.norm(self.goal_pos- self.curr_pos)
 
-        if np.linalg.norm(self.curr_pos_block - goal_pos)< 0.05:
-            reward_pos = 100
-            reward_reaching = 0
+        if np.linalg.norm(self.goal_pos- self.curr_pos) < 0.03:
+            reward_reaching = 20
             print("goal in")
 
-        # reward_bound 
-        is_inside_bound = self.is_inside_bound(self.curr_pos[0], self.curr_pos[1], -0.65, -0.6, 0.75, 0.60)
-        if is_inside_bound == False:
-            reward_bound = -1.0
-        else:
-            reward_bound = 0.0
-
-        reward = reward_acion + reward_pos + 0.01*reward_reaching + reward_bound
+        reward = reward_acion + reward_reaching
 
         for i in range(12):
             qpos = self.sim.data.qpos
             qvel = self.sim.data.qvel
+            qpos[-7:-4] = self.goal_pos
             self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
+
 
         ob = self._get_obs()
         done = False
@@ -355,21 +343,25 @@ class SingleUR3XYLEFTEnv(MujocoEnv, utils.EzPickle):
     def reset_model(self):
         '''overridable method'''
 
-        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        goal_x = -0.1 + 0.4*np.random.rand() # -0.1 ~ 0.3
+        goal_y = -0.5 + 0.3*np.random.rand() # -0.5 ~-0.2
+        goal_z =  0.7 + 0.4*np.random.rand() #  0.7 ~ 1.1
+
+        self.goal_pos = np.array([goal_x, goal_y, goal_z])
+
+        rand_idx = np.random.randint(2)
+        if rand_idx == 0:
+            qpos = self.init_qpos
+            qpos[0:self.ur3_nqpos] = np.array([ 2.35249725, -0.48698999,  0.44778902, -0.18942875,  0.85223811 , 0.01271872])
+            qpos = qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        else:
+            qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
+        
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
-
-        # qpos[-21] =  0.10 +0.35*np.random.rand() # x  0 ~ 0.55
-        # qpos[-20] = -0.30 -0.15*np.random.rand() # y -0.5 ~ -0.1
-
-        block_pos_candi = np.array([[-0.15, -0.3], [-0.3, -0.3], [-0.15, -0.4], [-0.3, -0.4], [-0.225, -0.35]])
-
-        rand_idx = np.random.randint(5)
-        qpos[-21:-19] = block_pos_candi[rand_idx]
-
+        
         self.set_state(qpos, qvel)
 
         return self._get_obs()
-    
 
     def viewer_setup(self):
         '''overridable method'''
@@ -402,7 +394,7 @@ def test_video_record(env):
 
     for i in range(10000):
         action = env.action_space.sample()
-        env.step([0,0,0,0,0,0,0,0])
+        env.step(action)
         # print(action) # action dim == 8
         env.render()
         print('step: %d'%(i))
@@ -410,5 +402,5 @@ def test_video_record(env):
 
 
 if __name__ == '__main__':
-    env = gym_custom.make('single-ur3-xy-left-larr-for-train-v0')
+    env = gym_custom.make('single-ur3-larr-v0')
     test_video_record(env)
