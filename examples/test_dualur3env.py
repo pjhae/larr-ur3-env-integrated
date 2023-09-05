@@ -153,8 +153,8 @@ def speedj_and_forceg(env_type='sim', render=False):
         env.set_initial_joint_pos('current')
         env.set_initial_gripper_pos('current')
         # 2. Set inital as default configuration
-        # env.set_initial_joint_pos(np.array([1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263, -1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267]))
-        env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
+        env.set_initial_joint_pos(np.array([1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263, -1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267]))
+        # env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
         env.set_initial_gripper_pos(np.array([0.0, 0.0]))
         assert render is False
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
@@ -163,7 +163,7 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     null_obj_func = UprightConstraint()
 
-    ee_pos_right = np.array([0.0, -0.35, 0.8])
+    ee_pos_right = np.array([0.45, -0.35, 0.8])
     ee_pos_left = np.array([-0.45, -0.35, 0.8])
     q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
     q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func, arm='left')
