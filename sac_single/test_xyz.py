@@ -27,8 +27,7 @@ import os.path as osp
 
 #     rospy.init_node('ros_subscription_test_node')
 
-#     cube_msg = rospy.wait_for_message('optitrack/cube_jh/poseStamped', PoseStamped)
-#     #ref_msg = rospy.wait_for_message('optitrack/ref_jh/poseStamped', PoseStamped)
+#     cube_msg = rospy.wait_for_message('optitrack/cube_rainbow/poseStamped', PoseStamped)
 
 #     return cube_msg.pose.position
 
@@ -75,7 +74,7 @@ parser.add_argument('--exp_type', default="sim",
 args = parser.parse_args()
 
 # Episode to test
-num_epi = 7820
+num_epi = 9700
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True
@@ -194,25 +193,12 @@ while True:
     step = 0
     done = False
 
-    # # Receive a NumPy vector of size 3 from the user
-    # user_input = input("Please enter a NumPy vector of size 3 (separated by spaces): ")
-    # elements = user_input.split()
-
-    # # If the entered values are not exactly 3, exit the program.
-    # if len(elements) != 3:
-    #     print("You must input 3 values.")
-    # else:
-    # # Convert the entered values to floating-point numbers and create a NumPy array.
-    #     env.goal_pos = np.array([float(element) for element in elements])
-
-
     while not done:
 
-        # # ROS related
+        # # # ROS related
         # cube_pos = listener_wait_msg()
-        # cube_pos_array = np.array([cube_pos.x, cube_pos.y])
-        # env.curr_pos_block = cube_pos_array - [0.11719225 ,2.44359732] + [0, -0.4]
-        # print(env.curr_pos_block)
+        # cube_pos_block_array = np.array([cube_pos.x, cube_pos.y]) -np.array([ 0.20667699, -0.02906933]) +np.array([0, -0.3])
+        # state[2:4] = cube_pos_block_array
 
         action = agent.select_action(state, evaluate=True)
         curr_pos = np.concatenate([state[:2],[0.8]])
