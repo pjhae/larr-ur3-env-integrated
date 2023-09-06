@@ -18,18 +18,18 @@ from collections import OrderedDict
 import os
 import os.path as osp
 
-# # ROS related
-# import rospy
-# from std_msgs.msg import String
-# from geometry_msgs.msg import PoseStamped
+# ROS related
+import rospy
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
 
-# def listener_wait_msg():
+def listener_wait_msg():
 
-#     rospy.init_node('ros_subscription_test_node')
+    rospy.init_node('ros_subscription_test_node')
 
-#     cube_msg = rospy.wait_for_message('optitrack/cube_rainbow/poseStamped', PoseStamped)
+    cube_msg = rospy.wait_for_message('optitrack/cube_rainbow/poseStamped', PoseStamped)
 
-#     return cube_msg.pose.position
+    return cube_msg.pose.position
 
 
 parser = argparse.ArgumentParser(description='PyTorch Soft Actor-Critic Args')
@@ -74,10 +74,10 @@ parser.add_argument('--exp_type', default="sim",
 args = parser.parse_args()
 
 # Episode to test
-num_epi = 2700
+num_epi = 700
 
 # Rendering (if exp_type is real, render should be FALSE)
-render = True
+render = False
 
 # Environment
 if args.exp_type == "sim":
@@ -95,7 +95,7 @@ elif args.exp_type == "real":
     env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
     # env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
-    env.set_initial_joint_pos(np.array([ 1.56185641, -0.85030324 , 0.98202817,  0.14722887, -0.00781149,  0.00257325]))
+    env.set_initial_joint_pos(np.array([ 1.94709782, -0.88839507,  1.76091047, -2.12800102,  0.85576529,  0.01280112]))
     env.set_initial_gripper_pos(np.array([255.0]))
     assert render is False
 
@@ -166,18 +166,18 @@ memory = ReplayMemory(args.replay_size, args.seed)
 agent.load_checkpoint("checkpoints_single/sac_checkpoint_{}_{}".format('single-ur3-larr-for-train-v0', num_epi), True)
 
 # Constraint
-class FrontConstraint(NullObjectiveBase):
+class UprightConstraint(NullObjectiveBase):
     
     def __init__(self):
         pass
 
     def _evaluate(self, SO3):
-        axis_des = np.array([-1, 0, -1])
+        axis_des = np.array([0, 0, -1])
         axis_curr = SO3[:,2]
         return 1.0 - np.dot(axis_curr, axis_des)
 
     
-null_obj_func_front = FrontConstraint()
+null_obj_func_front = UprightConstraint()
 
 
 # Start evaluation
@@ -187,7 +187,7 @@ episodes = 10
 
 while True:
     state = env.reset()
-    state[3:6] = np.array([0.1, -0.35, 0.9])
+    state[3:6] = np.array([0.1, -0.3, 0.8])
     state = state[:6]
     
     episode_reward = 0
@@ -197,9 +197,11 @@ while True:
     while not done:
 
         # # ROS related
-        # cube_pos = listener_wait_msg()
+        cube_pos = listener_wait_msg()
         # goal_pos = np.array([cube_pos.x, cube_pos.y, cube_pos.z]) - np.array([[-1.23483741,  0.22603086,  0.76730996]]) + np.array([0.1, -0.35, 0.9])
-        state[:3] = np.array([0.2, -0.3, 0.9])
+        tmp = state[0:3]
+        state[0:3] = np.array([cube_pos.x, cube_pos.y, cube_pos.z]) - np.array([0.58133191, 1.26822007 ,0.75078773]) +  np.array([0.1, -0.3, 0.8])
+        state[3:6] = tmp 
         # print(state[3:])
 
         action = agent.select_action(state, evaluate=True)
