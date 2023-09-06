@@ -130,9 +130,19 @@ class FrontConstraint(NullObjectiveBase):
         axis_des = np.array([-1, 0, -1])
         axis_curr = SO3[:,2]
         return 1.0 - np.dot(axis_curr, axis_des)
-
     
-null_obj_func_front = FrontConstraint()
+class UprightConstraint(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        axis_des = np.array([0, 0, -1])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
+    
+    
+null_obj_func = UprightConstraint()
 
 # train
 for i_episode in itertools.count(1):
@@ -141,7 +151,7 @@ for i_episode in itertools.count(1):
     episode_steps = 0
     done = False
     state = env.reset()
-    state[3:6] = np.array([0.1, -0.35, 0.9])
+    state[3:6] = np.array([0.1, -0.3, 0.8])
     state = state[:6]
     
     while not done:
@@ -165,7 +175,7 @@ for i_episode in itertools.count(1):
 
         # render
         # env.render()
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func_front, arm='right')
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
         dt = 1
         qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
 
@@ -206,7 +216,7 @@ for i_episode in itertools.count(1):
         for i in range(episodes):
 
             state = env.reset()
-            state[3:6] = np.array([0.1, -0.35, 0.9])
+            state[3:6] = np.array([0.1, -0.3, 0.8])
             state = state[:6]
             episode_steps = 0
             episode_reward = 0
@@ -214,7 +224,7 @@ for i_episode in itertools.count(1):
             while not done:
                 action = agent.select_action(state, evaluate=True)
 
-                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func_front, arm='right')
+                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
                 dt = 1
                 qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
 

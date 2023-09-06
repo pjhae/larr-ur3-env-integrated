@@ -185,14 +185,14 @@ register(
 register(
     id='single-ur3-xy-front-larr-for-train-v0',
     entry_point='gym_custom.envs.custom.single_ur3_xy_front_env:SingleUR3XYFRONTEnv',
-    max_episode_steps=300,
+    max_episode_steps=800,
     reward_threshold=0.0,
 )
 
 register(
     id='single-ur3-xy-left-front-larr-for-train-v0',
     entry_point='gym_custom.envs.custom.single_ur3_xy_left_front_env:SingleUR3XYLEFTFRONTEnv',
-    max_episode_steps=300,
+    max_episode_steps=800,
     reward_threshold=0.0,
 )
 

@@ -55,7 +55,7 @@ class SingleUR3XYFRONTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([ 1.56185641, -0.85030324 , 0.98202817,  0.14722887, -0.00781149,  0.00257325])
+        np.array([ 1.94709782, -0.88839507,  1.76091047, -2.12800102,  0.85576529,  0.01280112])
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
 
@@ -315,7 +315,7 @@ class SingleUR3XYFRONTEnv(MujocoEnv, utils.EzPickle):
         self.curr_pos = curr_pos
 
         # reward action
-        reward_acion = -0.000001*np.linalg.norm(a)
+        reward_acion = -0.0001*np.linalg.norm(a)
 
         # reward reaching
         reward_reaching = -np.linalg.norm(self.goal_pos- self.curr_pos)
@@ -344,19 +344,12 @@ class SingleUR3XYFRONTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
 
         goal_x = -0.1 + 0.4*np.random.rand() # -0.1 ~ 0.3
-        goal_y = -0.5 + 0.3*np.random.rand() # -0.5 ~-0.2
-        goal_z =  0.7 + 0.4*np.random.rand() #  0.7 ~ 1.1
+        goal_y = -0.4 + 0.2*np.random.rand() # -0.4 ~-0.2
+        goal_z =  0.7 + 0.3*np.random.rand() #  0.7 ~ 1.0
 
         self.goal_pos = np.array([goal_x, goal_y, goal_z])
 
-        rand_idx = np.random.randint(2)
-        if rand_idx == 0:
-            qpos = self.init_qpos
-            qpos[0:self.ur3_nqpos] = np.array([ 2.35249725, -0.48698999,  0.44778902, -0.18942875,  0.85223811 , 0.01271872])
-            qpos = qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
-        else:
-            qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
-        
+        qpos = self.init_qpos + self.np_random.uniform(size=self.model.nq, low=-0.01, high=0.01)
         qvel = self.init_qvel + self.np_random.uniform(size=self.model.nv, low=-0.01, high=0.01)
         
         self.set_state(qpos, qvel)

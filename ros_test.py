@@ -21,7 +21,7 @@ if __name__ == '__main__':
     while True:
  
         cube_pos = listener_wait_msg()
-        cube_pos_array = np.array([cube_pos.x, cube_pos.y]) -np.array([ 0.20667699, -0.02906933]) +np.array([0, -0.3])
+        cube_pos_array = np.array([cube_pos.x, cube_pos.y, cube_pos.z]) - np.array([[-1.23483741,  0.22603086,  0.76730996]]) + np.array([0.1, -0.35, 0.9])
   
 
         msg_count += 1
