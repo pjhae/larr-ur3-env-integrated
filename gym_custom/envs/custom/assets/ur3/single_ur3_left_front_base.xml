@@ -115,7 +115,7 @@
         
 
         <body name="asri_ball" pos="0.3 -0.4 0.13" quat="0.9961946981 0.0871557427 0 0" >
-            <geom name="asri_stickball:ball" pos="0 0 0" size="0.025" type="sphere" conaffinity="0" contype="1" rgba="1 0 0 1"/>
+            <geom name="asri_stickball:ball" pos="0 0 0" size="0.025" type="sphere" conaffinity="0" contype="0" rgba="1 0 0 1"/>
             <!-- <geom name="asri_stickball:stick" type="capsule" fromto="0 0 0 0 0 0.15" size="0.0025" condim="1" material="light_wood" density="700" /> -->
             <joint name="stickball_box" type="free" damping="0.001" />
         </body>
