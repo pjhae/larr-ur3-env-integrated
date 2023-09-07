@@ -55,7 +55,7 @@ class SingleUR3XYFRONTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([ 1.94709782, -0.88839507,  1.76091047, -2.12800102,  0.85576529,  0.01280112])
+        np.array([ 1.77152457, -1.19910872,  1.6012215,  -1.9863254,  -0.00238329,  0.02207245])
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
 
@@ -320,7 +320,7 @@ class SingleUR3XYFRONTEnv(MujocoEnv, utils.EzPickle):
         # reward reaching
         reward_reaching = -np.linalg.norm(self.goal_pos- self.curr_pos)
 
-        if np.linalg.norm(self.goal_pos- self.curr_pos) < 0.03:
+        if np.linalg.norm(self.goal_pos- self.curr_pos) < 0.02:
             reward_reaching = 20
             print("goal in")
 

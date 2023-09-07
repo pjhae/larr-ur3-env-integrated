@@ -198,9 +198,9 @@ def speedj_and_forceg(env_type='sim', render=False):
     null_obj_func = UprightConstraint()
     null_obj_func_front = FrontConstraint()
 
-    ee_pos_right = np.array([0.2, -0.3, 0.8])  ## end-effector
+    ee_pos_right = np.array([0.1, -0.3, 0.8])  ## end-effector
 
-    q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right, null_obj_func, arm='right')
+    q_right_des, iter_taken_right, err_right, null_obj_right = env.inverse_kinematics_ee(ee_pos_right,null_obj_func_front, arm='right')
     print(q_right_des)
     
     if env_type == list_of_env_types[0]:
@@ -221,7 +221,7 @@ def speedj_and_forceg(env_type='sim', render=False):
     # Move to goal
     duration = 3.0 # in seconds
     obs_dict_current = env.env.get_obs_dict()
-    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration)
+    q_right_des_vel = (q_right_des - obs_dict_current['right']['qpos'])/(duration*12)
     
     start = time.time()
     for t in range(int(duration/dt)):
@@ -936,7 +936,7 @@ if __name__ == '__main__':
 
     # 2.1 Updated UR wrapper examples
     # servoj_and_forceg(env_type='sim', render=True)
-    speedj_and_forceg(env_type='real', render=False)
+    speedj_and_forceg(env_type='sim', render=True)
 
     # while True:# 0.0-0.2  -0.5   1.0-1.2   *np.random.rand()
     #     _goal_pos = np.array([0.0, -0.4, 1.0])

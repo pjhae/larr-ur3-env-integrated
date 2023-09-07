@@ -143,6 +143,7 @@ class UprightConstraint(NullObjectiveBase):
     
     
 null_obj_func = UprightConstraint()
+null_obj_func_front = FrontConstraint()
 
 # train
 for i_episode in itertools.count(1):
@@ -175,7 +176,7 @@ for i_episode in itertools.count(1):
 
         # render
         # env.render()
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func_front, arm='right')
         dt = 1
         qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
 
@@ -224,7 +225,7 @@ for i_episode in itertools.count(1):
             while not done:
                 action = agent.select_action(state, evaluate=True)
 
-                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='right')
+                q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func_front, arm='right')
                 dt = 1
                 qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
 
