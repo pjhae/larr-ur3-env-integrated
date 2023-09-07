@@ -34,7 +34,7 @@ class FrontConstraint(NullObjectiveBase):
         pass
 
     def _evaluate(self, SO3):
-        axis_des = np.array([0, -1, 0])
+        axis_des = np.array([1, 0, -1])
         axis_curr = SO3[:,2]
         return 1.0 - np.dot(axis_curr, axis_des)
 
@@ -43,7 +43,7 @@ def speedj_and_forceg(env_type='sim', render=False):
     list_of_env_types = ['sim', 'real']
     
     if env_type == list_of_env_types[0]:
-        env = gym_custom.make('single-ur3-xy-left-larr-for-train-v0')
+        env = gym_custom.make('single-ur3-xy-left-front-larr-for-train-v0')
         speedj_args = {'a': 5, 't': None, 'wait': None}
 
     else: raise ValueError('Invalid env_type! Availiable options are %s'%(list_of_env_types))
@@ -53,7 +53,7 @@ def speedj_and_forceg(env_type='sim', render=False):
     null_obj_func = UprightConstraint()
     null_obj_func_front = FrontConstraint()
 
-    ee_pos_left = np.array([-0.45, -0.35, 0.8])  ## end-effector
+    ee_pos_left = np.array([-0.1, -0.3, 0.8])  ## end-effector
 
     q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func_front, arm='left')
 
