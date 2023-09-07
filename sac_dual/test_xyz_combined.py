@@ -63,7 +63,8 @@ args = parser.parse_args()
 
 
 # Episode to test
-num_epi = 3800
+num_epi_right = 1620
+num_epi_left = 640
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True
@@ -84,7 +85,7 @@ elif args.exp_type == "real":
     env.set_initial_joint_pos('current')
     env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
-    env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))  # TODO
+    env.set_initial_joint_pos(np.array([ 1.77152457, -1.19910872,  1.6012215,  -1.9863254,  -0.00238329,  0.02207245, -1.77152457, -np.pi+1.19910872, -1.6012215, -np.pi+1.9863254,  0.00238329, -0.02207245]))  # TODO
     env.set_initial_gripper_pos(np.array([255.0, 255.0]))
     assert render is False
 
@@ -101,7 +102,7 @@ if args.exp_type == "sim":
     env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
     # scale factor
     env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-    env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    env.wrapper_left.ur3_scale_factor[:6]  = [23.03403947, 23.80201627, 30.65127641, 14.93660589, 23.06927071, 26.52280244]
 
 elif args.exp_type == "real":
         env.env = env
@@ -124,11 +125,10 @@ np.random.seed(args.seed)
 
 # for xyz + qvel
 COMMAND_LIMITS = {
-    'speedj': [np.array([-0.04, -0.04, -0.04, -0.04, -0.04, -0.04]),
-        np.array([0.04, 0.04, 0.04, 0.04, 0.04, 0.04])], # [rad/s]
+    'speedj': [np.array([-0.04, -0.04, -0.04]),
+        np.array([0.04, 0.04, 0.04])], # [rad/s]
     'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
 }
-
 
 def convert_action_to_space(action_limits):
     if isinstance(action_limits, dict):
@@ -151,28 +151,42 @@ def _set_action_space():
 action_space = _set_action_space()['speedj']
 
 # agent # TODO
-agent_right = SAC(12, action_space, args)
-agent_left = SAC(12, action_space, args)
+agent_right = SAC(6, action_space, args)
+agent_left = SAC(6, action_space, args)
 
 # Memory
 memory = ReplayMemory(args.replay_size, args.seed)
 
+
+
 # Load the parameter # TODO 
-agent_right.load_checkpoint("checkpoints_dual/sac_checkpoint_{}_{}".format('dual-ur3-pick-and-place-larr-for-train-v0', num_epi), True)
-agent_left.load_checkpoint("checkpoints_dual/sac_checkpoint_{}_{}".format('dual-ur3-pick-and-place-larr-for-train-v0', num_epi), True)
+agent_right.load_checkpoint("checkpoints_single/sac_checkpoint_{}_{}".format('single-ur3-larr-for-train-v0', num_epi_right), True)
+agent_left.load_checkpoint("checkpoints_single/sac_checkpoint_{}_{}".format('single-ur3-left-larr-for-train-v0', num_epi_left), True)
 
 # Constraint
-class UprightConstraint(NullObjectiveBase):
+class FrontConstraintRight(NullObjectiveBase):
     
     def __init__(self):
         pass
 
     def _evaluate(self, SO3):
-        axis_des = np.array([0, 0, -1])
+        axis_des = np.array([-1, 0, -1])
         axis_curr = SO3[:,2]
         return 1.0 - np.dot(axis_curr, axis_des)
 
-null_obj_func = UprightConstraint()
+class FrontConstraintLeft(NullObjectiveBase):
+    
+    def __init__(self):
+        pass
+
+    def _evaluate(self, SO3):
+        axis_des = np.array([1, 0, -1])
+        axis_curr = SO3[:,2]
+        return 1.0 - np.dot(axis_curr, axis_des)
+
+null_obj_func_right = FrontConstraintRight()
+null_obj_func_left  = FrontConstraintLeft()
+
 
 # Start evaluation
 avg_reward = 0.
@@ -181,20 +195,22 @@ episodes = 10
 
 while True:
     state = env.reset()
-    state[6:12] = [0.16262042, -0.2576475, 0.91949741, -0.16262042, -0.2576475, 0.91949741]  # TODO
-    state = state[:12]
-    
+    state[:6] = np.array([0.1, -0.3, 0.8, -0.1, -0.3, 0.8])  # TODO
+    # state[6:12] = np.array([-0.1 + 0.4*np.random.rand(), -0.4 + 0.2*np.random.rand(), 0.7 + 0.3*np.random.rand(), 
+    #                        0.1 - 0.4*np.random.rand(), -0.4 + 0.2*np.random.rand(), 0.7 + 0.3*np.random.rand()])
+    state[6:12] = np.array([[0.3, -0.3, 0.8, -0.3, -0.3, 0.8]])
     episode_reward = 0
     step = 0
     done = False
 
     while not done:
         
+        state[6:12] = np.array([[0.1, -0.3, 0.9, -0.1, -0.3, 0.9]])    
+        action_right = agent_right.select_action(np.concatenate([state[6:9], state[:3]]), evaluate=True)
+        action_left = agent_left.select_action(np.concatenate([state[9:12], state[3:6]]), evaluate=True)
 
-        action = agent.select_action(state, evaluate=True) # TODO
-
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9] +action[:3], null_obj_func, arm='right')  # TODO
-        q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+action[3:], null_obj_func, arm='left')  # TODO
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[0:3] + action_right, null_obj_func_right , arm='right')  # TODO
+        q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[3:6]+ action_left, null_obj_func_left , arm='left')  # TODO
         dt = 1
         qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
         qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt

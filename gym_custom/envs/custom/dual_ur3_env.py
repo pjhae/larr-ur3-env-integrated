@@ -50,9 +50,9 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-            np.array([ 1.22096933, -1.3951761, 1.4868261, -2.01667739, 0.84679318, -0.00242263]) # right arm
+            np.array([ 1.77152457, -1.19910872,  1.6012215,  -1.9863254,  -0.00238329,  0.02207245]) # right arm
         self.init_qpos[self.ur3_nqpos+self.gripper_nqpos:2*self.ur3_nqpos+self.gripper_nqpos] = \
-            np.array([-1.22088266, -1.7506136,  -1.48391903, -1.11987769, -0.84708205, -0.00714267]) # left arm
+            np.array([-1.77152457, -np.pi+1.19910872, -1.6012215, -np.pi+1.9863254,  0.00238329, -0.02207245]) # left arm
 
         # Variables for forward/inverse kinematics
         # https://www.universal-robots.com/articles/ur-articles/parameters-for-calculations-of-kinematics-and-dynamics/
@@ -346,7 +346,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
         # curr pos
         _, curr_right_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'right')
         _, curr_left_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[self.ur3_nqpos:], 'left')
-        self.curr_pos = np.concatenate([curr_right_pos[:2], curr_left_pos[:2]])
+        self.curr_pos = np.concatenate([curr_right_pos[:3], curr_left_pos[:3]])
     
 
         # curr pos block

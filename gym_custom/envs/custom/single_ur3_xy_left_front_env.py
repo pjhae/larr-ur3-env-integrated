@@ -314,7 +314,7 @@ class SingleUR3XYLEFTFRONTEnv(MujocoEnv, utils.EzPickle):
         self.curr_pos = curr_pos
 
         # reward action
-        reward_acion = -0.0001*np.linalg.norm(a)
+        reward_acion = -0.001*np.linalg.norm(a)
 
         # reward reaching
         reward_reaching = -np.linalg.norm(self.goal_pos- self.curr_pos)
