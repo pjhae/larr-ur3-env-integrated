@@ -64,7 +64,7 @@ args = parser.parse_args()
 
 # Episode to test
 num_epi_right = 1620
-num_epi_left = 640
+num_epi_left = 800
 
 # Rendering (if exp_type is real, render should be FALSE)
 render = True
@@ -205,7 +205,7 @@ while True:
 
     while not done:
         
-        state[6:12] = np.array([[0.1, -0.3, 0.9, -0.1, -0.3, 0.9]])    
+        state[6:12] = np.array([[0.1, -0.3, 0.9+0.001*step, -0.1, -0.3, 0.9+0.001*step]])    
         action_right = agent_right.select_action(np.concatenate([state[6:9], state[:3]]), evaluate=True)
         action_left = agent_left.select_action(np.concatenate([state[9:12], state[3:6]]), evaluate=True)
 
