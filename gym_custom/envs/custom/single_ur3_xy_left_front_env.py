@@ -55,7 +55,7 @@ class SingleUR3XYLEFTFRONTEnv(MujocoEnv, utils.EzPickle):
         '''overridable method'''
         # Initial position for UR3
         self.init_qpos[0:self.ur3_nqpos] = \
-        np.array([-1.77152457, -np.pi+1.19910872, -1.6012215, -np.pi+1.9863254,  0.00238329, -0.02207245])
+        np.array([-1.94492479, -2.20721716, -1.79447947, -1.08557497, -0.84910183, -0.02760129])
         # np.array([-90, -135, -135, 0, -45, 0])*np.pi/180.0 # left arm
         # np.array([90, -45, 135, -180, 45, 0])*np.pi/180.0 # right arm
         
@@ -312,7 +312,7 @@ class SingleUR3XYLEFTFRONTEnv(MujocoEnv, utils.EzPickle):
         # gripper pos
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'left')
         self.curr_pos = curr_pos
-
+        print(self._get_ur3_qpos()[:self.ur3_nqpos])
         # reward action
         reward_acion = -0.001*np.linalg.norm(a)
 

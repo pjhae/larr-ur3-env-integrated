@@ -200,7 +200,7 @@ while True:
         cube_pos = listener_wait_msg()
         # goal_pos = np.array([cube_pos.x, cube_pos.y, cube_pos.z]) - np.array([[-1.23483741,  0.22603086,  0.76730996]]) + np.array([0.1, -0.35, 0.9])
         tmp = state[0:3]
-        state[0:3] = np.array([cube_pos.x, cube_pos.y, cube_pos.z]) - np.array([0.58133191, 1.26822007 ,0.75078773]) +  np.array([0.1, -0.3, 0.8])
+        state[0:3] = np.array([cube_pos.x, cube_pos.y, cube_pos.z]) - np.array([ 0.08846794, -1.09185982,  0.76178968])+ np.array([0.1, -0.3, 0.8])
         state[3:6] = tmp 
         # print(state[3:])
 
@@ -224,7 +224,7 @@ while True:
         state = next_state[:6]
 
          # If exp_type is real, evaluate just for 500 step
-        if args.exp_type == "real" and step == 600:
+        if args.exp_type == "real" and step == 1500:
             break   
     
     avg_reward = episode_reward/500

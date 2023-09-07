@@ -175,7 +175,7 @@ for i_episode in itertools.count(1):
 
         # render
         # env.render()
-        q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func_front, arm='left')
+        q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='left')
         dt = 1
         qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
 
@@ -224,7 +224,7 @@ for i_episode in itertools.count(1):
             while not done:
                 action = agent.select_action(state, evaluate=True)
 
-                q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func_front, arm='left')
+                q_left_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[3:6]+action, null_obj_func, arm='left')
                 dt = 1
                 qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
 

@@ -55,7 +55,7 @@ def speedj_and_forceg(env_type='sim', render=False):
 
     ee_pos_left = np.array([-0.1, -0.3, 0.8])  ## end-effector
 
-    q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func_front, arm='left')
+    q_left_des, iter_taken_left, err_left, null_obj_left = env.inverse_kinematics_ee(ee_pos_left, null_obj_func , arm='left')
 
     if env_type == list_of_env_types[0]:
         PI_gains = {'speedj': {'P': 0.2, 'I': 10}} # was 0.2, 10.0

@@ -9,10 +9,9 @@ from geometry_msgs.msg import PoseStamped
 def listener_wait_msg():
 
     rospy.init_node('ros_subscription_test_node')
-
-    cube_msg = rospy.wait_for_message('optitrack/cube_rainbow/poseStamped', PoseStamped)
-
-    return cube_msg.pose.position
+    cube1_msg = rospy.wait_for_message('optitrack/cube_rainbow/poseStamped', PoseStamped)
+    cube2_msg = rospy.wait_for_message('optitrack/cube_RB/poseStamped', PoseStamped)
+    return cube1_msg.pose.position, cube2_msg.pose.position
 
 if __name__ == '__main__':
 
@@ -20,13 +19,13 @@ if __name__ == '__main__':
 
     while True:
  
-        cube_pos = listener_wait_msg()
-        cube_pos_array = np.array([cube_pos.x, cube_pos.y]) -np.array([0.21217686, 0.51513129]) + np.array([0.0, -0.35])
-        #  +  np.array([0.1, -0.3, 0.8])
+        cube1_pos, cube2_pos = listener_wait_msg()
+        cube1_pos_array = np.array([cube1_pos.x, cube1_pos.y, cube1_pos.z]) - np.array([ 0.08846794, -1.09185982,  0.76178968])
+        cube2_pos_array = np.array([cube2_pos.x, cube2_pos.y, cube2_pos.z]) - np.array([[-0.02001864, -1.14144528,  0.76573527]]) + np.array([0.1, -0.3, 0.8])
+
         msg_count += 1
-        print("ctrl : ", cube_pos_array)
+        print("ctrl : ", cube1_pos_array, cube2_pos_array)
  
-        #print("rel vec : ", ctrl_pos_array-ref_pos_array)
 
         if msg_count >= 10000: break
 

@@ -64,10 +64,10 @@ args = parser.parse_args()
 
 # Episode to test
 num_epi_right = 1620
-num_epi_left = 800
+num_epi_left = 1320
 
 # Rendering (if exp_type is real, render should be FALSE)
-render = True
+render = False
 
 # Environment
 if args.exp_type == "sim":
@@ -193,24 +193,40 @@ avg_reward = 0.
 avg_step = 0.
 episodes = 10
 
+# ROS related
+import rospy
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
+
+def listener_wait_msg():
+
+    rospy.init_node('ros_subscription_test_node')
+    cube1_msg = rospy.wait_for_message('optitrack/cube_rainbow/poseStamped', PoseStamped)
+    cube2_msg = rospy.wait_for_message('optitrack/cube_RB/poseStamped', PoseStamped)
+    return cube1_msg.pose.position, cube2_msg.pose.position
+
+
 while True:
     state = env.reset()
-    state[:6] = np.array([0.1, -0.3, 0.8, -0.1, -0.3, 0.8])  # TODO
-    # state[6:12] = np.array([-0.1 + 0.4*np.random.rand(), -0.4 + 0.2*np.random.rand(), 0.7 + 0.3*np.random.rand(), 
-    #                        0.1 - 0.4*np.random.rand(), -0.4 + 0.2*np.random.rand(), 0.7 + 0.3*np.random.rand()])
-    state[6:12] = np.array([[0.3, -0.3, 0.8, -0.3, -0.3, 0.8]])
+
+    state[6:12] = np.array([0.1, -0.3, 0.8, -0.1, -0.3, 0.8]) # current
     episode_reward = 0
     step = 0
     done = False
 
     while not done:
         
-        state[6:12] = np.array([[0.1, -0.3, 0.9+0.001*step, -0.1, -0.3, 0.9+0.001*step]])    
-        action_right = agent_right.select_action(np.concatenate([state[6:9], state[:3]]), evaluate=True)
-        action_left = agent_left.select_action(np.concatenate([state[9:12], state[3:6]]), evaluate=True)
+        cube1_pos, cube2_pos = listener_wait_msg()
+        cube1_pos_array = np.array([cube1_pos.x, cube1_pos.y, cube1_pos.z]) - np.array([-0.38276982, -1.14199173,  0.76113039]) + np.array([-0.1, -0.3, 0.8])
+        cube2_pos_array = np.array([cube2_pos.x, cube2_pos.y, cube2_pos.z]) - np.array([-0.02001864, -1.14144528,  0.76573527]) + np.array([0.1, -0.3, 0.8])
 
-        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[0:3] + action_right, null_obj_func_right , arm='right')  # TODO
-        q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[3:6]+ action_left, null_obj_func_left , arm='left')  # TODO
+        # state[:6] = np.array([[0.1, -0.3, 0.9+0.001*step, -0.1, -0.3, 0.9+0.001*step]]) # goal
+        state[:6] = np.concatenate([cube2_pos_array, cube1_pos_array])
+        action_right = agent_right.select_action(np.concatenate([state[0:3], state[6:9]]), evaluate=True)
+        action_left = agent_left.select_action(np.concatenate([state[3:6], state[9:12]]), evaluate=True)
+
+        q_right_des, _ ,_ ,_ = env.inverse_kinematics_ee(state[6:9] + action_right, null_obj_func_right , arm='right')  # TODO
+        q_left_des, _ ,_ ,_  = env.inverse_kinematics_ee(state[9:12]+ action_left, null_obj_func_left , arm='left')  # TODO
         dt = 1
         qvel_right = (q_right_des - env.get_obs_dict()['right']['qpos'])/dt
         qvel_left = (q_left_des - env.get_obs_dict()['left']['qpos'])/dt
