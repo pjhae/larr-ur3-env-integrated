@@ -79,17 +79,8 @@ def speedj_and_forceg(env_type='sim', render=False):
         })
     
         if render: env.render()
-        # TODO: get_obs_dict() takes a long time causing timing issues.
-        #   Is it due to Upboard's lackluster performance or some deeper
-        #   issues within UR Script wrppaer?
-        # obs_dict = env.env.get_obs_dict()
-        # right_pos_err = np.linalg.norm(obs_dict['right']['qpos'] - q_right_des)
-        # left_pos_err = np.linalg.norm(obs_dict['left']['qpos'] - q_left_des)
-        # right_vel_err = np.linalg.norm(obs_dict['right']['qvel'] - q_right_des_vel)
-        # left_vel_err = np.linalg.norm(obs_dict['left']['qvel'] - q_left_des_vel)
         print('time: %f [s]'%(t*dt))
-        # print('right arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(right_pos_err), np.rad2deg(right_vel_err)))
-        # print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
+        print('left arm joint pos error [deg]: %f vel error [dps]: %f'%(np.rad2deg(left_pos_err), np.rad2deg(left_vel_err)))
     finish = time.time()
 
     # Stop
@@ -123,9 +114,7 @@ def speedj_and_forceg(env_type='sim', render=False):
 
 
 
-
-
 if __name__ == '__main__':
-
-    speedj_and_forceg(env_type='sim', render=True)
+   
+    speedj_and_forceg(env_type='sim', render=True)  # only sim!
 
