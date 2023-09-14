@@ -32,6 +32,7 @@ For real experiment, move to :
 
 SAC for both environments
 =================
+For simulation/real, move to :
 ```
 /sac_[single or dual]/main.py
 ```
