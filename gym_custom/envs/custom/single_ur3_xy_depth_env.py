@@ -350,10 +350,16 @@ class SingleUR3XYEnv(MujocoEnv, utils.EzPickle):
             self.set_state(qpos, qvel)
             self.do_simulation(a, self.frame_skip)
 
+        # depth related    
+        depth = self.render(mode = 'depth_array', camera_id = 2)
+        plt.imshow(depth, cmap='viridis')  # 'viridis'는 컬러맵 선택입니다.
+        plt.colorbar()  # 컬러바를 추가합니다.
+        plt.title('Depth Image')  # 그래프 제목을 설정합니다.
+        plt.show()
 
         ob = self._get_obs()
         done = False
-
+       
         return ob, reward, done, {}
 
 
