@@ -11,7 +11,7 @@ import time
 import sys
 import gym_custom
 from gym_custom import spaces
-from gym_custom.envs.custom.ur_utils import URScriptWrapper_DualUR3 as URScriptWrapper
+from gym_custom.envs.custom.ur_utils import URScriptWrapper_SingleUR3 as URScriptWrapper
 from gym_custom.envs.custom.ur_utils import NullObjectiveBase
 from gym_custom.envs.real.utils import ROSRate, prompt_yes_or_no
 from collections import OrderedDict
@@ -26,18 +26,18 @@ parser.add_argument('--exp_type', default="sim", help='choose sim or real')
 args = parser.parse_args()
 
 # Simulation Environment
-env = gym_custom.make('dual-ur3-larr-for-train-v0')
+env = gym_custom.make('single-ur3-larr-for-train-v0')
 servoj_args, speedj_args = {'t': None, 'wait': None}, {'a': 5, 't': None, 'wait': None}
 PID_gains = {'servoj': {'P': 1.0, 'I': 0.5, 'D': 0.2}, 'speedj': {'P': 0.20, 'I':10.0}}
 ur3_scale_factor = np.array([50.0, 50.0, 25.0, 10.0, 10.0, 10.0])*np.array([1.0, 1.0, 1.0, 2.5, 2.5, 2.5])
 gripper_scale_factor = np.array([1.0])
 env = URScriptWrapper(env, PID_gains, ur3_scale_factor, gripper_scale_factor)
 
+
 # Real Environment
 if args.exp_type == 'real':
-    real_env = gym_custom.make('dual-ur3-larr-real-for-train-v0',
+    real_env = gym_custom.make('single-ur3-larr-real-for-train-v0',
         host_ip_right='192.168.5.102',
-        host_ip_left='192.168.5.101',
         rate=25
     )
     servoj_args, speedj_args = {'t': 2/real_env.rate._freq, 'wait': False}, {'a': 1, 't': 4/real_env.rate._freq, 'wait': False}
@@ -45,61 +45,56 @@ if args.exp_type == 'real':
     real_env.set_initial_joint_pos('current')
     real_env.set_initial_gripper_pos('current')
     # 2. Set inital as default configuration
-    real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0, -90, -135, -135, 0, -45, 0]))
-    real_env.set_initial_gripper_pos(np.array([0.0, 0.0]))
+    real_env.set_initial_joint_pos(np.deg2rad([90, -45, 135, -180, 45, 0]))
+    real_env.set_initial_gripper_pos(np.array([0.0]))
 
     time.sleep(1.0)
 
 
 # (참고용) Action limits 
 COMMAND_LIMITS = {
-    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi])*0.1,
-        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi])*0.1], # [rad/s]
-    'move_gripper': [np.array([-1]), np.array([1])] # [0: open, 1: close]
+    'speedj': [np.array([-np.pi, -np.pi, -np.pi, -2*np.pi, -2*np.pi, -2*np.pi, -1])*0.25,
+        np.array([np.pi, np.pi, np.pi, 2*np.pi, 2*np.pi, 2*np.pi, 1])*0.25], # [rad/s]
 }
 
 # Pre-defined action sequence
-action_seq = np.array([[0,0,0,0,0,0,0.3,0,0,0,0,0]]*100+[[0,0,0,0,0,0,-0.3,0,0,0,0,0]]*100+\
-                      [[0,0,0,0,0,0,0,0.3,0,0,0,0]]*100+[[0,0,0,0,0,0,0,-0.3,0,0,0,0]]*100+\
-                      [[0,0,0,0,0,0,0,0,0.3,0,0,0]]*100+[[0,0,0,0,0,0,0,0,-0.3,0,0,0]]*100+\
-                      [[0,0,0,0,0,0,0,0,0,0.6,0,0]]*50 +[[0,0,0,0,0,0,0,0,0,-0.6,0,0]]*50+\
-                      [[0,0,0,0,0,0,0,0,0,0,0.6,0]]*100+[[0,0,0,0,0,0,0,0,0,0,-0.6,0]]*100+\
-                      [[0,0,0,0,0,0,0,0,0,0,0,0.6]]*100+[[0,0,0,0,0,0,0,0,0,0,0,-0.6]]*100)
+action_seq = np.array([[-0.3,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0]]*100+\
+                      [[0,-0.3,0,0,0,0,0]]*100+[[0,0.3,0,0,0,0,0]]*100+\
+                      [[0,0,-0.3,0,0,0,0]]*100+[[0,0,0.3,0,0,0,0]]*100+\
+                      [[0,0,0,-0.6,0,0,0]]*50+[[0,0,0,0.6,0,0,0]]*50+\
+                      [[0,0,0,0,-0.6,0,0]]*100+[[0,0,0,0,0.6,0,0]]*100+\
+                      [[0,0,0,0,0,-0.6,0]]*100+[[0,0,0,0,0,0.6,0]]*100)
+
 
 # Run simulation
 # if real, get the data
 if args.exp_type == 'real':
     real_data = []
     state = real_env.reset()
-    # env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
-    # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
     for i in range(1100):
         next_state, reward, done, _  = real_env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
-            },
-            'left': {
-                'speedj': {'qd': action_seq[i][6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                'move_gripper_force': {'gf': np.array([10.0])}
-            }
+                'move_gripper_force': {'gf': np.array([action_seq[i][6]])}}
         })
-
-        curr_pos = real_env.get_obs_dict()['left']['curr_pos']      # from real env
+        # print((i//100)%2)
+        curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env
         real_data.append(curr_pos)
+        # print(curr_pos)
         # env.render()
     # Save real data
     real_data = np.array(real_data)
-    save_data(real_data, "real_data_left.npy")
+    save_data(real_data, "real_data.npy")
 
 
 # if sim, RUN CEM
 else:
-    n_seq = 100
+    n_seq = 2
     n_horrizon =1100
     n_dim = 3
     n_iter = 1000
-    n_elit = 5
+    n_elit = 1
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -108,7 +103,7 @@ else:
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_dual/data/real_data_left_indep.npy")
+    real_data = load_data("cem_single/data/real_data_indep.npy")
 
     # logging
     logging = []
@@ -129,23 +124,21 @@ else:
         for i in range(n_seq):
             state = env.reset()
             # ur3_scale_factor
-            env.wrapper_left.ur3_scale_factor[:6]= candidate_parameters[i][:6]
+            env.wrapper_right.ur3_scale_factor[:6]= candidate_parameters[i][:6]
+            # env.wrapper_right.ur3_scale_factor[0]= candidate_parameters[i][0]
 
             for j in range(n_horrizon):
-                curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
+                curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
                 sim_data[i][j][:] = curr_pos
                 next_state, reward, done, _  = env.step({
-                    'right': {
-                        'speedj': {'qd': action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                        'move_gripper_force': {'gf': np.array([10.0])}
-                    },
-                    'left': {
-                        'speedj': {'qd': action_seq[j][6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                        'move_gripper_force': {'gf': np.array([10.0])}
+                'right': {
+                    'speedj': {'qd':  action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                    'move_gripper_force': {'gf': np.array([action_seq[j][6]])}
                     }
                 })
 
                 # env.render()
+
         
         mse_results = np.zeros(n_seq)
         for i in range(n_seq):
@@ -199,19 +192,15 @@ else:
         # for traj visualization, real vs sim
         logging_traj = []
         state = env.reset()
-        env.wrapper_left.ur3_scale_factor[:6] = prams_mean[:6]
-        # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+        env.wrapper_right.ur3_scale_factor[:6] = prams_mean[:6]
+
         for j in range(n_horrizon):
-            curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
+            curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
             sim_data[0][j][:] = curr_pos
             next_state, reward, done, _  = env.step({
-                'right': {
-                    'speedj': {'qd': action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                    'move_gripper_force': {'gf': np.array([10.0])}
-                },
-                'left': {
-                    'speedj': {'qd': action_seq[j][6:12], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
-                    'move_gripper_force': {'gf': np.array([10.0])}
+            'right': {
+                'speedj': {'qd':  action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
+                'move_gripper_force': {'gf': np.array([action_seq[j][6]])}
                 }
             })
 

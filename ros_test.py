@@ -5,6 +5,9 @@ from std_msgs.msg import String
 from geometry_msgs.msg import PoseStamped
 
 
+## 1. Register your own rigid body in optitrack(ex, cube_rainbow, cube_RB)
+## 2. Get the position of rigid body using rospy.wait_for_message
+
 
 def listener_wait_msg():
 

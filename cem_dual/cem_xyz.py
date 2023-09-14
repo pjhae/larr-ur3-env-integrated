@@ -176,7 +176,7 @@ else:
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_dual/data/real_data_xy_right_0904_real.npy")
+    real_data = load_data("cem_dual/data/real_data_xy_right_0904_real.npy")
     real_data = real_data[:,:2]
 
     # logging
