@@ -70,22 +70,22 @@ action_seq = np.array([[-0.3,0,0,0,0,0,0]]*100+[[0.3,0,0,0,0,0,0]]*100+\
 # if real, get the data
 if args.exp_type == 'real':
     real_data = []
-    state = real_env.reset()
-    env.wrapper_right.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
+    state = env.reset()
+    env.wrapper_right.ur3_scale_factor[:6] = [25 ,25 ,25, 15 ,25, 20]
     for i in range(1100):
-        next_state, reward, done, _  = real_env.step({
+        next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd': action_seq[i][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
                 'move_gripper_force': {'gf': np.array([action_seq[i][6]])}}
         })
         # print((i//100)%2)
-        curr_pos = real_env.get_obs_dict()['right']['curr_pos']      # from real env
+        curr_pos = env.get_obs_dict()['right']['curr_pos']      # from real env
         real_data.append(curr_pos)
         # print(curr_pos)
         # env.render()
     # Save real data
     real_data = np.array(real_data)
-    save_data(real_data, "real_data.npy")
+    save_data(real_data, "real_data_check.npy")
 
 
 # if sim, RUN CEM
@@ -103,7 +103,7 @@ else:
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("sac_single/data/real_data_indep.npy")
+    real_data = load_data("sac_single/data/real_data_check.npy")
 
     # logging
     logging = []
@@ -189,14 +189,13 @@ else:
         plt.ylabel("error")
         plt.legend()
     
-        # for traj visualization, real vs sim
-        logging_traj = []
+        # 1111 for traj visualization, real vs sim
+        logging_traj1 = []
         state = env.reset()
-        env.wrapper_right.ur3_scale_factor[:6] = prams_mean[:6]
-
+        env.wrapper_right.ur3_scale_factor[:6] = np.array([25 ,25 ,25, 15 ,25, 20])
         for j in range(n_horrizon):
-            curr_pos = env.get_obs_dict()['right']['curr_pos']       # from sim env
-            sim_data[0][j][:] = curr_pos
+            curr_pos1 = env.get_obs_dict()['right']['curr_pos']       # from sim env
+
             next_state, reward, done, _  = env.step({
             'right': {
                 'speedj': {'qd':  action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -204,15 +203,16 @@ else:
                 }
             })
 
-            logging_traj.append(curr_pos)
+            logging_traj1.append(curr_pos1)
+
 
         # Plot
-        history_array_traj = np.array(logging_traj).T 
+        history_array_traj1 = np.array(logging_traj1).T 
         real_array_traj = np.array(real_data).T
 
         ax3 = plt.subplot(3, 1, 3)  
-        plt.plot(history_array_traj[2], label='sim', marker=',')
-        plt.plot(real_array_traj[2], label='real', linestyle='--')
+        plt.plot(history_array_traj1[2], label='sim(0.002s X 24repeat)', linestyle='--')
+        plt.plot(real_array_traj[2], label='sim(0.004s X 12repeat)', marker=',')
 
         plt.xlabel("timestep")
         plt.ylabel("position")

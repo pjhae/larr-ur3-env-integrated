@@ -312,7 +312,7 @@ class SingleUR3XYLEFTFRONTEnv(MujocoEnv, utils.EzPickle):
         # gripper pos
         SO3, curr_pos, _ = self.forward_kinematics_ee(self._get_ur3_qpos()[:self.ur3_nqpos], 'left')
         self.curr_pos = curr_pos
-        print(self._get_ur3_qpos()[:self.ur3_nqpos])
+      
         # reward action
         reward_acion = -0.001*np.linalg.norm(a)
 
