@@ -29,6 +29,12 @@ For real experiment, move to :
 /gym_custom/envs/real/[single or dual]_ur3_env.py
 ```
 
+Examples
+=================
+For simulation/real, move to :
+```
+/examples/test_[single or dual]ur3env.py
+```
 
 SAC for both environments
 =================
