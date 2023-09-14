@@ -44,7 +44,8 @@ To minimize sim-to-real gap, we used CEM.
 /cem_[single or dual]
 ```
 #### Method
-![image](https://github.com/pjhae/larr-ur3-env-integrated/assets/74540268/7d2b9eb6-e5fc-47f8-8519-d107b68b7ad7)
+![image](https://github.com/pjhae/larr-ur3-env-integrated/assets/74540268/1eb773ec-848a-459d-8709-8c43e5cd07a6)
+
 
 #### Parameter sensitivity for scale factor
-![image](https://github.com/pjhae/larr-ur3-env-integrated/assets/74540268/197dbd18-8737-40a7-8502-4484fc5a41f5)
+![image](https://github.com/pjhae/larr-ur3-env-integrated/assets/74540268/7b06f77f-5a28-4838-8e70-ddcd080691e7)
