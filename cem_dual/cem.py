@@ -165,11 +165,12 @@ else:
         print(prams_mean)
         
         # Plot
+        plt.figure(figsize=(8, 10))
         plt.clf()  
         history_array = np.array(logging).T  
         history_array_err = np.array(logging_err).T  
 
-        ax1 = plt.subplot(3, 1, 1)   
+        ax1 = plt.subplot(5, 1, 1)   
         plt.plot(history_array[0], label='p1', marker='o')
         plt.plot(history_array[1], label='p2', marker='o')
         plt.plot(history_array[2], label='p3', marker='o')
@@ -188,7 +189,7 @@ else:
         plt.ylabel("parameter")
         plt.legend()
 
-        ax2 = plt.subplot(3, 1, 2, sharex=ax1)  
+        ax2 = plt.subplot(5, 1, 2, sharex=ax1)  
         plt.plot(history_array_err, color='k', label='err', marker=".")
         plt.xlabel("Iteration")
         plt.ylabel("error")
@@ -201,7 +202,7 @@ else:
         # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
         for j in range(n_horrizon):
             curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
-            print(curr_pos)
+
             next_state, reward, done, _  = env.step({
                 'right': {
                     'speedj': {'qd': action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -218,18 +219,33 @@ else:
         # Plot
         history_array_traj = np.array(logging_traj).T 
         real_array_traj = np.array(real_data).T
-        print(len(history_array_traj), len(history_array_traj[0]))
-        ax3 = plt.subplot(3, 1, 3)  
+
+        ax3 = plt.subplot(5, 1, 3)  
         plt.plot(history_array_traj[0], label='sim', marker=',')
         plt.plot(real_array_traj[0], label='real', linestyle='--')
-
         plt.xlabel("timestep")
-        plt.ylabel("position")
+        plt.ylabel("x$_{position}$")
         plt.legend()
-        plt.pause(0.1)
+
+        ax4 = plt.subplot(5, 1, 4)  
+        plt.plot(history_array_traj[1], label='sim', marker=',')
+        plt.plot(real_array_traj[1], label='real', linestyle='--')
+        plt.xlabel("timestep")
+        plt.ylabel("y$_{position}$")
+        plt.legend()
+
+        ax5 = plt.subplot(5, 1, 5)  
+        plt.plot(history_array_traj[2], label='sim', marker=',')
+        plt.plot(real_array_traj[2], label='real', linestyle='--')
+        plt.xlabel("timestep")
+        plt.ylabel("z$_{position}$")
+        plt.legend()
+
+        plt.pause(1)
+        plt.close()
 
     plt.show() 
-
+    
 
 
 

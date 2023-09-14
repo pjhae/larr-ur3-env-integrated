@@ -18,6 +18,11 @@ import os
 import os.path as osp
 import matplotlib.pyplot as plt
 
+
+# TODO : YOU should change get_obs in 'dual-ur3-larr-for-train-v0' to make dim of 'curr_pos' to 2 or 3
+
+
+
 class UprightConstraint(NullObjectiveBase):
     
     def __init__(self):
@@ -134,7 +139,7 @@ if args.exp_type == 'real':
         q_right_des, _ ,_ ,_ = real_env.inverse_kinematics_ee(curr_pos_right + action_seq[i][:3], null_obj_func, arm='right')
         q_left_des,  _ ,_ ,_ = real_env.inverse_kinematics_ee(curr_pos_left + action_seq[i][3:], null_obj_func, arm='left')
         dt = 1
-        print(curr_pos_right, action_seq[i][3:])
+        # print(curr_pos_right, action_seq[i][3:])
         qvel_right = (q_right_des - real_env.get_obs_dict()['right']['qpos'])/dt
         qvel_left = (q_left_des - real_env.get_obs_dict()['left']['qpos'])/dt
         
@@ -156,14 +161,14 @@ if args.exp_type == 'real':
         # env.render()
     # Save real data
     real_data = np.array(real_data)
-    save_data(real_data, "real_data_xy_left_0904.npy")
+    save_data(real_data, "real_data_xy_left.npy")
 
 
 # if sim, RUN CEM
 else:
     n_seq = 2
     n_horrizon = 600
-    n_dim = 2
+    n_dim = 3
     n_iter = 1000
     n_elit = 1
     alpha = 0.9
@@ -174,8 +179,8 @@ else:
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("cem_dual/data/real_data_xy_right_0904_real.npy")
-    real_data = real_data[:,:2]
+    real_data = load_data("cem_dual/data/real_data_xy_left.npy")
+    real_data = real_data[:,:2]  # if your workspace is XY(2dim)
 
     # logging
     logging = []
@@ -249,6 +254,7 @@ else:
         print("right : ",prams_mean)
         
         # Plot
+        plt.figure(figsize=(8, 10))
         plt.clf()  
         history_array = np.array(logging).T  
         history_array_err = np.array(logging_err).T  
@@ -319,16 +325,29 @@ else:
         history_array_traj = np.array(logging_traj).T 
         real_array_traj = np.array(real_data).T
 
-        ax3 = plt.subplot(3, 1, 3)  
+        ax3 = plt.subplot(5, 1, 3)  
+        plt.plot(history_array_traj[0], label='sim', marker=',')
+        plt.plot(real_array_traj[0], label='real', linestyle='--')
+        plt.xlabel("timestep")
+        plt.ylabel("x$_{position}$")
+        plt.legend()
+
+        ax4 = plt.subplot(5, 1, 4)  
         plt.plot(history_array_traj[1], label='sim', marker=',')
         plt.plot(real_array_traj[1], label='real', linestyle='--')
-
         plt.xlabel("timestep")
-        plt.ylabel("position")
+        plt.ylabel("y$_{position}$")
         plt.legend()
-        plt.pause(0.1)
 
-    plt.show() 
+        ax5 = plt.subplot(5, 1, 5)  
+        plt.plot(history_array_traj[2], label='sim', marker=',')
+        plt.plot(real_array_traj[2], label='real', linestyle='--')
+        plt.xlabel("timestep")
+        plt.ylabel("z$_{position}$")
+        plt.legend()
+
+        plt.pause(1)
+        plt.close()
 
 
 
