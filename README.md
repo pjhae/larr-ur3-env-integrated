@@ -3,7 +3,7 @@ Custom OpenAI Gym
 
 OpenAI Gym based simulated(MuJoCo) and real environments for Universal Robotics robots.
 
-### Quick Start Guide
+#### Quick Start Guide
 
 Download the [latest release](https://github.com/snu-larr/dual-ur3-env/releases/latest) and install via pip.
 
