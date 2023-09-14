@@ -4,9 +4,7 @@ import gym
 import numpy as np
 import itertools
 import torch
-from sac import SAC
 from torch.utils.tensorboard import SummaryWriter
-from replay_memory import ReplayMemory
 import time
 import sys
 import gym_custom
@@ -163,11 +161,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 100
+    n_seq = 2
     n_horrizon = 600
     n_dim = 2
     n_iter = 1000
-    n_elit = 5
+    n_elit = 1
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -322,8 +320,8 @@ else:
         real_array_traj = np.array(real_data).T
 
         ax3 = plt.subplot(3, 1, 3)  
-        plt.plot(history_array_traj[0], label='sim', marker=',')
-        plt.plot(real_array_traj[0], label='real', linestyle='--')
+        plt.plot(history_array_traj[1], label='sim', marker=',')
+        plt.plot(real_array_traj[1], label='real', linestyle='--')
 
         plt.xlabel("timestep")
         plt.ylabel("position")

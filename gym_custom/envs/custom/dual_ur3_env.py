@@ -325,8 +325,7 @@ class DualUR3Env(MujocoEnv, utils.EzPickle):
                 'grippervel': self._get_gripper_qvel()[:self.gripper_nqvel]
             },
             'left': {
-                
-                'curr_pos' : curr_left_pos[2:],
+                'curr_pos' : curr_left_pos[:2],
                 'curr_pos_block' : self.curr_pos_block[2:],
                 "qpos_sine"  : np.sin(self._get_ur3_qpos()[self.ur3_nqpos:]),
                 "qpos_cosine": np.cos(self._get_ur3_qpos()[self.ur3_nqpos:]),

@@ -4,9 +4,7 @@ import gym
 import numpy as np
 import itertools
 import torch
-from sac import SAC
 from torch.utils.tensorboard import SummaryWriter
-from replay_memory import ReplayMemory
 import time
 import sys
 import gym_custom
@@ -95,11 +93,11 @@ if args.exp_type == 'real':
 
 # if sim, RUN CEM
 else:
-    n_seq = 100
+    n_seq = 2
     n_horrizon =1100
     n_dim = 3
     n_iter = 1000
-    n_elit = 5
+    n_elit = 1
     alpha = 0.9
 
     # a, P, I params # res if [5, 0.2, 10]
@@ -108,7 +106,7 @@ else:
 
     # load data
     sim_data = np.zeros([n_seq, n_horrizon, n_dim])
-    real_data = load_data("cem_dual/data/real_data_left_indep.npy")
+    real_data = load_data("cem_dual/data/real_data_left.npy")
 
     # logging
     logging = []
@@ -203,7 +201,7 @@ else:
         # env.wrapper_left.ur3_scale_factor[:6] = [24.52907494 ,24.02851783 ,25.56517597, 14.51868608 ,23.78797503, 21.61325463]
         for j in range(n_horrizon):
             curr_pos = env.get_obs_dict()['left']['curr_pos']       # from sim env
-            sim_data[0][j][:] = curr_pos
+            print(curr_pos)
             next_state, reward, done, _  = env.step({
                 'right': {
                     'speedj': {'qd': action_seq[j][:6], 'a': speedj_args['a'], 't': speedj_args['t'], 'wait': speedj_args['wait']},
@@ -220,10 +218,10 @@ else:
         # Plot
         history_array_traj = np.array(logging_traj).T 
         real_array_traj = np.array(real_data).T
-
+        print(len(history_array_traj), len(history_array_traj[0]))
         ax3 = plt.subplot(3, 1, 3)  
-        plt.plot(history_array_traj[2], label='sim', marker=',')
-        plt.plot(real_array_traj[2], label='real', linestyle='--')
+        plt.plot(history_array_traj[0], label='sim', marker=',')
+        plt.plot(real_array_traj[0], label='real', linestyle='--')
 
         plt.xlabel("timestep")
         plt.ylabel("position")

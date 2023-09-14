@@ -4,9 +4,7 @@ import gym
 import numpy as np
 import itertools
 import torch
-from sac import SAC
 from torch.utils.tensorboard import SummaryWriter
-from replay_memory import ReplayMemory
 import time
 import sys
 import gym_custom
