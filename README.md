@@ -27,7 +27,6 @@ For real experiment, move to :
 
 ```
 /gym_custom/envs/real/[single or dual]_ur3_env.py
-
 ```
 
 
@@ -35,7 +34,6 @@ SAC for both environments
 =================
 ```
 /sac_[single or dual]/main.py
-
 ```
 
 
