@@ -55,6 +55,6 @@ To minimize sim-to-real gap, we used CEM.
 
 
 
-#### Parameter sensitivity for scale factor
+#### Sensitivity of scale factor
 ![image](https://github.com/pjhae/larr-ur3-env-integrated/assets/74540268/7b424423-ceb4-44bb-b43c-c9bac984b7c0)
 
